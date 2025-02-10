@@ -44,17 +44,16 @@ socket.onmessage = async (event) => {
     const videoDevices = devices.filter(device => device.kind === 'videoinput');
     console.log(videoDevices);
 
-    const virtualCam = devices.find(device => 
-        device.kind === "videoinput");
-    
-    console.log("Virtual cam:", virtualCam);
+    const virtualCam = videoDevices.find(device => 
+      device.label.toLowerCase().includes("Dummy")
+    );
     
     if (!virtualCam) {
         console.warn("Virtual camera (video10) not found");
            
         }
 
-    const camera1Id = videoDevices[0].deviceId
+    const camera1Id = videoDevices[1].deviceId
     const constraintsCamera1 = { video: { deviceId: virtualCam.deviceId }, audio: false };
     const stream1 = await navigator.mediaDevices.getUserMedia(constraintsCamera1);
     

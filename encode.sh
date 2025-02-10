@@ -14,7 +14,7 @@ SDP_FILE="stream.sdp"
 
 echo "Starting H.264 streaming with Intel acceleration..."
 
-# sudo modprobe v4l2loopback devices=1 video_nr=10 exclusive_caps=1
+sudo modprobe v4l2loopback devices=1 video_nr=10 exclusive_caps=1
 
 # Create the SDP file for RTP streaming
 echo "Generating SDP file: $SDP_FILE"
