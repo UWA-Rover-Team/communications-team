@@ -1,0 +1,52 @@
+const WebSocket = require("ws");
+
+const wss = new WebSocket.Server({ host: "0.0.0.0", port: 8080 });
+let clients = {};
+
+console.log("WebSocket server running on ws://0.0.0.0:8080");
+
+wss.on("connection", (ws) => {
+    console.log("Client connected successfully");
+
+    ws.on("message", (message) => {
+    	console.log("Received message");
+        const data = JSON.parse(message);
+        if (data.type === "offer" || data.type === "answer") {
+            if (clients[data.target]) {
+                clients[data.target].send(JSON.stringify({
+                    type: data.type,
+                    sdp: data[data.type].sdp // Ensure proper structure
+                }));
+                console.log(`Forwarded ${data.type} to ${data.target}`);
+            } 
+            else {
+                console.log(`Target ${data.target} not found.`);
+            }
+        } 
+        else if (data.type === "candidate") {
+            if (clients[data.target]) {
+                clients[data.target].send(JSON.stringify({
+                    type: "candidate",
+                    candidate: data.candidate
+                }));
+            }
+        } 
+        else if (data.type === "register") {
+            clients[data.name] = ws;
+            console.log(`Client registered as ${data.name}`);
+            
+            if (data.name === "receiver" && clients["sender"]) {
+            	clients["sender"].send(JSON.stringify({ type: "new_receiver" }));
+                console.log("Notified sender about new receiver connection.");
+            }
+        }
+    });
+
+    ws.on("close", () => {
+        console.log("Client Disconnected");
+    });
+
+    ws.on("error", (error) => {
+        console.error("WebSocket error:", error);
+    });
+});
