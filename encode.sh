@@ -32,7 +32,7 @@ EOF
 
 # Open a new terminal for the first ffmpeg command (physical camera -> RTP)
 gnome-terminal -- bash -c "\
-ffmpeg -hwaccel cuda -hwaccel_output_format cuda -f v4l2 -input_format mjpeg -video_size $RESOLUTION -i '$DEVICE' \
+ffmpeg -f v4l2 -input_format mjpeg -video_size $RESOLUTION -i '$DEVICE' \
        -vf \"scale=$RESOLUTION,fps=15\" -c:v $ENCODER -b:v $BITRATE -preset fast -tune zerolatency \
        -pix_fmt yuv420p -an -f rtp '$OUTPUT'; \
 echo 'RTP stream terminated.'; \
