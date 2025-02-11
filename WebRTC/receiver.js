@@ -4,6 +4,7 @@ const peerConnection = new RTCPeerConnection();
 const socket = new WebSocket("ws://192.168.2.173:8080"); // Replace with correct WebSocket server IP
 const receiverName = "receiver";
 const senderName = "sender";
+let cameraCount = 0;
 
 // Register as receiver
 socket.onopen = () => {
@@ -48,11 +49,14 @@ socket.onmessage = async (event) => {
 };
 
 peerConnection.ontrack = (event) => {
-  // If the video element already has a stream, add the new track; otherwise, create one
-  if (remoteVideo.srcObject) {
-    remoteVideo.srcObject.addTrack(event.track);
-  } else {
-    remoteVideo.srcObject = new MediaStream([event.track]);
+
+  if (event.track.kind === 'video') {
+    const newVideo = document.createElement('video');
+    newVideo.id = 'camera${++cameraCount}'
+    newVideo.autoplay = true;
+    newVideo.playsInline = true;
+    newVideo.srcObject = new MediaStream([event.track]);
+    document.body.appendChild(newVideo);
   }
 };
 
