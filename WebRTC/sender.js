@@ -44,7 +44,10 @@ socket.onmessage = async (event) => {
     const videoDevices = devices.filter(device => device.kind === 'videoinput');
 
     const camera1Id = videoDevices[0].deviceId
-    const constraintsCamera1 = { video: { deviceId: camera1Id }, audio: false };
+    const constraintsCamera1 = { video: { deviceId: camera1Id,
+                                          width: { ideal: 640 }, 
+                                          height: { ideal: 480 }}, 
+                                 audio: false };
     const stream1 = await navigator.mediaDevices.getUserMedia(constraintsCamera1);
     
     document.getElementById("camera1Video").srcObject = stream1;
@@ -52,7 +55,7 @@ socket.onmessage = async (event) => {
     stream1.getTracks().forEach((track) => peerConnection.addTrack(track, stream1));
 
     // Set max bitrate to 0.1 Mbps (100,000 bits per second)
-    const videoSender = peerConnection.getSenders().find(sender => sender.track && sender.track.kind === 'video');
+    const videoSender = peerConnection.getSenders().find(sender => sender.track === stream1.getVideoTracks()[0]);
     const parameters = videoSender.getParameters();
     parameters.encodings[0].maxBitrate = 100000;
     await videoSender.setParameters(parameters);
