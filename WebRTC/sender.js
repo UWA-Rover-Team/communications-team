@@ -2,7 +2,7 @@
 
 const localVideo = document.getElementById("localVideo");
 const peerConnection = new RTCPeerConnection();
-const socket = new WebSocket("ws://192.168.0.25:8080");
+const socket = new WebSocket("ws://192.168.2.173:8080");
 const senderName = "sender";
 const receiverName = "receiver";
 
