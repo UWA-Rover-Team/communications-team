@@ -2,7 +2,7 @@
 
 const localVideo = document.getElementById("localVideo");
 const peerConnection = new RTCPeerConnection();
-const socket = new WebSocket("ws://192.168.2.173:8080");
+const socket = new WebSocket("ws://192.168.0.25:8080");
 const senderName = "sender";
 const receiverName = "receiver";
 
@@ -42,25 +42,20 @@ socket.onmessage = async (event) => {
     // List devices and then filter videoinput ones
     const devices = await navigator.mediaDevices.enumerateDevices();
     const videoDevices = devices.filter(device => device.kind === 'videoinput');
-    console.log(videoDevices);
 
-    const virtualCam = videoDevices.find(device => 
-      device.label.includes("Dummy")
-    );
-    
-    if (!virtualCam) {
-        console.warn("Virtual camera (video10) not found");
-           
-        }
-
-    const camera1Id = videoDevices[1].deviceId
-    const constraintsCamera1 = { video: { deviceId: virtualCam.deviceId }, audio: false };
+    const camera1Id = videoDevices[0].deviceId
+    const constraintsCamera1 = { video: { deviceId: camera1Id }, audio: false };
     const stream1 = await navigator.mediaDevices.getUserMedia(constraintsCamera1);
     
     document.getElementById("camera1Video").srcObject = stream1;
 
-    
     stream1.getTracks().forEach((track) => peerConnection.addTrack(track, stream1));
+
+    // Set max bitrate to 0.1 Mbps (100,000 bits per second)
+    const videoSender = peerConnection.getSenders().find(sender => sender.track && sender.track.kind === 'video');
+    const parameters = videoSender.getParameters();
+    parameters.encodings[0].maxBitrate = 100000;
+    await videoSender.setParameters(parameters);
 
     console.log("creating offer...");
     const offer = await peerConnection.createOffer();

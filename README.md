@@ -1,9 +1,11 @@
 # communications-team
 
-## base-station.py 
-This code is to be downloaded onto the base station.
-4 locations contains the IP of the rover pc. Before running check these using search (ctrl+f) "rover_ip"
+## Dependcies for Non_ff
+- sudo apt install node
+- sudo apt install npm
+- npm install ws
+- npm install wrtc
 
-## rover.py
-This code is to be downloaded onto the rover.
-1 location contains the IP of the base_station pc. Before running check this using search (ctrz+f) "base_station_ip"
+## Extra Dependencies with ffmpeg
+- sudo apt install ffmpeg
+- sudo apt install v4l2-utils
