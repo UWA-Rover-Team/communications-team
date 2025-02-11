@@ -42,6 +42,8 @@ socket.onmessage = async (event) => {
     // List devices and then filter videoinput ones
     const devices = await navigator.mediaDevices.enumerateDevices();
     const videoDevices = devices.filter(device => device.kind === 'videoinput');
+    console.log("List of video devices:", videoDevices);
+
 
     // Loop through all found video inputs and send them over their own track
     for (const [index, device] of videoDevices.entries()) {
