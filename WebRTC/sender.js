@@ -43,22 +43,42 @@ socket.onmessage = async (event) => {
     const devices = await navigator.mediaDevices.enumerateDevices();
     const videoDevices = devices.filter(device => device.kind === 'videoinput');
 
-    const camera1Id = videoDevices[0].deviceId
-    const constraintsCamera1 = { video: { deviceId: camera1Id,
-                                          width: { ideal: 640 }, 
-                                          height: { ideal: 480 }}, 
-                                 audio: false };
-    const stream1 = await navigator.mediaDevices.getUserMedia(constraintsCamera1);
+    // Loop through all found video inputs and send them over their own track
+    for (const [index, device] of videoDevices.entries()) {
+
+      const cameraConstraints = { video: { deviceId: device.deviceId,
+                                  width: { ideal: 640 }, 
+                                  height: { ideal: 480 }}, 
+                                  audio: false };
+      const stream = await navigator.mediaDevices.getUserMedia(cameraConstraints);
+
+      // Add each track to the peerConnection
+      for (const track of stream.getTracks()) {
+        const sender = peerConnection.addTrack(track, stream);
+
+        // Double checks that each track is a video track
+        if (track.kind === 'video') {
+          const parameters = sender.getParameters();
+          parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
+          await sender.setParameters(parameters);
+        }
+      }
+
+      // Add each track to the html stream
+      const videoElement = document.getElementById('camera${index + 1}Video');
+
+      // Optionally create a video element if it doesn't already exist
+      const newVideo = document.createElement('video');
+      newVideo.id = `camera${index + 1}Video`;
+      newVideo.autoplay = true;
+      newVideo.playsInline = true;
+      newVideo.srcObject = stream;
+      document.body.appendChild(newVideo);
+    }
+
+
     
-    document.getElementById("camera1Video").srcObject = stream1;
-
-    stream1.getTracks().forEach((track) => peerConnection.addTrack(track, stream1));
-
-    // Set max bitrate to 0.1 Mbps (100,000 bits per second)
-    const videoSender = peerConnection.getSenders().find(sender => sender.track === stream1.getVideoTracks()[0]);
-    const parameters = videoSender.getParameters();
-    parameters.encodings[0].maxBitrate = 100000;
-    await videoSender.setParameters(parameters);
+    
 
     console.log("creating offer...");
     const offer = await peerConnection.createOffer();
