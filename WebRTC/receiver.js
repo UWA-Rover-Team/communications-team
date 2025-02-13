@@ -1,7 +1,7 @@
 // receiver.js
 
 const remoteVideo = document.getElementById("remoteVideo");
-let peerConnection = acceptPeerConnection();
+let peerConnection;
 const socket = new WebSocket("ws://192.168.2.173:8080"); // Replace with correct WebSocket server IP
 const receiverName = "receiver";
 const senderName = "sender";
