@@ -33,6 +33,7 @@ wss.on("connection", (ws) => {
             }
         } 
         else if (data.type === "register") {
+            ws.clientName = data.name; 
             clients[data.name] = ws;
             console.log(`Client registered as ${data.name}`);
             
@@ -52,6 +53,7 @@ wss.on("connection", (ws) => {
                 type: "rdisconnect"
             }));
         }
+        console.log("Send disconnect message");
     });
 
     ws.on("error", (error) => {
