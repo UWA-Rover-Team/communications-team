@@ -25,6 +25,7 @@ socket.onmessage = async (event) => {
 
     if (peerConnection.signalingState === "closed") {
       peerConnection = new RTCPeerConnection();
+      console.log("New rtc session created");
     }
 
     // Reconstruct the offer object expected by setRemoteDescription
