@@ -32,8 +32,10 @@ socket.onmessage = async (event) => {
   } 
   
   else if(data.type === "new_receiver") {
-    peerConnection = await createPeerConnection();
-    console.log("New reciever found. Sending offer");
+    createPeerConnection().then((pc) => {
+      peerConnection = pc;
+      console.log("New receiver found, sending offer");
+    });
   }
 
   else if(data.type === "peerdisconnect") {
@@ -108,7 +110,10 @@ async function createPeerConnection() {
     return pc;
 }
 
-peerConnection = await createPeerConnection(); // Send offer on open up
+createPeerConnection().then((pc) => {
+  peerConnection = pc;
+  console.log("New rtc session created");
+});
 
 
 // Handle ICE Candidates: ICE candadites checks the best connection between the two peers. It fires continuously throughout the connection, checking and changing the connection.
