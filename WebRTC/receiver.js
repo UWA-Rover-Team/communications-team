@@ -89,7 +89,7 @@ setInterval(() => {
         }
         lastStats[report.id] = {
           bytesReceived: report.bytesReceived,
-          timestamp: report.timestamp
+          timestamp: report.timestamp 
         };
       }
       
