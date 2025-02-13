@@ -61,7 +61,7 @@ socket.onmessage = async (event) => {
     peerConnection.close()
     document.querySelectorAll('video').forEach(video => video.remove());
     receivedTracks.forEach(track => track.stop());
-    console.log("Receiver has left the chat. Closing peer connection and removing video elements");
+    console.log("Receiver has left the chat. Closing peer connection and closing tracks");
   }
   
    else {
@@ -75,7 +75,7 @@ peerConnection.ontrack = (event) => {
     receivedTracks.push(event.track); // Add track to the global array
 
     const newVideo = document.createElement('video');
-    newVideo.id = 'camera${++cameraCount}'
+    newVideo.id = `camera${++cameraCount}`;
     newVideo.autoplay = true;
     newVideo.playsInline = true;
     newVideo.srcObject = new MediaStream([event.track]);
