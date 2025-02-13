@@ -6,6 +6,11 @@ const senderName = "sender";
 const receiverName = "receiver";
 let peerConnection;
 
+createPeerConnection().then((pc) => {
+  let peerConnection = pc;
+  console.log("New rtc session created");
+});
+
 // Register sender
 socket.onopen = () => {
     socket.send(JSON.stringify({ 
@@ -117,10 +122,7 @@ async function createPeerConnection() {
   return pc;
 }
 
-createPeerConnection().then((pc) => {
-  let peerConnection = pc;
-  console.log("New rtc session created");
-});
+
 
 
 
