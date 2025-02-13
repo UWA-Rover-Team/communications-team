@@ -75,6 +75,7 @@ peerConnection.ontrack = (event) => {
     newVideo.playsInline = true;
     newVideo.srcObject = new MediaStream([event.track]);
     document.body.appendChild(newVideo);
+    console.log("New video stream has started");
   }
 };
 
