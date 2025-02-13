@@ -42,6 +42,11 @@ socket.onmessage = async (event) => {
     console.log("New reciever found. Sending offer");
   }
 
+  else if(data.type === "rdisconnect") {
+    peerConnection.close()
+    console.log("Receiver has left the chat. Closing peer connection");
+  }
+
   else {
     console.warn("Sender received unknown message type:", data);
   }
@@ -88,6 +93,8 @@ socket.onmessage = async (event) => {
       newVideo.srcObject = stream;
       document.body.appendChild(newVideo);
     }
+
+
 
     console.log("creating offer...");
     const offer = await peerConnection.createOffer();

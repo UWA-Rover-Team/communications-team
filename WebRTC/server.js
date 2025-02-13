@@ -8,7 +8,7 @@ let clients = {};
 console.log("WebSocket server running on ws://0.0.0.0:8080");
 
 wss.on("connection", (ws) => {
-    
+
     ws.on("message", (message) => {
     	console.log("Received message");
         const data = JSON.parse(message);
@@ -45,6 +45,13 @@ wss.on("connection", (ws) => {
 
     ws.on("close", () => {
         console.log("Client Disconnected");
+
+        if (ws.clientName === "receiver") {
+            console.log("Receiver has disconnected. Handling cleanup...");
+            clients["sender"].send(JSON.stringify({
+                type: "rdisconnect"
+            }));
+        }
     });
 
     ws.on("error", (error) => {

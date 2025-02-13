@@ -1,3 +1,5 @@
+// receiver.js
+
 const remoteVideo = document.getElementById("remoteVideo");
 const peerConnection = new RTCPeerConnection();
 
