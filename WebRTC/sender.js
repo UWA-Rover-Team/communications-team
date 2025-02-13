@@ -40,6 +40,7 @@ socket.onmessage = async (event) => {
 
   else if(data.type === "peerdisconnect") {
     peerConnection.close()
+    document.querySelectorAll('video').forEach(video => video.remove());
     console.log("Receiver has left the chat. Closing peer connection");
   }
 
