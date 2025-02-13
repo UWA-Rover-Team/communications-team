@@ -1,7 +1,7 @@
 // receiver.js
 
 const remoteVideo = document.getElementById("remoteVideo");
-let peerConnection = new RTCPeerConnection();
+let peerConnection = acceptPeerConnection();
 const socket = new WebSocket("ws://192.168.2.173:8080"); // Replace with correct WebSocket server IP
 const receiverName = "receiver";
 const senderName = "sender";
@@ -27,7 +27,8 @@ socket.onmessage = async (event) => {
 
     console.log("Received a new offer");
 
-    if (peerConnection.signalingState === "closed") {
+    if (peerConnection.signalingState !== "stable") {
+      peerConnection.close();  // Optional: clean up old connection
       peerConnection = acceptPeerConnection();
       console.log("New rtc session created");
     }
