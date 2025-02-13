@@ -59,6 +59,7 @@ socket.onmessage = async (event) => {
   else if(data.type === "peerdisconnect") {
     peerConnection.close()
     document.querySelectorAll('video').forEach(video => video.remove());
+    stream.getTracks().forEach(track => track.stop());
     console.log("Receiver has left the chat. Closing peer connection and removing video elements");
   }
   
