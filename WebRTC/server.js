@@ -45,15 +45,23 @@ wss.on("connection", (ws) => {
     });
 
     ws.on("close", () => {
-        console.log("Client Disconnected");
+        console.log("Client Disconnected:", ws.clientName);
 
-        if (ws.clientName === "receiver") {
-            console.log("Receiver has disconnected. Handling cleanup...");
-            clients["sender"].send(JSON.stringify({
-                type: "rdisconnect"
+        // Dictionary of where to send it to
+        const clientMapping = {
+            "receiver": "sender",
+            "sender": "receiver"
+        };
+
+        const otherClient = clientMapping[ws.clientName];
+
+        // Check if both clients exist
+        if (otherClient && clients[otherClient]) {
+            clients[otherClient].send(JSON.stringify({
+                type: "peerdisconnect"
             }));
+            console.log(`Sent disconnect message to ${otherClient}`);
         }
-        console.log("Send disconnect message");
     });
 
     ws.on("error", (error) => {

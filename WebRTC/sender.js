@@ -36,7 +36,7 @@ socket.onmessage = async (event) => {
     console.log("New reciever found. Sending offer");
   }
 
-  else if(data.type === "rdisconnect") {
+  else if(data.type === "peerdisconnect") {
     peerConnection.close()
     console.log("Receiver has left the chat. Closing peer connection");
   }

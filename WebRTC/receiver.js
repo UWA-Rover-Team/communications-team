@@ -1,7 +1,7 @@
 // receiver.js
 
 const remoteVideo = document.getElementById("remoteVideo");
-const peerConnection = new RTCPeerConnection();
+let peerConnection = new RTCPeerConnection();
 
 const socket = new WebSocket("ws://192.168.2.173:8080"); // Replace with correct WebSocket server IP
 const receiverName = "receiver";
@@ -22,6 +22,10 @@ socket.onmessage = async (event) => {
   console.log("Receiver received message:", data);
 
   if (data.type === "offer") {
+
+    if (peerConnection.signalingState === "closed") {
+      peerConnection = new RTCPeerConnection();
+    }
 
     // Reconstruct the offer object expected by setRemoteDescription
     const offer = { type: "offer", sdp: data.sdp };
@@ -45,6 +49,11 @@ socket.onmessage = async (event) => {
   
   else if (data.type === "candidate") {
     await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+  }
+
+  else if(data.type === "peerdisconnect") {
+    peerConnection.close()
+    console.log("Receiver has left the chat. Closing peer connection");
   }
   
    else {
