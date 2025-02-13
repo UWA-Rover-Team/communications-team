@@ -32,7 +32,7 @@ socket.onmessage = async (event) => {
   } 
   
   else if(data.type === "new_receiver") {
-    peerConnection = createPeerConnection();
+    peerConnection = await createPeerConnection();
     console.log("New reciever found. Sending offer");
   }
 
@@ -108,7 +108,7 @@ async function createPeerConnection() {
     return pc;
 }
 
-peerConnection = createPeerConnection(); // Send offer on open up
+peerConnection = await createPeerConnection(); // Send offer on open up
 
 
 // Handle ICE Candidates: ICE candadites checks the best connection between the two peers. It fires continuously throughout the connection, checking and changing the connection.
