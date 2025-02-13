@@ -7,7 +7,7 @@ const senderName = "sender";
 let cameraCount = 0;
 const receivedTracks = []; // Global array
 
-let peerConnection;
+let peerConnection = acceptPeerConnection();
 
 console.log("receiver.js has started");
 
