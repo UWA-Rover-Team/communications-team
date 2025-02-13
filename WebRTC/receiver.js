@@ -13,6 +13,8 @@ socket.onopen = () => {
 		name: receiverName 
 	}));
 }
+
+
 socket.onmessage = async (event) => {
   const data = JSON.parse(event.data);
   console.log("Receiver received message:", data);

@@ -31,6 +31,17 @@ socket.onmessage = async (event) => {
     console.log("ICE candidate added successfully.");
   } 
   
+  else if(data.type === "new_reciever") {
+    socket.send(
+      JSON.stringify({
+        type: "offer",
+        offer: peerConnection.localDescription,
+        target: receiverName,
+      })
+    );
+    console.log("New reciever found. Sending offer");
+  }
+
   else {
     console.warn("Sender received unknown message type:", data);
   }
@@ -78,10 +89,6 @@ socket.onmessage = async (event) => {
       document.body.appendChild(newVideo);
     }
 
-
-    
-    
-
     console.log("creating offer...");
     const offer = await peerConnection.createOffer();
     await peerConnection.setLocalDescription(offer);
@@ -97,7 +104,7 @@ socket.onmessage = async (event) => {
 })();
 
 
-// Handle ICE Candidates
+// Handle ICE Candidates: ICE candadites checks the best connection between the two peers. It fires continuously throughout the connection, checking and changing the connection.
 peerConnection.onicecandidate = (event) => {
     if (event.candidate) {
         socket.send(JSON.stringify({

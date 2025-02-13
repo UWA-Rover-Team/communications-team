@@ -1,3 +1,5 @@
+// WebSocket Server. Need to keep active for ICE candidate optimisation and reconnection
+
 const WebSocket = require("ws");
 
 const wss = new WebSocket.Server({ host: "0.0.0.0", port: 8080 });
@@ -6,8 +8,7 @@ let clients = {};
 console.log("WebSocket server running on ws://0.0.0.0:8080");
 
 wss.on("connection", (ws) => {
-    console.log("Client connected successfully");
-
+    
     ws.on("message", (message) => {
     	console.log("Received message");
         const data = JSON.parse(message);
