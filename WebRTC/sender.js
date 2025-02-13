@@ -7,7 +7,7 @@ const receiverName = "receiver";
 let peerConnection;
 
 createPeerConnection().then((pc) => {
-  let peerConnection = pc;
+  peerConnection = pc;
   console.log("New rtc session created");
 });
 
