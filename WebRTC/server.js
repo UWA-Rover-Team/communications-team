@@ -33,6 +33,7 @@ wss.on("connection", (ws) => {
             }
         } 
         else if (data.type === "register") {
+            ws.clientName = data.name; 
             clients[data.name] = ws;
             console.log(`Client registered as ${data.name}`);
             
