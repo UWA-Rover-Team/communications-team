@@ -2,7 +2,6 @@
 
 const remoteVideo = document.getElementById("remoteVideo");
 let peerConnection = new RTCPeerConnection();
-
 const socket = new WebSocket("ws://192.168.2.173:8080"); // Replace with correct WebSocket server IP
 const receiverName = "receiver";
 const senderName = "sender";
@@ -29,7 +28,7 @@ socket.onmessage = async (event) => {
     console.log("Received a new offer");
 
     if (peerConnection.signalingState === "closed") {
-      peerConnection = new RTCPeerConnection();
+      peerConnection = createPeerConnection();
       console.log("New rtc session created");
     }
 
@@ -69,33 +68,36 @@ socket.onmessage = async (event) => {
   }
 };
 
-peerConnection.ontrack = (event) => {
-  console.log("New track has been detected");
-  if (event.track.kind === 'video') { 
-    receivedTracks.push(event.track); // Add track to the global array
+function acceptPeerConnections() {
+  const pc = new RTCPeerConnection();
 
-    const newVideo = document.createElement('video');
-    newVideo.id = `camera${++cameraCount}`;
-    newVideo.autoplay = true;
-    newVideo.playsInline = true;
-    newVideo.srcObject = new MediaStream([event.track]);
-    document.body.appendChild(newVideo);
-    console.log("New video stream has started");
-  }
-};
-
-// Handle ICE Candidates
-peerConnection.onicecandidate = (event) => {
-    if (event.candidate) {
-        socket.send(JSON.stringify({
-            type: "candidate",
-            candidate: event.candidate,
-            target: senderName
-        }));
+  // attach event handlers on connection
+  pc.ontrack = (event) => {
+    console.log("New track has been detected");
+    if (event.track.kind === 'video') {
+      receivedTracks.push(event.track);
+      const newVideo = document.createElement('video');
+      newVideo.id = `camera${++cameraCount}`;
+      newVideo.autoplay = true;
+      newVideo.playsInline = true;
+      newVideo.srcObject = new MediaStream([event.track]);
+      document.body.appendChild(newVideo);
+      console.log("New video stream has started");
     }
-};
+  };
 
+  pc.onicecandidate = (event) => {
+    if (event.candidate) {
+      socket.send(JSON.stringify({
+        type: "candidate",
+        candidate: event.candidate,
+        target: senderName
+      }));
+    }
+  };
 
+  return pc;
+}
 
 // Object to store previous stats for calculation
 const lastStats = {};

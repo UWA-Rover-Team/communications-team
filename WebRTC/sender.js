@@ -32,7 +32,7 @@ socket.onmessage = async (event) => {
   } 
   
   else if(data.type === "new_receiver") {
-    setupAndSendOffer();
+    peerConnection = createPeerConnection();
     console.log("New reciever found. Sending offer");
   }
 
@@ -47,9 +47,9 @@ socket.onmessage = async (event) => {
 };
 
 // Capture video and create offer
-async function setupAndSendOffer() {
+async function createPeerConnection() {
 
-    peerConnection = new RTCPeerConnection();
+    const pc = new RTCPeerConnection();
 
     // List devices and then filter videoinput ones
     const devices = await navigator.mediaDevices.enumerateDevices();
@@ -68,7 +68,7 @@ async function setupAndSendOffer() {
 
       // Add each track to the peerConnection
       for (const track of stream.getTracks()) {
-        const sender = peerConnection.addTrack(track, stream);
+        const sender = pc.addTrack(track, stream);
 
         // Double checks that each track is a video track
         if (track.kind === 'video') {
@@ -93,20 +93,22 @@ async function setupAndSendOffer() {
 
 
     console.log("creating offer...");
-    const offer = await peerConnection.createOffer();
-    await peerConnection.setLocalDescription(offer);
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
     
     socket.send(
       JSON.stringify({
         type: "offer",
-        offer: peerConnection.localDescription,
+        offer: pc.localDescription,
         target: receiverName,
       })
     );
     console.log("offer sent success");
+
+    return pc;
 }
 
-setupAndSendOffer(); // Send offer on open up
+peerConnection = createPeerConnection(); // Send offer on open up
 
 
 // Handle ICE Candidates: ICE candadites checks the best connection between the two peers. It fires continuously throughout the connection, checking and changing the connection.
