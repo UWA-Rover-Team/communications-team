@@ -31,7 +31,7 @@ socket.onmessage = async (event) => {
     console.log("ICE candidate added successfully.");
   } 
   
-  else if(data.type === "new_reciever") {
+  else if(data.type === "new_receiver") {
     socket.send(
       JSON.stringify({
         type: "offer",
