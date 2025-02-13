@@ -4,6 +4,7 @@ const localVideo = document.getElementById("localVideo");
 const socket = new WebSocket("ws://192.168.2.173:8080");
 const senderName = "sender";
 const receiverName = "receiver";
+let peerConnection = false;
 
 // Register sender
 socket.onopen = () => {
