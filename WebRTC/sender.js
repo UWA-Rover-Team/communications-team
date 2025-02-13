@@ -4,6 +4,7 @@ const localVideo = document.getElementById("localVideo");
 const socket = new WebSocket("ws://192.168.2.173:8080");
 const senderName = "sender";
 const receiverName = "receiver";
+const peerConnection = new RTCPeerConnection();
 
 // Register sender
 socket.onopen = () => {
@@ -48,8 +49,7 @@ socket.onmessage = async (event) => {
 // Capture video and create offer
 async function setupAndSendOffer() {
 
-    // Create new peerConnection
-    const peerConnection = new RTCPeerConnection();
+    peerConnection = new RTCPeerConnection();
 
     // List devices and then filter videoinput ones
     const devices = await navigator.mediaDevices.enumerateDevices();
