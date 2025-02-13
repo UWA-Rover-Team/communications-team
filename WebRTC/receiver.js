@@ -7,6 +7,7 @@ const socket = new WebSocket("ws://192.168.2.173:8080"); // Replace with correct
 const receiverName = "receiver";
 const senderName = "sender";
 let cameraCount = 0;
+const receivedTracks = []; // Global array
 
 console.log("receiver.js has started");
 
@@ -59,7 +60,7 @@ socket.onmessage = async (event) => {
   else if(data.type === "peerdisconnect") {
     peerConnection.close()
     document.querySelectorAll('video').forEach(video => video.remove());
-    stream.getTracks().forEach(track => track.stop());
+    receivedTracks.forEach(track => track.stop());
     console.log("Receiver has left the chat. Closing peer connection and removing video elements");
   }
   
@@ -70,7 +71,9 @@ socket.onmessage = async (event) => {
 
 peerConnection.ontrack = (event) => {
   console.log("New track has been detected");
-  if (event.track.kind === 'video') {
+  if (event.track.kind === 'video') { 
+    receivedTracks.push(event.track); // Add track to the global array
+
     const newVideo = document.createElement('video');
     newVideo.id = 'camera${++cameraCount}'
     newVideo.autoplay = true;
