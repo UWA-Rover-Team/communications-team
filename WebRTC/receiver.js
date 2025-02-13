@@ -68,7 +68,7 @@ socket.onmessage = async (event) => {
 };
 
 peerConnection.ontrack = (event) => {
-
+  console.log("New track has been detected");
   if (event.track.kind === 'video') {
     const newVideo = document.createElement('video');
     newVideo.id = 'camera${++cameraCount}'
@@ -95,35 +95,38 @@ peerConnection.onicecandidate = (event) => {
 
 // Object to store previous stats for calculation
 const lastStats = {};
+const getStats = false;
 
 // Run every 1 second to measure inbound video bandwidth and latency
 setInterval(() => {
-  peerConnection.getStats().then(stats => {
-    stats.forEach(report => {
-      // Process inbound video bitrate
-      if (report.type === 'inbound-rtp' && report.kind === 'video') {
-        if (lastStats[report.id]) {
-          const bytesReceivedDiff = report.bytesReceived - lastStats[report.id].bytesReceived;
-          const bitrate = (bytesReceivedDiff * 8) / 1000000; // Converts to mbps
-          console.log(`Video bitrate: ${bitrate.toFixed(3)} mbps`);
+  if (getStats) {
+    peerConnection.getStats().then(stats => {
+      stats.forEach(report => {
+        // Process inbound video bitrate
+        if (report.type === 'inbound-rtp' && report.kind === 'video') {
+          if (lastStats[report.id]) {
+            const bytesReceivedDiff = report.bytesReceived - lastStats[report.id].bytesReceived;
+            const bitrate = (bytesReceivedDiff * 8) / 1000000; // Converts to mbps
+            console.log(`Video bitrate: ${bitrate.toFixed(3)} mbps`);
+          }
+          lastStats[report.id] = {
+            bytesReceived: report.bytesReceived,
+            timestamp: report.timestamp 
+          };
         }
-        lastStats[report.id] = {
-          bytesReceived: report.bytesReceived,
-          timestamp: report.timestamp 
-        };
-      }
-      
-      // Process latency from candidate pair stats
-      if (report.type === 'candidate-pair' && (report.selected || report.nominated)) {
-        const rtt = report.currentRoundTripTime;
-        if (typeof rtt === 'number') {
-          console.log(`Current round trip time: ${rtt * 1000} ms`);
-        } else {
-          console.log('RTT not available yet.');
+        
+        // Process latency from candidate pair stats
+        if (report.type === 'candidate-pair' && (report.selected || report.nominated)) {
+          const rtt = report.currentRoundTripTime;
+          if (typeof rtt === 'number') {
+            console.log(`Current round trip time: ${rtt * 1000} ms`);
+          } else {
+            console.log('RTT not available yet.');
+          }
         }
-      }
+      });
     });
-  });
+  }
 }, 1000);
 
 
