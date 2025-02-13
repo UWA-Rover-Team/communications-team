@@ -68,7 +68,7 @@ socket.onmessage = async (event) => {
   }
 };
 
-function acceptPeerConnections() {
+function acceptPeerConnection() {
   const pc = new RTCPeerConnection();
 
   // attach event handlers on connection
