@@ -76,24 +76,19 @@ async function createOffer(pc) {
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
   
-  console.log("Websocket state:", socket.readyState);
-  console.log(typeof(socket))
-  console.log(socket)
-try {
-    socket.send(
-      JSON.stringify({
-        type: "offer",
-        offer: pc.localDescription,
-        target: receiverName,
-      })
-    );
-    console.log("offer sent success");
-  
-    return pc;
-} catch (error) {
-  console.log(error);
-  return null;
-}
+  socket.send(
+    /*
+    JSON.stringify({
+      type: "offer",
+      offer: pc.localDescription,
+      target: receiverName,
+    })
+    */
+   "hello"
+  );
+  console.log("offer sent success");
+
+  return pc;
 }
 
 peerConnection.onicecandidate = (event) => {
