@@ -1,5 +1,8 @@
 // sender.js
 
+// deviceID of cameras
+// FRONT CAMERA: LQXeVP21cCGt44HPH73pUvFC7Gc8ld1b8Zi136vnzzQ=
+
 const localVideo = document.getElementById("localVideo");
 const socket = new WebSocket("ws://192.168.2.173:8080");
 const senderName = "sender";
