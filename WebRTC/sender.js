@@ -39,10 +39,7 @@ socket.onmessage = async (event) => {
   
   else if(data.type === "new_receiver") {
     peerConnection = new RTCPeerConnection();
-    connectCameras().then((pc) => {
-      peerConnection = pc;
-      console.log("New receiver found, sending offer");
-    });
+    connectCameras(peerConnection);
   }
 
   else if(data.type === "peerdisconnect") {
