@@ -1,13 +1,15 @@
 // sender.js
 
 // deviceID of cameras
-// FRONT CAMERA: LQXeVP21cCGt44HPH73pUvFC7Gc8ld1b8Zi136vnzzQ=
+const frontCameraId = "LQXeVP21cCGt44HPH73pUvFC7Gc8ld1b8Zi136vnzzQ=";
 
 const localVideo = document.getElementById("localVideo");
 const socket = new WebSocket("ws://192.168.2.173:8080");
 const senderName = "sender";
 const receiverName = "receiver";
 let peerConnection;
+
+const streamMapping = new Map();
 
 createPeerConnection().then((pc) => {
   peerConnection = pc;
@@ -80,34 +82,42 @@ async function createPeerConnection() {
   // Loop through all found video inputs and send them over their own track
   for (const [index, device] of videoDevices.entries()) {
 
-    const cameraConstraints = { video: { deviceId: device.deviceId,
-                                width: { ideal: 640 }, 
-                                height: { ideal: 480 }}, 
-                                audio: false };
-    const stream = await navigator.mediaDevices.getUserMedia(cameraConstraints);
+    if (device.deviceId === "LQXeVP21cCGt44HPH73pUvFC7Gc8ld1b8Zi136vnzzQ=") {
+      console.log("Front camera has connected");
+    }
+    /*
+    else {
+      const cameraConstraints = { video: {deviceId: device.deviceId,
+                                          width: { ideal: 640 }, 
+                                          height: { ideal: 480 }}, 
+                                          audio: false };
+      const stream = await navigator.mediaDevices.getUserMedia(cameraConstraints);
 
-    // Add each track to the peerConnection
-    for (const track of stream.getTracks()) {
-      const sender = pc.addTrack(track, stream);
+      // Add each track to the peerConnection
+      for (const track of stream.getTracks()) {
+        const sender = pc.addTrack(track, stream);
 
-      // Double checks that each track is a video track
-      if (track.kind === 'video') {
+        // Double checks that each track is a video track
+        if (track.kind === 'video') {
         const parameters = sender.getParameters();
         parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
         await sender.setParameters(parameters);
+        }
       }
+
+      // Add each track to the html stream
+      const videoElement = document.getElementById('camera${index + 1}Video');
+
+      // Optionally create a video element if it doesn't already exist
+      const newVideo = document.createElement('video');
+      newVideo.id = `camera${index + 1}Video`;
+      newVideo.autoplay = true;
+      newVideo.playsInline = true;
+      newVideo.srcObject = stream;
+      document.body.appendChild(newVideo);
     }
-
-    // Add each track to the html stream
-    const videoElement = document.getElementById('camera${index + 1}Video');
-
-    // Optionally create a video element if it doesn't already exist
-    const newVideo = document.createElement('video');
-    newVideo.id = `camera${index + 1}Video`;
-    newVideo.autoplay = true;
-    newVideo.playsInline = true;
-    newVideo.srcObject = stream;
-    document.body.appendChild(newVideo);
+    */
+    
   }
   console.log("creating offer...");
   const offer = await pc.createOffer();

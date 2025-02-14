@@ -75,6 +75,14 @@ function acceptPeerConnection() {
   // attach event handlers on connection
   pc.ontrack = (event) => {
     console.log("New track has been detected");
+
+    for (const stream of event.streams) {
+      if (event.track.kind === 'video') {
+        console.log("Detected video stream");
+      }
+    }
+    
+    /*
     if (event.track.kind === 'video') {
       receivedTracks.push(event.track);
       const newVideo = document.createElement('video');
@@ -85,6 +93,7 @@ function acceptPeerConnection() {
       document.body.appendChild(newVideo);
       console.log("New video stream has started");
     }
+    */
   };
 
   pc.onicecandidate = (event) => {

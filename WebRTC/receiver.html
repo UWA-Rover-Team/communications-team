@@ -1,12 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Receiver</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi-Stream Video Page</title>
+  <style>
+    /* Basic page styling */
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+    }
+    /* Container using Flexbox to align video streams */
+    .container {
+      display: flex;
+      justify-content: space-between; /* Distributes left, centre, and right */
+      align-items: flex-start;
+      flex-wrap: wrap; /* Wrap on smaller screens */
+    }
+    /* Styling each video stream container */
+    .video-stream {
+      text-align: center;
+      margin: 10px;
+    }
+    /* Video dimensions set to 640x480 pixels */
+    video {
+      width: 640px;
+      height: 480px;
+      background-color: #000; /* Fallback background color */
+    }
+  </style>
 </head>
 <body>
-    <h2>WebRTC Receiver</h2>
-    <script src="receiver.js"></script>
+  <div class="container">
+    <!-- Left video stream container -->
+    <div class="video-stream" id="left-stream">
+      <h2>Left Video Stream</h2>
+      <video id="video-left" controls>
+        <!-- Stream assigned via receiver.js -->
+        Your browser does not support the video tag.
+      </video>
+    </div>
+    <!-- Centre video stream container -->
+    <div class="video-stream" id="centre-stream">
+      <h2>Centre Video Stream</h2>
+      <video id="video-centre" controls>
+        <!-- Stream assigned via receiver.js -->
+        Your browser does not support the video tag.
+      </video>
+    </div>
+    <!-- Right video stream container -->
+    <div class="video-stream" id="right-stream">
+      <h2>Right Video Stream</h2>
+      <video id="video-right" controls>
+        <!-- Stream assigned via receiver.js -->
+        Your browser does not support the video tag.
+      </video>
+    </div>
+  </div>
+
+  <!-- Receiver script that assigns streams to each video element -->
+  <script src="receiver.js"></script>
 </body>
 </html>
