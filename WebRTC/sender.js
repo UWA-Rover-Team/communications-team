@@ -76,6 +76,8 @@ async function createOffer(pc) {
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
   
+  console.log("Websocket state:", socket.readyState);
+
   socket.send(
     JSON.stringify({
       type: "offer",
