@@ -7,11 +7,9 @@ const localVideo = document.getElementById("localVideo");
 const socket = new WebSocket("ws://192.168.2.173:8080");
 const senderName = "sender";
 const receiverName = "receiver";
-let peerConnection;
-
 const streamMapping = new Map();
 
-peerConnection = new RTCPeerConnection();
+let peerConnection = new RTCPeerConnection();
 connectCameras().then((pc) => {
   peerConnection = pc;
   console.log("New receiver found, sending offer");
