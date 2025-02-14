@@ -1,7 +1,5 @@
 // sender.js
 
-const { create } = require("domain");
-
 // deviceID of cameras
 const frontCameraId = "LQXeVP21cCGt44HPH73pUvFC7Gc8ld1b8Zi136vnzzQ=";
 
