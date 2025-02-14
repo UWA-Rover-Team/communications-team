@@ -11,9 +11,10 @@ let peerConnection;
 
 const streamMapping = new Map();
 
-createPeerConnection().then((pc) => {
+peerConnection = new RTCPeerConnection();
+connectCameras().then((pc) => {
   peerConnection = pc;
-  console.log("New rtc session created");
+  console.log("New receiver found, sending offer");
 });
 
 // Register sender
@@ -42,7 +43,8 @@ socket.onmessage = async (event) => {
   } 
   
   else if(data.type === "new_receiver") {
-    createPeerConnection().then((pc) => {
+    peerConnection = new RTCPeerConnection();
+    connectCameras().then((pc) => {
       peerConnection = pc;
       console.log("New receiver found, sending offer");
     });
@@ -60,16 +62,12 @@ socket.onmessage = async (event) => {
 };
 
 // Capture video and create offer
-async function createPeerConnection() {
-  const pc = new RTCPeerConnection();
-
-
-
+async function connectCameras(pc) {
+  
   // List devices and then filter videoinput ones
   const devices = await navigator.mediaDevices.enumerateDevices();
   const videoDevices = devices.filter(device => device.kind === 'videoinput');
   console.log("List of video devices:", videoDevices);
-
 
   // Loop through all found video inputs and send them over their own track
   for (const [index, device] of videoDevices.entries()) {
@@ -78,7 +76,42 @@ async function createPeerConnection() {
       console.log("Front camera has connected");
       createOffer(pc);
     }
-    /*
+  }
+}
+
+async function createOffer(pc) {
+  console.log("creating offer...");
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+  
+  socket.send(
+    JSON.stringify({
+      type: "offer",
+      offer: pc.localDescription,
+      target: receiverName,
+    })
+  );
+  console.log("offer sent success");
+
+  return pc;
+}
+
+peerConnection.onicecandidate = (event) => {
+  if (event.candidate) {
+    socket.send(JSON.stringify({
+      type: "candidate",
+      candidate: event.candidate,
+      target: receiverName
+    }));
+  }
+};
+
+
+
+
+
+
+/*
     else {
       const cameraConstraints = { video: {deviceId: device.deviceId,
                                           width: { ideal: 640 }, 
@@ -110,38 +143,6 @@ async function createPeerConnection() {
       document.body.appendChild(newVideo);
     }
     */
-    
-  }
-
-}
-
-async function createOffer(pc) {
-  console.log("creating offer...");
-  const offer = await pc.createOffer();
-  await pc.setLocalDescription(offer);
-  
-  socket.send(
-    JSON.stringify({
-      type: "offer",
-      offer: pc.localDescription,
-      target: receiverName,
-    })
-  );
-  console.log("offer sent success");
-
-  return pc;
-}
-
-pc.onicecandidate = (event) => {
-  if (event.candidate) {
-    socket.send(JSON.stringify({
-      type: "candidate",
-      candidate: event.candidate,
-      target: receiverName
-    }));
-  }
-};
-
 
 
 
