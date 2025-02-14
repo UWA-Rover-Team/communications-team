@@ -10,10 +10,7 @@ const receiverName = "receiver";
 const streamMapping = new Map();
 
 let peerConnection = new RTCPeerConnection();
-connectCameras().then((pc) => {
-  peerConnection = pc;
-  console.log("New receiver found, sending offer");
-});
+connectCameras(peerConnection);
 
 // Register sender
 socket.onopen = () => {
