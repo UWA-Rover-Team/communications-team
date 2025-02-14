@@ -1,5 +1,7 @@
 // sender.js
 
+const { create } = require("domain");
+
 // deviceID of cameras
 const frontCameraId = "LQXeVP21cCGt44HPH73pUvFC7Gc8ld1b8Zi136vnzzQ=";
 
@@ -63,15 +65,7 @@ socket.onmessage = async (event) => {
 async function createPeerConnection() {
   const pc = new RTCPeerConnection();
 
-  pc.onicecandidate = (event) => {
-    if (event.candidate) {
-      socket.send(JSON.stringify({
-        type: "candidate",
-        candidate: event.candidate,
-        target: receiverName
-      }));
-    }
-  };
+
 
   // List devices and then filter videoinput ones
   const devices = await navigator.mediaDevices.enumerateDevices();
@@ -84,6 +78,7 @@ async function createPeerConnection() {
 
     if (device.deviceId === "LQXeVP21cCGt44HPH73pUvFC7Gc8ld1b8Zi136vnzzQ=") {
       console.log("Front camera has connected");
+      createOffer(pc);
     }
     /*
     else {
@@ -119,6 +114,10 @@ async function createPeerConnection() {
     */
     
   }
+
+}
+
+async function createOffer(pc) {
   console.log("creating offer...");
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
@@ -135,9 +134,15 @@ async function createPeerConnection() {
   return pc;
 }
 
-
-
-
+pc.onicecandidate = (event) => {
+  if (event.candidate) {
+    socket.send(JSON.stringify({
+      type: "candidate",
+      candidate: event.candidate,
+      target: receiverName
+    }));
+  }
+};
 
 
 
