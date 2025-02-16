@@ -27,6 +27,28 @@ socket.onmessage = async (event) => {
 
     console.log("Received a new offer");
     acceptPeerConnection();
+    if (peerConnection.signalingState === "closed") {
+      peerConnection = acceptPeerConnection();
+      console.log("New rtc session created");
+    }
+  
+    // Reconstruct the offer object expected by setRemoteDescription
+    const offer = { type: "offer", sdp: data.sdp };
+    await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+    console.log("Remote description set successfully.");
+  
+    // Create an answer to the offer
+    const answer = await peerConnection.createAnswer();
+    await peerConnection.setLocalDescription(answer);
+    console.log("Local description set successfully.");
+    
+    // Send the answer to the sender after a brief delay (allowing ICE gathering)
+    socket.send(JSON.stringify({
+       type: "answer",
+       answer: peerConnection.localDescription,
+       target: senderName
+    }));
+    console.log("Answer sent successfully");
   } 
   
   else if (data.type === "candidate") {
@@ -49,29 +71,6 @@ socket.onmessage = async (event) => {
 
 async function acceptPeerConnection() {
   peerConnection = new RTCPeerConnection();
-  if (peerConnection.signalingState === "closed") {
-    peerConnection = acceptPeerConnection();
-    console.log("New rtc session created");
-  }
-
-  // Reconstruct the offer object expected by setRemoteDescription
-  const offer = { type: "offer", sdp: data.sdp };
-  await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
-  console.log("Remote description set successfully.");
-
-  // Create an answer to the offer
-  const answer = await peerConnection.createAnswer();
-  await peerConnection.setLocalDescription(answer);
-  console.log("Local description set successfully.");
-  
-  // Send the answer to the sender after a brief delay (allowing ICE gathering)
-  socket.send(JSON.stringify({
-     type: "answer",
-     answer: peerConnection.localDescription,
-     target: senderName
-  }));
-  console.log("Answer sent successfully");
-
   peerConnection.ontrack = (event) => {
     console.log("New track has been detected");
     if (event.track.kind === 'video') {
