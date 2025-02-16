@@ -91,14 +91,21 @@ async function addTrack(camera, cameraId) {
     width: { ideal: 640 }, 
     height: { ideal: 480 }}, 
     audio: false };
-  const stream = navigator.mediaDevices.getUserMedia(cameraConstraints);
-  const track = stream.getTracks();
-  const sender = pc.addTrack(track[0], stream);
-  console.log(`Sender's ${camera} track ID:`, track.id);
-  //cameraMap.set('frontCameraTrackId', sender.track.id);
-  const parameters = sender.getParameters();
-  parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
-  sender.setParameters(parameters);
+    navigator.mediaDevices.getUserMedia(cameraConstraints).then((stream) => {
+      const tracks = stream.getTracks();
+      const videoTrack = tracks[0];
+      const sender = pc.addTrack(videoTrack, stream);
+      console.log(`Sender's ${camera} track ID:`, videoTrack.id);
+      // Update sender parameters
+      const parameters = sender.getParameters();
+      if (!parameters.encodings) parameters.encodings = [{}];
+      parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
+      sender.setParameters(parameters);
+    })
+    
+    .catch((error) => {
+      console.error("Error accessing user media:", error);
+    });
 }
 
 
