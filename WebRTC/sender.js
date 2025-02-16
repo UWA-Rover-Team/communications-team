@@ -166,7 +166,6 @@ async function renegotiateOffer(pc) {
 }
 
 let previousVideoDevices = [];
-
 async function checkForNewDevices() {
   const devices = await navigator.mediaDevices.enumerateDevices();
   const currentVideoDevices = devices.filter(device => device.kind === "videoinput");
@@ -177,7 +176,7 @@ async function checkForNewDevices() {
   
   if (newDevices.length > 0) {
     console.log("New device(s) added:", newDevices);
-    // Handle new device(s) here (e.g., call connectCameras or similar logic)
+    connectCameras(peerConnection);
   }
   
   // Update the previous devices list for future comparisons
