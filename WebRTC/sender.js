@@ -165,7 +165,28 @@ async function renegotiateOffer(pc) {
   return pc;
 }
 
+let previousVideoDevices = [];
 
-navigator.mediaDevices.ondevicechange = async () => {
-  console.log("Device list changed!");
-};
+async function checkForNewDevices() {
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  const currentVideoDevices = devices.filter(device => device.kind === "videoinput");
+  
+  // Compare previous list with current list
+  const previousIds = previousVideoDevices.map(device => device.deviceId);
+  const newDevices = currentVideoDevices.filter(device => !previousIds.includes(device.deviceId));
+  
+  if (newDevices.length > 0) {
+    console.log("New device(s) added:", newDevices);
+    // Handle new device(s) here (e.g., call connectCameras or similar logic)
+  }
+  
+  // Update the previous devices list for future comparisons
+  previousVideoDevices = currentVideoDevices;
+}
+
+// Initialize the device list on startup
+checkForNewDevices();
+
+// Listen for device changes
+navigator.mediaDevices.ondevicechange = checkForNewDevices;
+
