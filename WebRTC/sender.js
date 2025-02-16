@@ -41,6 +41,7 @@ socket.onmessage = async (event) => {
     console.log("New receiver found. Sending Offer...");
     peerConnection = new RTCPeerConnection();
     connectCameras(peerConnection);
+    renegotiateOffer(pc, device.deviceId);
   }
 
   else if(data.type === "peerdisconnect") {
@@ -63,10 +64,20 @@ async function connectCameras(pc) {
 
   // Loop through all found video inputs and send them over their own track
   for (const [index, device] of videoDevices.entries()) {
-
     if (device.deviceId === "LQXeVP21cCGt44HPH73pUvFC7Gc8ld1b8Zi136vnzzQ=") {
       console.log("Front camera has connected, updating offer");
-      renegotiateOffer(pc, device.deviceId);
+      const cameraConstraints = { video: {deviceId: cameraId,
+        width: { ideal: 640 }, 
+        height: { ideal: 480 }}, 
+        audio: false };
+      const stream = await navigator.mediaDevices.getUserMedia(cameraConstraints);
+
+      for (const track of stream.getTracks()) {
+        const sender = pc.addTrack(track, stream);
+        const parameters = sender.getParameters();
+        parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
+        sender.setParameters(parameters);
+      }
     }
   }
 }
@@ -82,19 +93,6 @@ async function renegotiateOffer(pc, cameraId) {
       }));
     }
   };
-
-  const cameraConstraints = { video: {deviceId: cameraId,
-                              width: { ideal: 640 }, 
-                              height: { ideal: 480 }}, 
-                              audio: false };
-  const stream = await navigator.mediaDevices.getUserMedia(cameraConstraints);
-
-  for (const track of stream.getTracks()) {
-    const sender = pc.addTrack(track, stream);
-    const parameters = sender.getParameters();
-    parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
-    sender.setParameters(parameters);
-  }
 
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
