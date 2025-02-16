@@ -71,25 +71,57 @@ async function connectCameras(pc) {
   }
 }
 
-async function createOffer(pc) {
-  const offer = await pc.createOffer();
-  await pc.setLocalDescription(offer);
-  console.log("Local description set succesfully");
-
-  console.log(pc.currentLocalDescription);
-
-  socket.send(
-    JSON.stringify({
-      type: "offer",
-      offer: pc.localDescription,
-      target: receiverName,
+function createOffer(pc) {
+  // Start by creating an offer and setting the local description
+  return pc.createOffer()
+    .then(offer => {
+      return pc.setLocalDescription(offer)
+      .then(() => {
+        console.log("Local description set successfully");
+        console.log("Local description before adding track:", pc.currentLocalDescription);
+        const devices = navigator.mediaDevices.enumerateDevices();
+        const cameraConstraints = { 
+          video: { 
+            deviceId: devices[0].deviceId,
+            width: { ideal: 640 }, 
+            height: { ideal: 480 }
+          }, 
+          audio: false 
+        };
+        return navigator.mediaDevices.getUserMedia(cameraConstraints);
+      });
     })
-    
-  );
-  console.log("...Offer sent success");
 
-  return pc;
+    .then(stream => {
+      // Assuming you want to add the first video track from the stream
+      const track = stream.getVideoTracks()[0];
+      const sender = pc.addTrack(track, stream);
+      const parameters = sender.getParameters();
+      // Modify bitrate parameters if applicable
+      parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
+      sender.setParameters(parameters);
+      return stream;
+    })
+
+    // Send the offer over the WebSocket after the local description and track are set
+    .then(() => {
+      socket.send(
+        JSON.stringify({
+          type: "offer",
+          offer: pc.localDescription,
+          target: receiverName,
+        })
+      );
+      console.log("...Offer sent successfully");
+      return pc;
+    })
+
+    .catch(error => {
+      console.error("Error during offer creation:", error);
+      throw error;
+    });
 }
+
 
 peerConnection.onicecandidate = (event) => {
   if (event.candidate) {
