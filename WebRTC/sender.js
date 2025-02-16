@@ -65,15 +65,13 @@ async function connectCameras(pc) {
   for (const [index, device] of videoDevices.entries()) {
 
     if (device.deviceId === "LQXeVP21cCGt44HPH73pUvFC7Gc8ld1b8Zi136vnzzQ=") {
-      console.log("Front camera has connected");
-      createOffer(pc, device.deviceId);
+      console.log("Front camera has connected, updating offer");
+      renegotiateOffer(pc, device.deviceId);
     }
   }
 }
 
-async function createOffer(pc, cameraId) {
-  
-  console.log("Local description before adding track:", pc.currentLocalDescription);
+async function renegotiateOffer(pc, cameraId) {
 
   pc.onicecandidate = (event) => {
     if (event.candidate) {
@@ -91,16 +89,12 @@ async function createOffer(pc, cameraId) {
                               audio: false };
   const stream = await navigator.mediaDevices.getUserMedia(cameraConstraints);
 
-  console.log("tracks are:", stream.getTracks());
-
   for (const track of stream.getTracks()) {
     const sender = pc.addTrack(track, stream);
     const parameters = sender.getParameters();
     parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
     sender.setParameters(parameters);
   }
-
-  console.log("Senders:", pc.getSenders());
 
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
