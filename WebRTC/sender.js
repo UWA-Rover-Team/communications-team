@@ -73,8 +73,6 @@ async function connectCameras(pc) {
 
 async function createOffer(pc) {
   
-  
-
   console.log("Local description before adding track:", pc.currentLocalDescription);
   const cameraConstraints = { video: {deviceId: device.deviceId,
                               width: { ideal: 640 }, 
@@ -90,6 +88,8 @@ async function createOffer(pc) {
   await pc.setLocalDescription(offer);
   console.log("Local description set succesfully");
 
+  console.log("Local description after adding track:", pc.currentLocalDescription);
+  
   socket.send(
     JSON.stringify({
       type: "offer",
