@@ -14,6 +14,9 @@ const cameraMap = new Map([
                           ['leftCameraTrackId', null],
                           ['rightCameraTrackId', null]
                         ]);
+const cameraStreams = {};
+
+
 
 // Register sender
 socket.onopen = () => {
@@ -96,11 +99,11 @@ async function addTrack(camera, cameraId, pc) {
   const stream = await navigator.mediaDevices.getUserMedia(cameraConstraints)
   const [videoTrack] = stream.getTracks();
 
-  const customStream = new MediaStream();
-  customStream.addTrack(videoTrack);
+  cameraStreams[camera] = new MediaStream();
+  cameraStreams[camera].addTrack(videoTrack);
 
-  const sender = pc.addTrack(videoTrack, customStream);
-  console.log(`Sender's ${camera} track ID:`, customStream.id);
+  const sender = pc.addTrack(videoTrack, cameraStreams[camera]);
+  console.log(`Sender's ${camera} track ID:`, cameraStreams[camera].id);
 
   // Update sender parameters
   const parameters = sender.getParameters();
