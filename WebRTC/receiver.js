@@ -7,11 +7,6 @@ const senderName = "sender";
 let cameraCount = 0;
 const receivedTracks = []; // Global array
 let peerConnection = new RTCPeerConnection();
-const cameraMap = new Map([
-                          ['frontCameraTrackId', null],
-                          ['leftCameraTrackId', null],
-                          ['rightCameraTrackId', null]
-                        ]);
 
 console.log("receiver.js has started");
 
@@ -29,7 +24,6 @@ socket.onmessage = async (event) => {
 
   if (data.type === "offer") {
     console.log("Received a new offer");
-    cameraMap = data.cameraMap;
     await acceptPeerConnection();
   
     // Reconstruct the offer object expected by setRemoteDescription
@@ -140,20 +134,3 @@ setInterval(() => {
     });
   }
 }, 1000);
-
-
-
-
-    
-/*
-if (event.track.kind === 'video') {
-  receivedTracks.push(event.track);
-  const newVideo = document.createElement('video');
-  newVideo.id = `camera${++cameraCount}`;
-  newVideo.autoplay = true;
-  newVideo.playsInline = true;
-  newVideo.srcObject = new MediaStream([event.track]);
-  document.body.appendChild(newVideo);
-  console.log("New video stream has started");
-}
-*/

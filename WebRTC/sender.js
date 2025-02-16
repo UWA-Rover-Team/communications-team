@@ -93,7 +93,7 @@ async function connectCameras(pc) {
 
 
 async function addStream(camera, cameraId, pc) {
-  
+
   const cameraConstraints = { video: {deviceId: cameraId,
     width: { ideal: 640 }, 
     height: { ideal: 480 }}, 
@@ -121,7 +121,6 @@ async function renegotiateOffer(pc) {
       socket.send(JSON.stringify({
         type: "candidate",
         candidate: event.candidate,
-        cameraMap: cameraMap,
         target: receiverName
       }));
     }
