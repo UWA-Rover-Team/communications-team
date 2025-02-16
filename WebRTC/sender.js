@@ -41,7 +41,7 @@ socket.onmessage = async (event) => {
     console.log("New receiver found. Sending Offer...");
     peerConnection = new RTCPeerConnection();
     connectCameras(peerConnection);
-    renegotiateOffer(pc, device.deviceId);
+    renegotiateOffer(peerConnection);
   }
 
   else if(data.type === "peerdisconnect") {
@@ -53,6 +53,9 @@ socket.onmessage = async (event) => {
     console.warn("Sender received unknown message type:", data);
   }
 };
+
+
+
 
 // Capture video and create offer
 async function connectCameras(pc) {
@@ -82,8 +85,11 @@ async function connectCameras(pc) {
   }
 }
 
-async function renegotiateOffer(pc, cameraId) {
 
+
+
+// Function to resend the offer
+async function renegotiateOffer(pc) {
   pc.onicecandidate = (event) => {
     if (event.candidate) {
       socket.send(JSON.stringify({
