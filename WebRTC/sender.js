@@ -93,7 +93,7 @@ async function addTrack(camera, cameraId) {
     width: { ideal: 640 }, 
     height: { ideal: 480 }}, 
     audio: false };
-    const stream = navigator.mediaDevices.getUserMedia(cameraConstraints)
+    const stream = await navigator.mediaDevices.getUserMedia(cameraConstraints)
     const tracks = stream.getTracks();
     const videoTrack = tracks[0];
     const sender = pc.addTrack(videoTrack, stream);
