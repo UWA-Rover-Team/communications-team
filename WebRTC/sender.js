@@ -81,6 +81,10 @@ async function createOffer(pc, cameraId) {
                               height: { ideal: 480 }}, 
                               audio: false };
   const stream = await navigator.mediaDevices.getUserMedia(cameraConstraints);
+
+  track = stream.getTracks();
+  console.log("track is:", track);
+
   const sender = pc.addTrack(track, stream);
   const parameters = sender.getParameters();
   parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
