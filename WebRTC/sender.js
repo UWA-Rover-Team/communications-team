@@ -79,15 +79,15 @@ function createOffer(pc) {
       .then(() => {
         console.log("Local description set successfully");
         console.log("Local description before adding track:", pc.currentLocalDescription);
-        const devices = navigator.mediaDevices.enumerateDevices();
-        const cameraConstraints = { 
-          video: { 
-            deviceId: devices[0].deviceId,
-            width: { ideal: 640 }, 
-            height: { ideal: 480 }
-          }, 
-          audio: false 
-        };
+        navigator.mediaDevices.enumerateDevices().then(devices => {
+          const cameraConstraints = { 
+            video: { 
+              deviceId: devices[0].deviceId,
+              width: { ideal: 640 }, 
+              height: { ideal: 480 }
+            },
+            audio: false
+          };
         return navigator.mediaDevices.getUserMedia(cameraConstraints);
       });
     })
