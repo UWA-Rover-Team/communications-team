@@ -111,6 +111,7 @@ function createOffer(pc) {
           })
         );
         console.log("...Offer sent successfully");
+        console.log(pc.currentLocalDescription);
         return pc;
       });
     })
