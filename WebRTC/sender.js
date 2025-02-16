@@ -164,3 +164,8 @@ async function renegotiateOffer(pc) {
 
   return pc;
 }
+
+
+navigator.mediaDevices.ondevicechange = async () => {
+  console.log("Device list changed!");
+};
