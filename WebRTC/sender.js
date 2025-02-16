@@ -70,19 +70,23 @@ async function connectCameras(pc) {
   const videoDevices = devices.filter(device => device.kind === 'videoinput');
   console.log("List of video devices:", videoDevices);
 
+  const trackPromises = [];
   // Loop through all found video inputs and send them over their own track
   for (const [index, device] of videoDevices.entries()) {
     if (device.deviceId === frontCameraId) {
       console.log("Front camera has connected, updating offer");
-      addTrack('middle', device.deviceId);
+      trackPromises.push(addTrack('middle', device.deviceId));
     }
 
     if (device.deviceId === leftCameraId) {
       console.log("Left camera has connected, updating offer");
-      addTrack('left', device.deviceId);
+      trackPromises.push(addTrack('left', device.deviceId));
     }
 
   }
+
+  await Promise.all(trackPromises);
+  console.log("All camera tracks have been added.");
 }
 
 
