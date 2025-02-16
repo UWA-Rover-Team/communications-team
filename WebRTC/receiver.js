@@ -6,8 +6,8 @@ const receiverName = "receiver";
 const senderName = "sender";
 let cameraCount = 0;
 const receivedTracks = []; // Global array
+let peerConnection = new RTCPeerConnection();
 
-let peerConnection = acceptPeerConnection();
 
 console.log("receiver.js has started");
 
@@ -26,6 +26,7 @@ socket.onmessage = async (event) => {
   if (data.type === "offer") {
 
     console.log("Received a new offer");
+    peerConnection = new RTCPeerConnection();
 
     if (peerConnection.signalingState === "closed") {
       peerConnection = acceptPeerConnection();
@@ -68,45 +69,21 @@ socket.onmessage = async (event) => {
   }
 };
 
-function acceptPeerConnection() {
-  const pc = new RTCPeerConnection();
 
-  // attach event handlers on connection
-  pc.ontrack = (event) => {
-    console.log("New track has been detected");
+pc.ontrack = (event) => {
+  console.log("New track has been detected");
+};
 
-    for (const stream of event.streams) {
-      if (event.track.kind === 'video') {
-        console.log("Detected video stream");
-      }
-    }
-    
-    /*
-    if (event.track.kind === 'video') {
-      receivedTracks.push(event.track);
-      const newVideo = document.createElement('video');
-      newVideo.id = `camera${++cameraCount}`;
-      newVideo.autoplay = true;
-      newVideo.playsInline = true;
-      newVideo.srcObject = new MediaStream([event.track]);
-      document.body.appendChild(newVideo);
-      console.log("New video stream has started");
-    }
-    */
-  };
+pc.onicecandidate = (event) => {
+  if (event.candidate) {
+    socket.send(JSON.stringify({
+      type: "candidate",
+      candidate: event.candidate,
+      target: senderName
+    }));
+  }
+};
 
-  pc.onicecandidate = (event) => {
-    if (event.candidate) {
-      socket.send(JSON.stringify({
-        type: "candidate",
-        candidate: event.candidate,
-        target: senderName
-      }));
-    }
-  };
-
-  return pc;
-}
 
 // Object to store previous stats for calculation
 const lastStats = {};
@@ -147,3 +124,16 @@ setInterval(() => {
 
 
 
+    
+/*
+if (event.track.kind === 'video') {
+  receivedTracks.push(event.track);
+  const newVideo = document.createElement('video');
+  newVideo.id = `camera${++cameraCount}`;
+  newVideo.autoplay = true;
+  newVideo.playsInline = true;
+  newVideo.srcObject = new MediaStream([event.track]);
+  document.body.appendChild(newVideo);
+  console.log("New video stream has started");
+}
+*/
