@@ -1,5 +1,10 @@
 // sender.js
 
+// TO WORK ON
+// USB disconnect detected, but no reconnect
+// Receiver is not disinguishing between deleted track and new track, failing to notice ontrack event. Maybe change to a different listener for ontrack event?
+
+
 // deviceID of cameras
 const frontCameraId = "LQXeVP21cCGt44HPH73pUvFC7Gc8ld1b8Zi136vnzzQ=";
 const leftCameraId = "2noqUGsn6qKXNB9fjiWc4SoBOttpdywjT+jQfNLESGs=";
