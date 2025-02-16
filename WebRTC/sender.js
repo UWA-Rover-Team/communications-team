@@ -87,6 +87,7 @@ async function connectCameras(pc) {
 
   await Promise.all(trackPromises);
   console.log("All camera tracks have been added.");
+  return;
 }
 
 
