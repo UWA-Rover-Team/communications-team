@@ -90,7 +90,7 @@ async function connectCameras(pc) {
 }
 
 
-async function addTrack(camera, cameraId) {
+function addTrack(camera, cameraId) {
   const cameraConstraints = { video: {deviceId: cameraId,
     width: { ideal: 640 }, 
     height: { ideal: 480 }}, 
