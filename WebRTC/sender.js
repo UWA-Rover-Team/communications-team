@@ -73,10 +73,8 @@ async function connectCameras(pc) {
 
 function createOffer(pc) {
   // Start by creating an offer and setting the local description
-  return pc.createOffer()
-    .then(offer => {
-      return pc.setLocalDescription(offer)
-      .then(() => {
+  return pc.createOffer().then(offer => {
+      return pc.setLocalDescription(offer).then(() => {
         console.log("Local description set successfully");
         console.log("Local description before adding track:", pc.currentLocalDescription);
         navigator.mediaDevices.enumerateDevices().then(devices => {
@@ -90,19 +88,18 @@ function createOffer(pc) {
           };
         
           return navigator.mediaDevices.getUserMedia(cameraConstraints);
-        });
+        })
+        .then(stream => {
+          // Assuming you want to add the first video track from the stream
+          const track = stream.getVideoTracks()[0];
+          const sender = pc.addTrack(track, stream);
+          const parameters = sender.getParameters();
+          // Modify bitrate parameters if applicable
+          parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
+          sender.setParameters(parameters);
+          return stream;
+        })
       });
-    })
-
-    .then(stream => {
-      // Assuming you want to add the first video track from the stream
-      const track = stream.getVideoTracks()[0];
-      const sender = pc.addTrack(track, stream);
-      const parameters = sender.getParameters();
-      // Modify bitrate parameters if applicable
-      parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
-      sender.setParameters(parameters);
-      return stream;
     })
 
     // Send the offer over the WebSocket after the local description and track are set
