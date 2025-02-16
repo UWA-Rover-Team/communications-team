@@ -94,7 +94,7 @@ async function createOffer(pc, cameraId) {
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
   console.log("Local description set succesfully");
-  console.log("Pc tracks are", pc.getTracks);
+  console.log("Pc tracks are", pc.getTracks());
 
   console.log("Local description after adding track:", pc.currentLocalDescription);
 
