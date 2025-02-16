@@ -130,7 +130,8 @@ async function addStream(camera, cameraId, pc) {
   videoTrack.onended = () => {
     console.log(`${camera} camera track ended. The device might have been disconnected.`);
     pc.removeTrack(sender);
-    connectCameras(pc);
+    cameraMap.set(`${camera}CameraTrackId`, null);
+    console.log(cameraMap);
   };
 }
 
