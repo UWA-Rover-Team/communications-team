@@ -101,8 +101,9 @@ async function addTrack(camera, cameraId) {
       if (!parameters.encodings) parameters.encodings = [{}];
       parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
       sender.setParameters(parameters);
+      console.log("Offer updated");
     })
-    
+
     .catch((error) => {
       console.error("Error accessing user media:", error);
     });
