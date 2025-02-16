@@ -7,7 +7,6 @@ const localVideo = document.getElementById("localVideo");
 const socket = new WebSocket("ws://192.168.2.173:8080");
 const senderName = "sender";
 const receiverName = "receiver";
-const streamMapping = new Map();
 let peerConnection = new RTCPeerConnection();
 
 
@@ -77,6 +76,8 @@ async function createOffer(pc) {
   await pc.setLocalDescription(offer);
   console.log("Local description set succesfully");
 
+  console.log(pc.currentLocalDescription);
+
   socket.send(
     JSON.stringify({
       type: "offer",
@@ -85,7 +86,7 @@ async function createOffer(pc) {
     })
     
   );
-  console.log("Offer sent success");
+  console.log("...Offer sent success");
 
   return pc;
 }
