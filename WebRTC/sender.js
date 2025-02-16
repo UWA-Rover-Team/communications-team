@@ -49,7 +49,7 @@ socket.onmessage = async (event) => {
   else if(data.type === "new_receiver") {
     console.log("New receiver found. Sending Offer...");
     peerConnection = new RTCPeerConnection();
-    await connectCameras(peerConnection);
+    checkForNewDevices();
     renegotiateOffer(peerConnection);
   }
 
@@ -176,12 +176,15 @@ async function checkForNewDevices() {
   
   if (newDevices.length > 0) {
     console.log("New device(s) added:", newDevices);
-    connectCameras(peerConnection);
+    await connectCameras(peerConnection);
   }
   
   // Update the previous devices list for future comparisons
   previousVideoDevices = currentVideoDevices;
 }
+
+// Initialize the device list on startup
+
 
 // Listen for device changes
 navigator.mediaDevices.ondevicechange = checkForNewDevices;
