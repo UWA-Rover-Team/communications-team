@@ -28,7 +28,7 @@ socket.onmessage = async (event) => {
     // Reconstruct the full answer object expected by setRemoteDescription
     const answer = { type: "answer", sdp: data.sdp };
     await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
-    console.log("Remote description answer set successfully.");
+    console.log("Remote description set successfully.");
   } 
   
   else if (data.type === "candidate") {
@@ -38,13 +38,13 @@ socket.onmessage = async (event) => {
   } 
   
   else if(data.type === "new_receiver") {
+    console.log("New receiver found. Sending offer...");
     peerConnection = new RTCPeerConnection();
     connectCameras(peerConnection);
   }
 
   else if(data.type === "peerdisconnect") {
     peerConnection.close()
-    document.querySelectorAll('video').forEach(video => video.remove());
     console.log("Receiver has left the chat. Closing peer connection");
   }
 
@@ -72,10 +72,9 @@ async function connectCameras(pc) {
 }
 
 async function createOffer(pc) {
-  
-  console.log("creating offer...");
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
+  console.log("Local description set succesfully");
 
   socket.send(
     JSON.stringify({

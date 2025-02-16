@@ -22,7 +22,6 @@ socket.onopen = () => {
 
 socket.onmessage = async (event) => {
   const data = JSON.parse(event.data);
-  console.log("Receiver received message:", data);
 
   if (data.type === "offer") {
 
@@ -36,12 +35,12 @@ socket.onmessage = async (event) => {
     // Reconstruct the offer object expected by setRemoteDescription
     const offer = { type: "offer", sdp: data.sdp };
     await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
-    console.log("Remote description (offer) set successfully.");
+    console.log("Remote description set successfully.");
 
     // Create an answer to the offer
     const answer = await peerConnection.createAnswer();
     await peerConnection.setLocalDescription(answer);
-    console.log("Local description (answer) set successfully.");
+    console.log("Local description set successfully.");
     
     // Send the answer to the sender after a brief delay (allowing ICE gathering)
     socket.send(JSON.stringify({
@@ -49,7 +48,7 @@ socket.onmessage = async (event) => {
        answer: peerConnection.localDescription,
        target: senderName
     }));
-    console.log("Answer sent to sender");
+    console.log("Answer sent successfully");
 
   } 
   
