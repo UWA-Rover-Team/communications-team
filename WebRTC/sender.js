@@ -183,9 +183,6 @@ async function checkForNewDevices() {
   previousVideoDevices = currentVideoDevices;
 }
 
-// Initialize the device list on startup
-checkForNewDevices();
-
 // Listen for device changes
 navigator.mediaDevices.ondevicechange = checkForNewDevices;
 
