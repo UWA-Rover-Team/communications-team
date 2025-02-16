@@ -66,15 +66,17 @@ async function connectCameras(pc) {
 
     if (device.deviceId === "LQXeVP21cCGt44HPH73pUvFC7Gc8ld1b8Zi136vnzzQ=") {
       console.log("Front camera has connected");
-      createOffer(pc);
+      createOffer(pc, device.deviceId);
     }
   }
 }
 
-async function createOffer(pc) {
+async function createOffer(pc, cameraId) {
   
   console.log("Local description before adding track:", pc.currentLocalDescription);
-  const cameraConstraints = { video: {deviceId: device.deviceId,
+
+
+  const cameraConstraints = { video: {deviceId: cameraId,
                               width: { ideal: 640 }, 
                               height: { ideal: 480 }}, 
                               audio: false };
@@ -89,7 +91,7 @@ async function createOffer(pc) {
   console.log("Local description set succesfully");
 
   console.log("Local description after adding track:", pc.currentLocalDescription);
-  
+
   socket.send(
     JSON.stringify({
       type: "offer",
