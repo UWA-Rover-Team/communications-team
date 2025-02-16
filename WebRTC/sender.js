@@ -40,7 +40,7 @@ socket.onmessage = async (event) => {
   else if(data.type === "new_receiver") {
     console.log("New receiver found. Sending Offer...");
     peerConnection = new RTCPeerConnection();
-    connectCameras(peerConnection);
+    await connectCameras(peerConnection);
     renegotiateOffer(peerConnection);
   }
 
