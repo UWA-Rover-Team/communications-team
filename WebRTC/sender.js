@@ -91,7 +91,7 @@ async function connectCameras(pc) {
 }
 
 
-async function addTrack(camera, cameraId, pc) {
+async function addStream(camera, cameraId, pc) {
   const cameraConstraints = { video: {deviceId: cameraId,
     width: { ideal: 640 }, 
     height: { ideal: 480 }}, 
@@ -143,50 +143,6 @@ async function renegotiateOffer(pc) {
   return pc;
 }
 
-
-
-
-
-
-
-
-
-/*
-    else {
-      const cameraConstraints = { video: {deviceId: device.deviceId,
-                                          width: { ideal: 640 }, 
-                                          height: { ideal: 480 }}, 
-                                          audio: false };
-      const stream = await navigator.mediaDevices.getUserMedia(cameraConstraints);
-
-      // Add each track to the peerConnection
-      for (const track of stream.getTracks()) {
-        const sender = pc.addTrack(track, stream);
-
-        // Double checks that each track is a video track
-        if (track.kind === 'video') {
-        const parameters = sender.getParameters();
-        parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
-        await sender.setParameters(parameters);
-        }
-      }
-
-      // Add each track to the html stream
-      const videoElement = document.getElementById('camera${index + 1}Video');
-
-      // Optionally create a video element if it doesn't already exist
-      const newVideo = document.createElement('video');
-      newVideo.id = `camera${index + 1}Video`;
-      newVideo.autoplay = true;
-      newVideo.playsInline = true;
-      newVideo.srcObject = stream;
-      document.body.appendChild(newVideo);
-    }
-    */
-
-
-
-    
-
-
-
+videoTrack.onended = () => {
+  console.log("Camera track ended. The device might have been disconnected.");
+};
