@@ -75,7 +75,6 @@ async function createOffer(pc, cameraId) {
   
   console.log("Local description before adding track:", pc.currentLocalDescription);
 
-
   peerConnection.onicecandidate = (event) => {
     if (event.candidate) {
       socket.send(JSON.stringify({
@@ -86,19 +85,15 @@ async function createOffer(pc, cameraId) {
     }
   };
 
-  
   const cameraConstraints = { video: {deviceId: cameraId,
                               width: { ideal: 640 }, 
                               height: { ideal: 480 }}, 
                               audio: false };
   const stream = await navigator.mediaDevices.getUserMedia(cameraConstraints);
 
-  const track = stream.getTracks();
-  const track1 = track[0];
-
-  console.log("track1 is:",track1);
-
-  const sender = pc.addTrack(track1, stream);
+  for (const track of stream.getTracks()) {
+    const sender = pc.addTrack(track, stream);
+  }
   
   const parameters = sender.getParameters();
   parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
