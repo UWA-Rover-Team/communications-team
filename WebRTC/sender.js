@@ -77,12 +77,12 @@ async function connectCameras(pc) {
   // Loop through all found video inputs and send them over their own track
   for (const [index, device] of videoDevices.entries()) {
     if (device.deviceId === frontCameraId) {
-      const camera = cameraMap.get('leftCameraTrackId');
+      const camera = cameraMap.get('frontCameraTrackId');
       if (camera !== null) {
-        console.log("Left camera already connected.");
+        console.log("front camera already connected.");
       } else {
-        console.log("Left camera has connected, updating offer");
-        await addStream('left', device.deviceId, pc);
+        console.log("front camera has connected, updating offer");
+        await addStream('front', device.deviceId, pc);
       }
     }
 
