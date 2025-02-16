@@ -107,6 +107,7 @@ function addTrack(camera, cameraId) {
       parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
       sender.setParameters(parameters);
       console.log("Offer updated");
+      return;
     })
 
     .catch((error) => {
