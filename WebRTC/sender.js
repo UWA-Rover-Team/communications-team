@@ -16,7 +16,6 @@ const cameraMap = new Map([
                           ['leftCameraTrackId', null],
                           ['rightCameraTrackId', null]
                         ]);
-const cameraStreams = {};
 
 
 
@@ -103,6 +102,7 @@ async function addStream(camera, cameraId, pc) {
   const stream = await navigator.mediaDevices.getUserMedia(cameraConstraints)
   const tracks = stream.getTracks();
   const videoTrack = tracks[0];
+  cameraMap.set(`${camera}CameraTrackId`, videoTrack);
   const sender = pc.addTrack(videoTrack, stream);
   console.log(`Sender's ${camera} track ID:`, videoTrack.id);
 
@@ -143,6 +143,6 @@ async function renegotiateOffer(pc) {
   return pc;
 }
 
-cameraStreams[0].onended = () => {
+cameraMap['frontCameraTrackId'].onended = () => {
   console.log("Camera track ended. The device might have been disconnected.");
 };
