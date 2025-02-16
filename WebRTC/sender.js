@@ -75,7 +75,7 @@ async function createOffer(pc, cameraId) {
   
   console.log("Local description before adding track:", pc.currentLocalDescription);
 
-  peerConnection.onicecandidate = (event) => {
+  pc.onicecandidate = (event) => {
     if (event.candidate) {
       socket.send(JSON.stringify({
         type: "candidate",
@@ -100,12 +100,11 @@ async function createOffer(pc, cameraId) {
     sender.setParameters(parameters);
   }
 
-
+  console.log("Senders:", pc.getSenders());
 
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
   console.log("Local description set succesfully");
-  console.log("Local description after adding track:", pc.currentLocalDescription);
 
   socket.send(
     JSON.stringify({
