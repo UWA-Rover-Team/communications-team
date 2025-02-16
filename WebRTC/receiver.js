@@ -24,7 +24,6 @@ socket.onmessage = async (event) => {
   const data = JSON.parse(event.data);
 
   if (data.type === "offer") {
-
     console.log("Received a new offer");
     acceptPeerConnection();
     if (peerConnection.signalingState === "closed") {
@@ -70,7 +69,13 @@ socket.onmessage = async (event) => {
 
 
 async function acceptPeerConnection() {
-  peerConnection = new RTCPeerConnection();
+
+  // Open new RTCPeerConnection if needed
+  if (!(peerConnection instanceof RTCPeerConnection)) {
+    peerConnection = new RTCPeerConnection();
+    console.log("Opening new RTC Session");
+  }  
+  
   peerConnection.ontrack = (event) => {
     console.log("New track has been detected");
     if (event.track.kind === 'video') {
