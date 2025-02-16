@@ -74,13 +74,12 @@ async function connectCameras(pc) {
                                   height: { ideal: 480 }}, 
                                   audio: false };
       const stream = await navigator.mediaDevices.getUserMedia(cameraConstraints);
-
-      for (const track of stream.getTracks()) {
-        const sender = pc.addTrack(track, stream);
-        const parameters = sender.getParameters();
-        parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
-        sender.setParameters(parameters);
-      }
+      const sender = pc.addTrack(track, stream);
+      console.log("Sender's track ID:", sender.track.id);
+      console.log("List of senders:", pc.getSenders);
+      const parameters = sender.getParameters();
+      parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
+      sender.setParameters(parameters);
     }
   }
 }
