@@ -84,7 +84,6 @@ async function acceptPeerConnection() {
   };
 
   peerConnection.ontrack = (event) => {
-    console.log("New track has been detected, id:", event.stream[0].id);
     if (event.track.kind === 'video') {
       receivedTracks.push(event.track);
       const newVideo = document.createElement('video');
