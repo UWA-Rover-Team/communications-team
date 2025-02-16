@@ -87,7 +87,7 @@ async function createOffer(pc, cameraId) {
 
   console.log("track1 is:",track1);
 
-  const sender = pc.addTrack(track, stream);
+  const sender = pc.addTrack(track1, stream);
   
   const parameters = sender.getParameters();
   parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
