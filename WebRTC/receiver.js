@@ -74,7 +74,7 @@ peerConnection.ontrack = (event) => {
   console.log("New track has been detected");
 };
 
-pc.onicecandidate = (event) => {
+peerConnection.onicecandidate = (event) => {
   if (event.candidate) {
     socket.send(JSON.stringify({
       type: "candidate",
