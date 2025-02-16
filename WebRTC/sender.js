@@ -113,20 +113,25 @@ async function addStream(camera, cameraId, pc) {
   const tracks = stream.getTracks();
   const videoTrack = tracks[0];
 
-  videoTrack.onended = () => {
-    console.log(`${camera} camera track ended. The device might have been disconnected.`);
-    connectCameras(pc);
-  };
+
 
   cameraMap.set(`${camera}CameraTrackId`, videoTrack);
   const sender = pc.addTrack(videoTrack, stream);
   console.log(`Sender's ${camera} track ID:`, videoTrack.id);
+
+  
 
   // Update sender parameters
   const parameters = sender.getParameters();
   parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
   console.log("Offer updated");
   sender.setParameters(parameters);
+
+  videoTrack.onended = () => {
+    console.log(`${camera} camera track ended. The device might have been disconnected.`);
+    pc.removeTrack(sender);
+    connectCameras(pc);
+  };
 }
 
 
