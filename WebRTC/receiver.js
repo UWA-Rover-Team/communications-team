@@ -25,7 +25,7 @@ socket.onmessage = async (event) => {
 
   if (data.type === "offer") {
     console.log("Received a new offer");
-    acceptPeerConnection();
+    await acceptPeerConnection();
     if (peerConnection.signalingState === "closed") {
       peerConnection = acceptPeerConnection();
       console.log("New rtc session created");
