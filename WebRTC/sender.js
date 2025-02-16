@@ -72,44 +72,47 @@ async function connectCameras(pc) {
 }
 
 function createOffer(pc) {
-  // Start by creating an offer and setting the local description
   return pc.createOffer().then(offer => {
-      return pc.setLocalDescription(offer).then(() => {
-        console.log("Local description set successfully");
-        console.log("Local description before adding track:", pc.currentLocalDescription);
-        navigator.mediaDevices.enumerateDevices().then(devices => {
-          const cameraConstraints = { video: { deviceId: devices[0].deviceId,
-                                      width: { ideal: 640 }, 
-                                      height: { ideal: 480 }},
-                                      audio: false
+      return pc.setLocalDescription(offer);
+    })
+    .then(() => {
+      console.log("Local description set successfully");
+      console.log("Local description before adding track:", pc.currentLocalDescription);
+      // Return the inner promise chain to ensure proper sequencing
+      return navigator.mediaDevices.enumerateDevices()
+        .then(devices => {
+          const cameraConstraints = { 
+            video: { 
+              deviceId: devices[0].deviceId,
+              width: { ideal: 640 }, 
+              height: { ideal: 480 }
+            },
+            audio: false
           };
           return navigator.mediaDevices.getUserMedia(cameraConstraints);
         })
         .then(stream => {
-          // Assuming you want to add the first video track from the stream
           const track = stream.getVideoTracks()[0];
           const sender = pc.addTrack(track, stream);
           const parameters = sender.getParameters();
-          // Modify bitrate parameters if applicable
-          parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
-          sender.setParameters(parameters);
+          if (parameters.encodings && parameters.encodings.length > 0) {
+            parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
+            sender.setParameters(parameters);
+          }
           return stream;
-        })
-      })
-      
-      // Send the offer over the WebSocket after the local description and track are set
-      .then(() => {
-        socket.send(
-          JSON.stringify({
-            type: "offer",
-            offer: pc.localDescription,
-            target: receiverName,
-          })
-        );
-        console.log("...Offer sent successfully");
-        console.log(pc.currentLocalDescription);
-        return pc;
-      });
+        });
+    })
+    .then(() => {
+      // At this point, if the track was added before creating the offer, you might need to renegotiate.
+      // For this example, we're just sending the offer that was created earlier.
+      socket.send(JSON.stringify({
+        type: "offer",
+        offer: pc.localDescription,
+        target: receiverName,
+      }));
+      console.log("...Offer sent successfully");
+      console.log(pc.currentLocalDescription);
+      return pc;
     })
     .catch(error => {
       console.error("Error during offer creation:", error);
