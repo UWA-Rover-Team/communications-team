@@ -86,13 +86,14 @@ async function createOffer(pc, cameraId) {
   console.log("track is:", track);
 
   const sender = pc.addTrack(track[0], stream);
-  console.log("Pc tracks are", pc.getTracks);
+  
   const parameters = sender.getParameters();
   parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
   sender.setParameters(parameters);
 
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
+  console.log("Pc tracks are", pc.getTracks);
   console.log("Local description set succesfully");
 
   console.log("Local description after adding track:", pc.currentLocalDescription);
