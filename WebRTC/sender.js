@@ -93,11 +93,12 @@ async function createOffer(pc, cameraId) {
 
   for (const track of stream.getTracks()) {
     const sender = pc.addTrack(track, stream);
+    const parameters = sender.getParameters();
+    parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
+    sender.setParameters(parameters);
   }
-  
-  const parameters = sender.getParameters();
-  parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
-  sender.setParameters(parameters);
+
+
 
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
