@@ -8,7 +8,7 @@ const socket = new WebSocket("ws://192.168.2.173:8080");
 const senderName = "sender";
 const receiverName = "receiver";
 const streamMapping = new Map();
-
+let peerConnection = new RTCPeerConnection();
 
 
 // Register sender
@@ -72,19 +72,18 @@ async function connectCameras(pc) {
 }
 
 async function createOffer(pc) {
+  
   console.log("creating offer...");
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
-  console.log(socket.readyState);
+
   socket.send(
-    /*
     JSON.stringify({
       type: "offer",
       offer: pc.localDescription,
       target: receiverName,
     })
-    */
-   "hello"
+    
   );
   console.log("offer sent success");
 
