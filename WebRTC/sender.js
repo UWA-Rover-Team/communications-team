@@ -76,6 +76,7 @@ async function connectCameras(pc) {
       const stream = await navigator.mediaDevices.getUserMedia(cameraConstraints);
       const track = stream.getTracks();
       const sender = pc.addTrack(track[0], stream);
+      console.log("Sender's track ID:", sender.track.id);
       const parameters = sender.getParameters();
       parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
       sender.setParameters(parameters);
