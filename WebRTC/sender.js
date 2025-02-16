@@ -75,17 +75,16 @@ async function connectCameras(pc) {
   const videoDevices = devices.filter(device => device.kind === 'videoinput');
   console.log("List of video devices:", videoDevices);
 
-  const trackPromises = [];
   // Loop through all found video inputs and send them over their own track
   for (const [index, device] of videoDevices.entries()) {
     if (device.deviceId === frontCameraId) {
       console.log("Front camera has connected, updating offer");
-      await addTrack('middle', device.deviceId, pc);
+      await addStream('middle', device.deviceId, pc);
     }
 
     if (device.deviceId === leftCameraId) {
       console.log("Left camera has connected, updating offer");
-      await addTrack('left', device.deviceId, pc);
+      await addStream('left', device.deviceId, pc);
     }
 
   }
@@ -94,19 +93,18 @@ async function connectCameras(pc) {
 
 
 async function addStream(camera, cameraId, pc) {
+  
   const cameraConstraints = { video: {deviceId: cameraId,
     width: { ideal: 640 }, 
     height: { ideal: 480 }}, 
-    audio: false };
+    audio: false 
+  };
+  
   const stream = await navigator.mediaDevices.getUserMedia(cameraConstraints)
   const tracks = stream.getTracks();
   const videoTrack = tracks[0];
-
-  cameraStreams[camera] = new MediaStream();
-  cameraStreams[camera].addTrack(videoTrack);
-
-  const sender = pc.addTrack(videoTrack, cameraStreams[camera]);
-  console.log(`Sender's ${camera} track ID:`, cameraStreams[camera].id);
+  const sender = pc.addTrack(videoTrack, stream);
+  console.log(`Sender's ${camera} track ID:`, videoTrack.id);
 
   // Update sender parameters
   const parameters = sender.getParameters();
@@ -146,6 +144,6 @@ async function renegotiateOffer(pc) {
   return pc;
 }
 
-videoTrack.onended = () => {
+cameraStreams[0].onended = () => {
   console.log("Camera track ended. The device might have been disconnected.");
 };
