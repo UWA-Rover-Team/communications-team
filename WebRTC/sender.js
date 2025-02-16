@@ -4,11 +4,13 @@
 const frontCameraId = "LQXeVP21cCGt44HPH73pUvFC7Gc8ld1b8Zi136vnzzQ=";
 const leftCameraId = "2noqUGsn6qKXNB9fjiWc4SoBOttpdywjT+jQfNLESGs=";
 
-const localVideo = document.getElementById("localVideo");
 const socket = new WebSocket("ws://192.168.2.173:8080");
+let peerConnection = new RTCPeerConnection();
+
 const senderName = "sender";
 const receiverName = "receiver";
-let peerConnection = new RTCPeerConnection();
+
+
 const cameraMap = new Map([
                           ['frontCameraTrackId', null],
                           ['leftCameraTrackId', null],
