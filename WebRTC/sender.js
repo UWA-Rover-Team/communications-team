@@ -27,6 +27,7 @@ socket.onmessage = async (event) => {
   if (data.type === "answer") {
     // Reconstruct the full answer object expected by setRemoteDescription
     const answer = { type: "answer", sdp: data.sdp };
+    console.log("Answer received");
     await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
     console.log("Remote description set successfully.");
   } 
@@ -38,7 +39,7 @@ socket.onmessage = async (event) => {
   } 
   
   else if(data.type === "new_receiver") {
-    console.log("New receiver found. Sending offer...");
+    console.log("New receiver found. Sending Offer...");
     peerConnection = new RTCPeerConnection();
     connectCameras(peerConnection);
   }
@@ -84,7 +85,7 @@ async function createOffer(pc) {
     })
     
   );
-  console.log("offer sent success");
+  console.log("Offer sent success");
 
   return pc;
 }
