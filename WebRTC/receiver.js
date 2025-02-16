@@ -67,10 +67,12 @@ socket.onmessage = async (event) => {
 async function acceptPeerConnection() {
 
   // Open new RTCPeerConnection if needed
-  if (!(peerConnection instanceof RTCPeerConnection)) {
+  if (!peerConnection || 
+    peerConnection.connectionState === 'closed' || 
+    peerConnection.connectionState === 'failed') {
     peerConnection = new RTCPeerConnection();
     console.log("Opening new RTC Session");
-  }  
+  }
 
   peerConnection.onicecandidate = (event) => {
     if (event.candidate) {
