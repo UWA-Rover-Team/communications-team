@@ -7,7 +7,11 @@ const senderName = "sender";
 let cameraCount = 0;
 const receivedTracks = []; // Global array
 let peerConnection = new RTCPeerConnection();
-
+const cameraMap = new Map([
+                          ['frontCameraTrackId', null],
+                          ['leftCameraTrackId', null],
+                          ['rightCameraTrackId', null]
+                        ]);
 
 console.log("receiver.js has started");
 
@@ -25,6 +29,7 @@ socket.onmessage = async (event) => {
 
   if (data.type === "offer") {
     console.log("Received a new offer");
+    cameraMap = data.cameraMap;
     await acceptPeerConnection();
   
     // Reconstruct the offer object expected by setRemoteDescription
@@ -85,7 +90,7 @@ async function acceptPeerConnection() {
   };
 
   peerConnection.ontrack = (event) => {
-    console.log("New track has been detected, id:", event.track.id);
+    console.log("New track has been detected, id:", event.stream[0].id);
     if (event.track.kind === 'video') {
       receivedTracks.push(event.track);
       const newVideo = document.createElement('video');

@@ -9,11 +9,11 @@ const socket = new WebSocket("ws://192.168.2.173:8080");
 const senderName = "sender";
 const receiverName = "receiver";
 let peerConnection = new RTCPeerConnection();
-cameraMap = new Map([
-                    ['frontCameraTrackId', null],
-                    ['leftCameraTrackId', null],
-                    ['rightCameraTrackId', null]
-                  ]);
+const cameraMap = new Map([
+                          ['frontCameraTrackId', null],
+                          ['leftCameraTrackId', null],
+                          ['rightCameraTrackId', null]
+                        ]);
 
 // Register sender
 socket.onopen = () => {
@@ -93,17 +93,20 @@ async function addTrack(camera, cameraId, pc) {
     width: { ideal: 640 }, 
     height: { ideal: 480 }}, 
     audio: false };
-    const stream = await navigator.mediaDevices.getUserMedia(cameraConstraints)
-    const tracks = stream.getTracks();
-    const videoTrack = tracks[0];
-    const sender = pc.addTrack(videoTrack, stream);
-    console.log(`Sender's ${camera} track ID:`, videoTrack.id);
-    // Update sender parameters
-    const parameters = sender.getParameters();
-    if (!parameters.encodings) parameters.encodings = [{}];
-    parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
-    console.log("Offer updated");
-    sender.setParameters(parameters);
+  const stream = await navigator.mediaDevices.getUserMedia(cameraConstraints)
+  const [videoTrack] = stream.getTracks();
+
+  const customStream = new MediaStream();
+  customStream.addTrack(videoTrack);
+
+  const sender = pc.addTrack(videoTrack, customStream);
+  console.log(`Sender's ${camera} track ID:`, customStream.id);
+
+  // Update sender parameters
+  const parameters = sender.getParameters();
+  parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
+  console.log("Offer updated");
+  sender.setParameters(parameters);
 }
 
 
@@ -114,6 +117,7 @@ async function renegotiateOffer(pc) {
       socket.send(JSON.stringify({
         type: "candidate",
         candidate: event.candidate,
+        cameraMap: cameraMap,
         target: receiverName
       }));
     }
