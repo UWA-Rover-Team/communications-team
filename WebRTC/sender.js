@@ -9,8 +9,7 @@ const senderName = "sender";
 const receiverName = "receiver";
 const streamMapping = new Map();
 
-let peerConnection = new RTCPeerConnection();
-connectCameras(peerConnection);
+
 
 // Register sender
 socket.onopen = () => {
