@@ -99,22 +99,21 @@ function createOffer(pc) {
           sender.setParameters(parameters);
           return stream;
         })
+      })
+      
+      // Send the offer over the WebSocket after the local description and track are set
+      .then(() => {
+        socket.send(
+          JSON.stringify({
+            type: "offer",
+            offer: pc.localDescription,
+            target: receiverName,
+          })
+        );
+        console.log("...Offer sent successfully");
+        return pc;
       });
     })
-
-    // Send the offer over the WebSocket after the local description and track are set
-    .then(() => {
-      socket.send(
-        JSON.stringify({
-          type: "offer",
-          offer: pc.localDescription,
-          target: receiverName,
-        })
-      );
-      console.log("...Offer sent successfully");
-      return pc;
-    })
-
     .catch(error => {
       console.error("Error during offer creation:", error);
       throw error;
