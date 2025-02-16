@@ -74,39 +74,32 @@ async function connectCameras(pc) {
   for (const [index, device] of videoDevices.entries()) {
     if (device.deviceId === frontCameraId) {
       console.log("Front camera has connected, updating offer");
-      const cameraConstraints = { video: {deviceId: device.deviceId,
-                                  width: { ideal: 640 }, 
-                                  height: { ideal: 480 }}, 
-                                  audio: false };
-      const stream = await navigator.mediaDevices.getUserMedia(cameraConstraints);
-      const track = stream.getTracks();
-      const sender = pc.addTrack(track[0], stream);
-      console.log("Sender's front track ID:", sender.track.id);
-      //cameraMap.set('frontCameraTrackId', sender.track.id);
-      const parameters = sender.getParameters();
-      parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
-      sender.setParameters(parameters);
+      addTrack('middle', device.deviceId);
     }
 
     if (device.deviceId === leftCameraId) {
-      console.log("Front camera has connected, updating offer");
-      const cameraConstraints = { video: {deviceId: device.deviceId,
-                                  width: { ideal: 640 }, 
-                                  height: { ideal: 480 }}, 
-                                  audio: false };
-      const stream = await navigator.mediaDevices.getUserMedia(cameraConstraints);
-      const track = stream.getTracks();
-      const sender = pc.addTrack(track[0], stream);
-      console.log("Sender's left track ID:", sender.track.id);
-      //cameraMap.set('frontCameraTrackId', sender.track.id);
-      const parameters = sender.getParameters();
-      parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
-      sender.setParameters(parameters);
+      console.log("Left camera has connected, updating offer");
+      addTrack('left', device.deviceId);
     }
 
   }
 }
 
+
+async function addTrack(camera, cameraId) {
+  const cameraConstraints = { video: {deviceId: cameraId,
+    width: { ideal: 640 }, 
+    height: { ideal: 480 }}, 
+    audio: false };
+  const stream = navigator.mediaDevices.getUserMedia(cameraConstraints);
+  const track = stream.getTracks();
+  const sender = pc.addTrack(track[0], stream);
+  console.log(`Sender's ${camera} track ID:`, track.id);
+  //cameraMap.set('frontCameraTrackId', sender.track.id);
+  const parameters = sender.getParameters();
+  parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
+  sender.setParameters(parameters);
+}
 
 
 // Function to resend the offer
