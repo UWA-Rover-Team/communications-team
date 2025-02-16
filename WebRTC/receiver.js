@@ -75,7 +75,17 @@ async function acceptPeerConnection() {
     peerConnection = new RTCPeerConnection();
     console.log("Opening new RTC Session");
   }  
-  
+
+  peerConnection.onicecandidate = (event) => {
+    if (event.candidate) {
+      socket.send(JSON.stringify({
+        type: "candidate",
+        candidate: event.candidate,
+        target: senderName
+      }));
+    }
+  };
+
   peerConnection.ontrack = (event) => {
     console.log("New track has been detected");
     if (event.track.kind === 'video') {
@@ -90,16 +100,6 @@ async function acceptPeerConnection() {
     }
   };  
 }
-
-peerConnection.onicecandidate = (event) => {
-  if (event.candidate) {
-    socket.send(JSON.stringify({
-      type: "candidate",
-      candidate: event.candidate,
-      target: senderName
-    }));
-  }
-};
 
 
 // Object to store previous stats for calculation
