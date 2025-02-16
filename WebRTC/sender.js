@@ -88,8 +88,9 @@ function createOffer(pc) {
             },
             audio: false
           };
+        
+          return navigator.mediaDevices.getUserMedia(cameraConstraints);
         });
-        return navigator.mediaDevices.getUserMedia(cameraConstraints);
       });
     })
 
