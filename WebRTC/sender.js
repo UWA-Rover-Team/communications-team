@@ -75,19 +75,16 @@ async function connectCameras(pc) {
   for (const [index, device] of videoDevices.entries()) {
     if (device.deviceId === frontCameraId) {
       console.log("Front camera has connected, updating offer");
-      trackPromises.push(addTrack('middle', device.deviceId));
+      await addTrack('middle', device.deviceId)
     }
 
     if (device.deviceId === leftCameraId) {
       console.log("Left camera has connected, updating offer");
-      trackPromises.push(addTrack('left', device.deviceId));
+      await addTrack('left', device.deviceId);
     }
 
   }
-
-  await Promise.all(trackPromises);
   console.log("All camera tracks have been added.");
-  return;
 }
 
 
@@ -106,7 +103,7 @@ function addTrack(camera, cameraId) {
       if (!parameters.encodings) parameters.encodings = [{}];
       parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
       console.log("Offer updated");
-      return sender.setParameters(parameters);
+      sender.setParameters(parameters);
     })
 
     .catch((error) => {
