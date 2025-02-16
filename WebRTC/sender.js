@@ -69,10 +69,10 @@ async function connectCameras(pc) {
   for (const [index, device] of videoDevices.entries()) {
     if (device.deviceId === "LQXeVP21cCGt44HPH73pUvFC7Gc8ld1b8Zi136vnzzQ=") {
       console.log("Front camera has connected, updating offer");
-      const cameraConstraints = { video: {deviceId: cameraId,
-        width: { ideal: 640 }, 
-        height: { ideal: 480 }}, 
-        audio: false };
+      const cameraConstraints = { video: {deviceId: device.deviceId,
+                                  width: { ideal: 640 }, 
+                                  height: { ideal: 480 }}, 
+                                  audio: false };
       const stream = await navigator.mediaDevices.getUserMedia(cameraConstraints);
 
       for (const track of stream.getTracks()) {
