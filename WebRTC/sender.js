@@ -88,27 +88,22 @@ async function connectCameras(pc) {
 }
 
 
-function addTrack(camera, cameraId) {
+async function addTrack(camera, cameraId) {
   const cameraConstraints = { video: {deviceId: cameraId,
     width: { ideal: 640 }, 
     height: { ideal: 480 }}, 
     audio: false };
-    navigator.mediaDevices.getUserMedia(cameraConstraints).then((stream) => {
-      const tracks = stream.getTracks();
-      const videoTrack = tracks[0];
-      const sender = pc.addTrack(videoTrack, stream);
-      console.log(`Sender's ${camera} track ID:`, videoTrack.id);
-      // Update sender parameters
-      const parameters = sender.getParameters();
-      if (!parameters.encodings) parameters.encodings = [{}];
-      parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
-      console.log("Offer updated");
-      sender.setParameters(parameters);
-    })
-
-    .catch((error) => {
-      console.error("Error accessing user media:", error);
-    });
+    const stream = navigator.mediaDevices.getUserMedia(cameraConstraints)
+    const tracks = stream.getTracks();
+    const videoTrack = tracks[0];
+    const sender = pc.addTrack(videoTrack, stream);
+    console.log(`Sender's ${camera} track ID:`, videoTrack.id);
+    // Update sender parameters
+    const parameters = sender.getParameters();
+    if (!parameters.encodings) parameters.encodings = [{}];
+    parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
+    console.log("Offer updated");
+    sender.setParameters(parameters);
 }
 
 
