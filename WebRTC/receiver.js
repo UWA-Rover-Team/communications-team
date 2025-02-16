@@ -72,6 +72,16 @@ socket.onmessage = async (event) => {
 
 peerConnection.ontrack = (event) => {
   console.log("New track has been detected");
+  if (event.track.kind === 'video') {
+    receivedTracks.push(event.track);
+    const newVideo = document.createElement('video');
+    newVideo.id = `camera${++cameraCount}`;
+    newVideo.autoplay = true;
+    newVideo.playsInline = true;
+    newVideo.srcObject = new MediaStream([event.track]);
+    document.body.appendChild(newVideo);
+    console.log("New video stream has started");
+  }
 };
 
 peerConnection.onicecandidate = (event) => {
