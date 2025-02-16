@@ -83,9 +83,11 @@ async function createOffer(pc, cameraId) {
   const stream = await navigator.mediaDevices.getUserMedia(cameraConstraints);
 
   track = stream.getTracks();
-  console.log("track is:", track);
+  track1 = track[0];
 
-  const sender = pc.addTrack(track[0], stream);
+  console.log("track1 is:",track1);
+
+  const sender = pc.addTrack(track, stream);
   
   const parameters = sender.getParameters();
   parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
@@ -94,8 +96,6 @@ async function createOffer(pc, cameraId) {
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
   console.log("Local description set succesfully");
-  console.log("Pc tracks are", pc.getTracks());
-
   console.log("Local description after adding track:", pc.currentLocalDescription);
 
   socket.send(
