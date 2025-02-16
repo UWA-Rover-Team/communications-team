@@ -82,8 +82,8 @@ async function createOffer(pc, cameraId) {
                               audio: false };
   const stream = await navigator.mediaDevices.getUserMedia(cameraConstraints);
 
-  track = stream.getTracks();
-  track1 = track[0];
+  const track = stream.getTracks();
+  const track1 = track[0];
 
   console.log("track1 is:",track1);
 
