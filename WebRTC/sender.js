@@ -75,12 +75,12 @@ async function connectCameras(pc) {
   for (const [index, device] of videoDevices.entries()) {
     if (device.deviceId === frontCameraId) {
       console.log("Front camera has connected, updating offer");
-      await addTrack('middle', device.deviceId)
+      await addTrack('middle', device.deviceId, pc);
     }
 
     if (device.deviceId === leftCameraId) {
       console.log("Left camera has connected, updating offer");
-      await addTrack('left', device.deviceId);
+      await addTrack('left', device.deviceId, pc);
     }
 
   }
@@ -88,7 +88,7 @@ async function connectCameras(pc) {
 }
 
 
-async function addTrack(camera, cameraId) {
+async function addTrack(camera, cameraId, pc) {
   const cameraConstraints = { video: {deviceId: cameraId,
     width: { ideal: 640 }, 
     height: { ideal: 480 }}, 
