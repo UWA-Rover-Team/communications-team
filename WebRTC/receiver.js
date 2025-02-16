@@ -70,7 +70,7 @@ socket.onmessage = async (event) => {
 };
 
 
-pc.ontrack = (event) => {
+peerConnection.ontrack = (event) => {
   console.log("New track has been detected");
 };
 
