@@ -26,31 +26,7 @@ socket.onmessage = async (event) => {
   if (data.type === "offer") {
 
     console.log("Received a new offer");
-    peerConnection = new RTCPeerConnection();
-
-    if (peerConnection.signalingState === "closed") {
-      peerConnection = acceptPeerConnection();
-      console.log("New rtc session created");
-    }
-
-    // Reconstruct the offer object expected by setRemoteDescription
-    const offer = { type: "offer", sdp: data.sdp };
-    await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
-    console.log("Remote description set successfully.");
-
-    // Create an answer to the offer
-    const answer = await peerConnection.createAnswer();
-    await peerConnection.setLocalDescription(answer);
-    console.log("Local description set successfully.");
-    
-    // Send the answer to the sender after a brief delay (allowing ICE gathering)
-    socket.send(JSON.stringify({
-       type: "answer",
-       answer: peerConnection.localDescription,
-       target: senderName
-    }));
-    console.log("Answer sent successfully");
-
+    acceptPeerConnection();
   } 
   
   else if (data.type === "candidate") {
@@ -70,19 +46,46 @@ socket.onmessage = async (event) => {
 };
 
 
-peerConnection.ontrack = (event) => {
-  console.log("New track has been detected");
-  if (event.track.kind === 'video') {
-    receivedTracks.push(event.track);
-    const newVideo = document.createElement('video');
-    newVideo.id = `camera${++cameraCount}`;
-    newVideo.autoplay = true;
-    newVideo.playsInline = true;
-    newVideo.srcObject = new MediaStream([event.track]);
-    document.body.appendChild(newVideo);
-    console.log("New video stream has started");
+
+async function acceptPeerConnection() {
+  peerConnection = new RTCPeerConnection();
+  if (peerConnection.signalingState === "closed") {
+    peerConnection = acceptPeerConnection();
+    console.log("New rtc session created");
   }
-};
+
+  // Reconstruct the offer object expected by setRemoteDescription
+  const offer = { type: "offer", sdp: data.sdp };
+  await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+  console.log("Remote description set successfully.");
+
+  // Create an answer to the offer
+  const answer = await peerConnection.createAnswer();
+  await peerConnection.setLocalDescription(answer);
+  console.log("Local description set successfully.");
+  
+  // Send the answer to the sender after a brief delay (allowing ICE gathering)
+  socket.send(JSON.stringify({
+     type: "answer",
+     answer: peerConnection.localDescription,
+     target: senderName
+  }));
+  console.log("Answer sent successfully");
+
+  peerConnection.ontrack = (event) => {
+    console.log("New track has been detected");
+    if (event.track.kind === 'video') {
+      receivedTracks.push(event.track);
+      const newVideo = document.createElement('video');
+      newVideo.id = `camera${++cameraCount}`;
+      newVideo.autoplay = true;
+      newVideo.playsInline = true;
+      newVideo.srcObject = new MediaStream([event.track]);
+      document.body.appendChild(newVideo);
+      console.log("New video stream has started");
+    }
+  };  
+}
 
 peerConnection.onicecandidate = (event) => {
   if (event.candidate) {
