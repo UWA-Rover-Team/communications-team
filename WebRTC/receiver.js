@@ -26,10 +26,6 @@ socket.onmessage = async (event) => {
   if (data.type === "offer") {
     console.log("Received a new offer");
     await acceptPeerConnection();
-    if (peerConnection.signalingState === "closed") {
-      peerConnection = acceptPeerConnection();
-      console.log("New rtc session created");
-    }
   
     // Reconstruct the offer object expected by setRemoteDescription
     const offer = { type: "offer", sdp: data.sdp };
