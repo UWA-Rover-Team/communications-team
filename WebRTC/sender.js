@@ -2,6 +2,7 @@
 
 // deviceID of cameras
 const frontCameraId = "LQXeVP21cCGt44HPH73pUvFC7Gc8ld1b8Zi136vnzzQ=";
+const leftCameraId = "2noqUGsn6qKXNB9fjiWc4SoBOttpdywjT+jQfNLESGs=";
 
 const localVideo = document.getElementById("localVideo");
 const socket = new WebSocket("ws://192.168.2.173:8080");
@@ -71,7 +72,7 @@ async function connectCameras(pc) {
 
   // Loop through all found video inputs and send them over their own track
   for (const [index, device] of videoDevices.entries()) {
-    if (device.deviceId === "LQXeVP21cCGt44HPH73pUvFC7Gc8ld1b8Zi136vnzzQ=") {
+    if (device.deviceId === frontCameraId) {
       console.log("Front camera has connected, updating offer");
       const cameraConstraints = { video: {deviceId: device.deviceId,
                                   width: { ideal: 640 }, 
@@ -80,12 +81,29 @@ async function connectCameras(pc) {
       const stream = await navigator.mediaDevices.getUserMedia(cameraConstraints);
       const track = stream.getTracks();
       const sender = pc.addTrack(track[0], stream);
-      console.log("Sender's track ID:", sender.track.id);
+      console.log("Sender's front track ID:", sender.track.id);
       //cameraMap.set('frontCameraTrackId', sender.track.id);
       const parameters = sender.getParameters();
       parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
       sender.setParameters(parameters);
     }
+
+    if (device.deviceId === leftCameraId) {
+      console.log("Front camera has connected, updating offer");
+      const cameraConstraints = { video: {deviceId: device.deviceId,
+                                  width: { ideal: 640 }, 
+                                  height: { ideal: 480 }}, 
+                                  audio: false };
+      const stream = await navigator.mediaDevices.getUserMedia(cameraConstraints);
+      const track = stream.getTracks();
+      const sender = pc.addTrack(track[0], stream);
+      console.log("Sender's left track ID:", sender.track.id);
+      //cameraMap.set('frontCameraTrackId', sender.track.id);
+      const parameters = sender.getParameters();
+      parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
+      sender.setParameters(parameters);
+    }
+
   }
 }
 
