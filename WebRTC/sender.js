@@ -76,6 +76,17 @@ async function createOffer(pc, cameraId) {
   console.log("Local description before adding track:", pc.currentLocalDescription);
 
 
+  peerConnection.onicecandidate = (event) => {
+    if (event.candidate) {
+      socket.send(JSON.stringify({
+        type: "candidate",
+        candidate: event.candidate,
+        target: receiverName
+      }));
+    }
+  };
+
+  
   const cameraConstraints = { video: {deviceId: cameraId,
                               width: { ideal: 640 }, 
                               height: { ideal: 480 }}, 
@@ -112,15 +123,7 @@ async function createOffer(pc, cameraId) {
 }
 
 
-peerConnection.onicecandidate = (event) => {
-  if (event.candidate) {
-    socket.send(JSON.stringify({
-      type: "candidate",
-      candidate: event.candidate,
-      target: receiverName
-    }));
-  }
-};
+
 
 
 
