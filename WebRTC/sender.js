@@ -18,6 +18,7 @@ socket.onopen = () => {
         type: "register", 
         name: senderName 
     }));
+    console.log("Registered to the server");
 }
 
 // Handle incoming messages
