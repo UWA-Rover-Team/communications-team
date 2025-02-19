@@ -33,7 +33,7 @@ wss.on("connection", (ws) => {
                     camera: data.camera
                 }));
             }
-            console.log("sent next camera to:", clients[data.target]);
+            console.log("sent next camera to receiver");
         }
 
         else if (data.type === "candidate") {
