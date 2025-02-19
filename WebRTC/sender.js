@@ -101,36 +101,36 @@ async function checkForNewDevices() {
 async function connectCameras(pc) {
   
   // List devices and then filter videoinput ones
-  const devices = await navigator.mediaDevices.enumerateDevices();
-  const videoDevices = devices.filter(device => device.kind === 'videoinput');
+  navigator.mediaDevices.enumerateDevices().then (devices => {
+    const videoDevices = devices.filter(device => device.kind === 'videoinput');
+    // Loop through all found video inputs and send them over their own track
+    for (const [index, device] of videoDevices.entries()) {
+      if (device.deviceId === frontCameraId) {
+        const camera = cameraMap.get('frontCameraTrackId');
+        if (camera !== null) {
+          console.log("front camera already connected.");
+        } else {
+          console.log("front camera has connected, updating offer");
+          // Add the stream and then renegotiate the offer
+          addStream('front', device.deviceId, pc).then(() => {
+            renegotiateOffer(peerConnection);
+          });
+        }
+      }
 
-  // Loop through all found video inputs and send them over their own track
-  for (const [index, device] of videoDevices.entries()) {
-    if (device.deviceId === frontCameraId) {
-      const camera = cameraMap.get('frontCameraTrackId');
-      if (camera !== null) {
-        console.log("front camera already connected.");
-      } else {
-        console.log("front camera has connected, updating offer");
-        // Add the stream and then renegotiate the offer
-        addStream('front', device.deviceId, pc).then(() => {
-          renegotiateOffer(peerConnection);
-        });
+      if (device.deviceId === leftCameraId) {
+        const camera = cameraMap.get('leftCameraTrackId');
+        if (camera !== null) {
+          console.log("Left camera already connected.");
+        } else {
+          console.log("Left camera has connected, updating offer");
+          addStream('left', device.deviceId, pc).then(() => {
+            renegotiateOffer(peerConnection);
+          });
+        }
       }
     }
-
-    if (device.deviceId === leftCameraId) {
-      const camera = cameraMap.get('leftCameraTrackId');
-      if (camera !== null) {
-        console.log("Left camera already connected.");
-      } else {
-        console.log("Left camera has connected, updating offer");
-        addStream('left', device.deviceId, pc).then(() => {
-          renegotiateOffer(peerConnection);
-        });
-      }
-    }
-  }
+  });
 }
 
 
