@@ -55,7 +55,7 @@ socket.onmessage = async (event) => {
     console.log("New receiver found. Sending Offer...");
     peerConnection = new RTCPeerConnection();
     await checkForNewDevices();
-    
+    console.log("New offer sent");
   }
 
   else if(data.type === "peerdisconnect") {
@@ -69,6 +69,24 @@ socket.onmessage = async (event) => {
 };
 
 
+let previousVideoDevices = [];
+console.log("previous devices are:". previousVideoDevices);
+async function checkForNewDevices() {
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  const currentVideoDevices = devices.filter(device => device.kind === "videoinput");
+  console.log("current devices:", currentVideoDevices);
+  // Compare previous list with current list
+  const previousIds = previousVideoDevices.map(device => device.deviceId);
+  const newDevices = currentVideoDevices.filter(device => !previousIds.includes(device.deviceId));
+  
+  if (newDevices.length > 0) {
+    console.log("New device(s) added:", newDevices);
+    await connectCameras(peerConnection);
+  }
+  
+  // Update the previous devices list for future comparisons
+  previousVideoDevices = currentVideoDevices;
+}
 
 
 // Capture video and create offer
@@ -87,8 +105,9 @@ async function connectCameras(pc) {
         console.log("front camera already connected.");
       } else {
         console.log("front camera has connected, updating offer");
-        await addStream('front', device.deviceId, pc);
-        renegotiateOffer(peerConnection);
+        addStream('front', device.deviceId, pc).then(() => {
+          renegotiateOffer(peerConnection);
+        });
       }
     }
 
@@ -98,8 +117,9 @@ async function connectCameras(pc) {
         console.log("Left camera already connected.");
       } else {
         console.log("Left camera has connected, updating offer");
-        await addStream('left', device.deviceId, pc);
-        renegotiateOffer(peerConnection);
+        addStream('left', device.deviceId, pc).then(() => {
+          renegotiateOffer(peerConnection);
+        });
       }
     }
   }
@@ -171,24 +191,7 @@ async function renegotiateOffer(pc) {
   return pc;
 }
 
-let previousVideoDevices = [];
-console.log("previous devices are:". previousVideoDevices);
-async function checkForNewDevices() {
-  const devices = await navigator.mediaDevices.enumerateDevices();
-  const currentVideoDevices = devices.filter(device => device.kind === "videoinput");
-  console.log("current devices:", currentVideoDevices);
-  // Compare previous list with current list
-  const previousIds = previousVideoDevices.map(device => device.deviceId);
-  const newDevices = currentVideoDevices.filter(device => !previousIds.includes(device.deviceId));
-  
-  if (newDevices.length > 0) {
-    console.log("New device(s) added:", newDevices);
-    await connectCameras(peerConnection);
-  }
-  
-  // Update the previous devices list for future comparisons
-  previousVideoDevices = currentVideoDevices;
-}
+
 
 // Initialize the device list on startup
 
