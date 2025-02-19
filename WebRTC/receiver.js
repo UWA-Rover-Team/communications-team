@@ -7,6 +7,8 @@ const senderName = "sender";
 let cameraCount = 0;
 const receivedTracks = []; // Global array
 let peerConnection = new RTCPeerConnection();
+let nextCamera = null;
+
 
 console.log("receiver.js has started");
 
@@ -51,6 +53,7 @@ socket.onmessage = async (event) => {
 
   else if (data.type === "nextCamera") {
     console.log("The next camera will be:", data.camera);
+    nextCamera = data.camera;
   }
 
   else if(data.type === "peerdisconnect") {
@@ -90,13 +93,15 @@ async function acceptPeerConnection() {
   peerConnection.ontrack = (event) => {
     if (event.track.kind === 'video') {
       receivedTracks.push(event.track);
-      const newVideo = document.createElement('video');
-      newVideo.id = `camera${++cameraCount}`;
-      newVideo.autoplay = true;
-      newVideo.playsInline = true;
-      newVideo.srcObject = new MediaStream([event.track]);
-      document.body.appendChild(newVideo);
-      console.log("New video stream has started");
+      if (nextCamera === "left") {
+        const newVideo = document.getElementById('video-left');
+        newVideo.srcObject = new MediaStream([event.track]);
+        document.body.appendChild(newVideo);
+        console.log("Left video stream has started");
+      }
+      else {
+        console.log("unknown camera location for camera", nextCamera);
+      }
     }
   };  
 }
