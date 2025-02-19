@@ -71,7 +71,6 @@ socket.onmessage = async (event) => {
 let previousVideoDevices = [];
 async function checkForNewDevices() {
   console.log("previous devices are:". previousVideoDevices);
-  await navigator.mediaDevices.getUserMedia({audio: false, video: true}); 
   const devices = await navigator.mediaDevices.enumerateDevices();
   const currentVideoDevices = devices.filter(device => device.kind === "videoinput");
   console.log("current devices:", currentVideoDevices);
