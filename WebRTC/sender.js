@@ -143,7 +143,7 @@ async function addStream(camera, cameraId, pc) {
     audio: false 
   };
   
-  navigator.mediaDevices.getUserMedia(cameraConstraints).then ((stream) => {
+  await navigator.mediaDevices.getUserMedia(cameraConstraints).then ((stream) => {
     const tracks = stream.getTracks();
     const videoTrack = tracks[0];
   
