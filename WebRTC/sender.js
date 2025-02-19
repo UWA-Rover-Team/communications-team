@@ -116,7 +116,7 @@ async function connectCameras(pc) {
             socket.send(JSON.stringify({ 
               type: "nextCamera",
               camera: "front",
-              target: senderName 
+              target: receiverName 
             }));
             renegotiateOffer(peerConnection);
           });
