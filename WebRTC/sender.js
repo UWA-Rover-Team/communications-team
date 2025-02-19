@@ -55,7 +55,7 @@ socket.onmessage = async (event) => {
     console.log("New receiver found. Sending Offer...");
     peerConnection = new RTCPeerConnection();
     await checkForNewDevices();
-    renegotiateOffer(peerConnection);
+    
   }
 
   else if(data.type === "peerdisconnect") {
@@ -88,6 +88,7 @@ async function connectCameras(pc) {
       } else {
         console.log("front camera has connected, updating offer");
         await addStream('front', device.deviceId, pc);
+        renegotiateOffer(peerConnection);
       }
     }
 
@@ -98,10 +99,10 @@ async function connectCameras(pc) {
       } else {
         console.log("Left camera has connected, updating offer");
         await addStream('left', device.deviceId, pc);
+        renegotiateOffer(peerConnection);
       }
     }
   }
-  console.log("All camera tracks have been added.");
 }
 
 
