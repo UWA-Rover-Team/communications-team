@@ -15,7 +15,10 @@ let peerConnection = new RTCPeerConnection();
 const senderName = "sender";
 const receiverName = "receiver";
 
-await navigator.mediaDevices.getUserMedia({audio: true, video: false}); 
+(async () => {
+  await navigator.mediaDevices.getUserMedia({audio: true, video: false}); 
+});
+
 
 const cameraMap = new Map([
                           ['frontCameraTrackId', null],
