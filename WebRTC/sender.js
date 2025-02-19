@@ -65,6 +65,9 @@ socket.onmessage = async (event) => {
   else if(data.type === "peerdisconnect") {
     peerConnection.close()
     previousVideoDevices = [];
+    cameraMap.forEach((value, key) => {
+      myMap.set(key, null);
+    });
     console.log("Receiver has left the chat. Closing peer connection");
   }
 
