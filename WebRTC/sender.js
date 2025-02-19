@@ -113,6 +113,11 @@ async function connectCameras(pc) {
           console.log("front camera has connected, updating offer");
           // Add the stream and then renegotiate the offer
           addStream('front', device.deviceId, pc).then(() => {
+            socket.send(JSON.stringify({ 
+              type: "nextCamera",
+              camera: "front",
+              target: senderName 
+            }));
             renegotiateOffer(peerConnection);
           });
         }
@@ -143,7 +148,7 @@ async function addStream(camera, cameraId, pc) {
     audio: false 
   };
   
-  await navigator.mediaDevices.getUserMedia(cameraConstraints).then ((stream) => {
+  await navigator.mediaDevices.getUserMedia(cameraConstraints).then ((stream) => { // Want to remove the await, but it doesnt work for now
     const tracks = stream.getTracks();
     const videoTrack = tracks[0];
   

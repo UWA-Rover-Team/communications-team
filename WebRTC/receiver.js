@@ -49,6 +49,10 @@ socket.onmessage = async (event) => {
     await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
   }
 
+  else if (data.type === "nextCamera") {
+    console.log("The next camera will be:", data.camera);
+  }
+
   else if(data.type === "peerdisconnect") {
     peerConnection.close()
     document.querySelectorAll('video').forEach(video => video.remove());

@@ -12,7 +12,7 @@ wss.on("connection", (ws) => {
     ws.on("message", (message) => {
     	console.log("Received message");
         const data = JSON.parse(message);
-        if (data.type === "offer" || data.type === "answer") {
+        if (data.type === "offer" || data.type === "answer" || data.type === "nextCamera") {
             if (clients[data.target]) {
                 clients[data.target].send(JSON.stringify({
                     type: data.type,
