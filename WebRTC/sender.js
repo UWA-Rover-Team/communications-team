@@ -33,7 +33,7 @@ socket.onopen = () => {
 }
 
 async () => {
-  navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+  await navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
     stream.getTracks().forEach(track => track.stop());
   })
 }
