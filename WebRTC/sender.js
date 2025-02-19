@@ -130,6 +130,11 @@ async function connectCameras(pc) {
         } else {
           console.log("Left camera has connected, updating offer");
           addStream('left', device.deviceId, pc).then(() => {
+            socket.send(JSON.stringify({ 
+              type: "nextCamera",
+              camera: "left",
+              target: receiverName 
+            }));
             renegotiateOffer(peerConnection);
           });
         }
