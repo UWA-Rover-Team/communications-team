@@ -149,7 +149,7 @@ async function addStream(camera, cameraId, pc) {
   
     cameraMap.set(`${camera}CameraTrackId`, videoTrack);
     const sender = pc.addTrack(videoTrack, stream);
-    console.log(`Sender's ${camera} track ID:`, videoTrack.id);
+
   
     // Update sender parameters
     const parameters = sender.getParameters();
@@ -164,8 +164,9 @@ async function addStream(camera, cameraId, pc) {
       cameraMap.set(`${camera}CameraTrackId`, null);
       console.log(cameraMap);
     };
-  })
+  });
 
+  console.log("track added:", camera);
 }
 
 
