@@ -166,7 +166,7 @@ async function renegotiateOffer(pc) {
     })
     
   );
-  console.log("...Offer sent success");
+  console.log("Offer sent success");
 
   return pc;
 }
