@@ -55,7 +55,7 @@ socket.onmessage = async (event) => {
     console.log("New receiver found. Sending Offer...");
     peerConnection = new RTCPeerConnection();
     await checkForNewDevices();
-    console.log("New offer sent");
+    console.log("Everything has been setup");
   }
 
   else if(data.type === "peerdisconnect") {
@@ -190,10 +190,6 @@ async function renegotiateOffer(pc) {
 
   return pc;
 }
-
-
-
-// Initialize the device list on startup
 
 
 // Listen for device changes
