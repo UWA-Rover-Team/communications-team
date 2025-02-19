@@ -12,7 +12,7 @@ wss.on("connection", (ws) => {
     ws.on("message", (message) => {
     	console.log("Received message");
         const data = JSON.parse(message);
-        if (data.type === "offer" || data.type === "answer" || data.type === "nextCamera") {
+        if (data.type === "offer" || data.type === "answer") {
             if (clients[data.target]) {
                 clients[data.target].send(JSON.stringify({
                     type: data.type,
@@ -24,6 +24,18 @@ wss.on("connection", (ws) => {
                 console.log(`Target ${data.target} not found.`);
             }
         } 
+
+        else if (data.type === "nextCamera"){
+            const data = JSON.parse(message);
+            if (clients[data.target]) {
+                clients[data.target].send(JSON.stringify({
+                    type: data.type,
+                    camera: data.camera
+                }));
+            }
+            console.log("sent next camera to:", clients[data.target]);
+        }
+
         else if (data.type === "candidate") {
             if (clients[data.target]) {
                 clients[data.target].send(JSON.stringify({
