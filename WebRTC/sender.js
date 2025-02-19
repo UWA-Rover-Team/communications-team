@@ -136,37 +136,36 @@ async function connectCameras(pc) {
 
 async function addStream(camera, cameraId, pc) {
 
+  // Define the constraints we want to use
   const cameraConstraints = { video: {deviceId: cameraId,
     width: { ideal: 640 }, 
     height: { ideal: 480 }}, 
     audio: false 
   };
   
-  const stream = await navigator.mediaDevices.getUserMedia(cameraConstraints)
-  const tracks = stream.getTracks();
-  const videoTrack = tracks[0];
-
-
-
-  cameraMap.set(`${camera}CameraTrackId`, videoTrack);
-  const sender = pc.addTrack(videoTrack, stream);
-  console.log(`Sender's ${camera} track ID:`, videoTrack.id);
-
+  navigator.mediaDevices.getUserMedia(cameraConstraints).then ((stream) => {
+    const tracks = stream.getTracks();
+    const videoTrack = tracks[0];
   
+    cameraMap.set(`${camera}CameraTrackId`, videoTrack);
+    const sender = pc.addTrack(videoTrack, stream);
+    console.log(`Sender's ${camera} track ID:`, videoTrack.id);
+  
+    // Update sender parameters
+    const parameters = sender.getParameters();
+    parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
+    console.log("Offer updated");
+    sender.setParameters(parameters);
+  
+    videoTrack.onended = () => {
+      console.log(`${camera} camera track ended. The device might have been disconnected.`);
+      pc.removeTrack(sender);
+      renegotiateOffer(pc);
+      cameraMap.set(`${camera}CameraTrackId`, null);
+      console.log(cameraMap);
+    };
+  })
 
-  // Update sender parameters
-  const parameters = sender.getParameters();
-  parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
-  console.log("Offer updated");
-  sender.setParameters(parameters);
-
-  videoTrack.onended = () => {
-    console.log(`${camera} camera track ended. The device might have been disconnected.`);
-    pc.removeTrack(sender);
-    renegotiateOffer(pc);
-    cameraMap.set(`${camera}CameraTrackId`, null);
-    console.log(cameraMap);
-  };
 }
 
 
