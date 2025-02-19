@@ -96,6 +96,7 @@ async function acceptPeerConnection() {
       if (nextCamera === "left") {
         const newVideo = document.getElementById('video-left');
         newVideo.srcObject = new MediaStream([event.track]);
+        videoElement.play();
         console.log("Left video stream has started");
       }
       else {
