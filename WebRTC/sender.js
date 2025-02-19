@@ -15,6 +15,7 @@ let peerConnection = new RTCPeerConnection();
 const senderName = "sender";
 const receiverName = "receiver";
 
+await navigator.mediaDevices.getUserMedia({audio: true, video: false}); 
 
 const cameraMap = new Map([
                           ['frontCameraTrackId', null],
@@ -80,8 +81,8 @@ async function checkForNewDevices() {
   const newDevices = currentVideoDevices.filter(device => !previousIds.includes(device.deviceId));
   
   if (newDevices.length > 0) {
-    console.log("New device(s) added:", newDevices);
     await connectCameras(peerConnection);
+    console.log("New device(s) added:", newDevices);
   }
   
   // Update the previous devices list for future comparisons
@@ -95,7 +96,6 @@ async function connectCameras(pc) {
   // List devices and then filter videoinput ones
   const devices = await navigator.mediaDevices.enumerateDevices();
   const videoDevices = devices.filter(device => device.kind === 'videoinput');
-  console.log("List of video devices:", videoDevices);
 
   // Loop through all found video inputs and send them over their own track
   for (const [index, device] of videoDevices.entries()) {
