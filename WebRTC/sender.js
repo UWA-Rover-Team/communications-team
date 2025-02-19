@@ -32,11 +32,7 @@ socket.onopen = () => {
   console.log("Registered to the server");
 }
 
-async () => {
-  await navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
-    stream.getTracks().forEach(track => track.stop());
-  })
-}
+
 
 // Handle incoming messages
 socket.onmessage = async (event) => {
@@ -58,6 +54,9 @@ socket.onmessage = async (event) => {
   
   else if(data.type === "new_receiver") {
     console.log("New receiver found. Sending Offer...");
+    await navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+      stream.getTracks().forEach(track => track.stop());
+    })
     peerConnection = new RTCPeerConnection();
     await checkForNewDevices();
     console.log("Everything has been setup");
