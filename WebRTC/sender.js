@@ -57,13 +57,14 @@ socket.onmessage = async (event) => {
     await navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
       stream.getTracks().forEach(track => track.stop());
     })
+
     peerConnection = new RTCPeerConnection();
     await checkForNewDevices();
-    console.log("Everything has been setup");
   }
 
   else if(data.type === "peerdisconnect") {
     peerConnection.close()
+    previousVideoDevices = [];
     console.log("Receiver has left the chat. Closing peer connection");
   }
 
@@ -108,6 +109,7 @@ async function connectCameras(pc) {
         console.log("front camera already connected.");
       } else {
         console.log("front camera has connected, updating offer");
+        // Add the stream and then renegotiate the offer
         addStream('front', device.deviceId, pc).then(() => {
           renegotiateOffer(peerConnection);
         });
