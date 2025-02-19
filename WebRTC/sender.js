@@ -172,10 +172,11 @@ async function renegotiateOffer(pc) {
 }
 
 let previousVideoDevices = [];
+console.log("previous devices are:". previousVideoDevices);
 async function checkForNewDevices() {
   const devices = await navigator.mediaDevices.enumerateDevices();
   const currentVideoDevices = devices.filter(device => device.kind === "videoinput");
-  
+  console.log("current devices:", currentVideoDevices);
   // Compare previous list with current list
   const previousIds = previousVideoDevices.map(device => device.deviceId);
   const newDevices = currentVideoDevices.filter(device => !previousIds.includes(device.deviceId));
