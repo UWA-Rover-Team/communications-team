@@ -15,11 +15,6 @@ let peerConnection = new RTCPeerConnection();
 const senderName = "sender";
 const receiverName = "receiver";
 
-(async () => {
-  await navigator.mediaDevices.getUserMedia({audio: true, video: false}); 
-});
-
-
 const cameraMap = new Map([
                           ['frontCameraTrackId', null],
                           ['leftCameraTrackId', null],
@@ -76,6 +71,7 @@ socket.onmessage = async (event) => {
 let previousVideoDevices = [];
 async function checkForNewDevices() {
   console.log("previous devices are:". previousVideoDevices);
+  await navigator.mediaDevices.getUserMedia({audio: true, video: false}); 
   const devices = await navigator.mediaDevices.enumerateDevices();
   const currentVideoDevices = devices.filter(device => device.kind === "videoinput");
   console.log("current devices:", currentVideoDevices);
