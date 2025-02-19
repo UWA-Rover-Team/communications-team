@@ -25,14 +25,17 @@ const cameraMap = new Map([
 
 // Register sender
 socket.onopen = () => {
-  navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
-    stream.getTracks().forEach(track => track.stop());
-  })
   socket.send(JSON.stringify({ 
       type: "register", 
       name: senderName 
   }));
   console.log("Registered to the server");
+}
+
+async () => {
+  navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+    stream.getTracks().forEach(track => track.stop());
+  })
 }
 
 // Handle incoming messages
