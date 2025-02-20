@@ -20,7 +20,8 @@ const receiverName = "receiver";
 const cameraMap = new Map([
                           ['frontCameraTrackId', null],
                           ['leftCameraTrackId', null],
-                          ['rightCameraTrackId', null]
+                          ['rightCameraTrackId', null],
+                          ['manipCameraTrackId', null]
                         ]);
 
 
@@ -114,7 +115,7 @@ async function connectCameras(pc) {
         if (camera !== null) {
           console.log("front camera already connected.");
         } else {
-          console.log("front camera has connected, updating offer");
+          console.log("Front camera has connected, updating offer");
           // Add the stream and then renegotiate the offer
           addStream('front', device.deviceId, pc).then(() => {
             socket.send(JSON.stringify({ 
