@@ -89,16 +89,16 @@ async function checkForNewDevices() {
     // Compare previous list with current list
     const previousIds = previousVideoDevices.map(device => device.deviceId);
     const newDevices = currentVideoDevices.filter(device => !previousIds.includes(device.deviceId));
-  
+    
     // Update the previous devices list for future comparisons
     previousVideoDevices = currentVideoDevices;
+    return newDevices
   }).then (()=> {
     if (newDevices.length > 0) {
       connectCameras(peerConnection);
       console.log("New device(s) added:", newDevices);
     }
   })
-
 }
 
 
