@@ -83,20 +83,22 @@ socket.onmessage = async (event) => {
 let previousVideoDevices = [];
 async function checkForNewDevices() {
   console.log("previous devices are:". previousVideoDevices);
-  const devices = await navigator.mediaDevices.enumerateDevices();
-  const currentVideoDevices = devices.filter(device => device.kind === "videoinput");
-  console.log("current devices:", currentVideoDevices);
-  // Compare previous list with current list
-  const previousIds = previousVideoDevices.map(device => device.deviceId);
-  const newDevices = currentVideoDevices.filter(device => !previousIds.includes(device.deviceId));
+  navigator.mediaDevices.enumerateDevices().then (devices => {
+    const currentVideoDevices = devices.filter(device => device.kind === "videoinput");
+    console.log("current devices:", currentVideoDevices);
+    // Compare previous list with current list
+    const previousIds = previousVideoDevices.map(device => device.deviceId);
+    const newDevices = currentVideoDevices.filter(device => !previousIds.includes(device.deviceId));
   
-  if (newDevices.length > 0) {
-    await connectCameras(peerConnection);
-    console.log("New device(s) added:", newDevices);
-  }
-  
-  // Update the previous devices list for future comparisons
-  previousVideoDevices = currentVideoDevices;
+    // Update the previous devices list for future comparisons
+    previousVideoDevices = currentVideoDevices;
+  }).then (()=> {
+    if (newDevices.length > 0) {
+      connectCameras(peerConnection);
+      console.log("New device(s) added:", newDevices);
+    }
+  })
+
 }
 
 
