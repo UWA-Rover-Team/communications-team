@@ -1,9 +1,5 @@
 // sender.js
 
-// TO WORK ON
-// USB disconnect detected, but no reconnect
-// Receiver is not disinguishing between deleted track and new track, failing to notice ontrack event. Maybe change to a different listener for ontrack event?
-
 
 // deviceID of cameras
 const frontCameraId =   "UUeWY3GwAp3rogYYRKjMix0ETJSCdiDG/neZ5xLoPVQ=";
@@ -34,7 +30,6 @@ socket.onopen = () => {
   }));
   console.log("Registered to the server");
 }
-
 
 
 // Handle incoming messages
@@ -216,21 +211,24 @@ async function renegotiateOffer(pc) {
     }
   };
 
-  const offer = await pc.createOffer();
-  await pc.setLocalDescription(offer);
-  console.log("Local description set succesfully");
-
-  socket.send(
-    JSON.stringify({
-      type: "offer",
-      offer: pc.localDescription,
-      target: receiverName,
-    })
+  pc.createOffer().then ((offer) => {
+    pc.setLocalDescription(offer);
     
-  );
-  console.log("Offer sent success");
+  }).then (() => {
+    console.log("Local description set succesfully");
 
-  return pc;
+    socket.send(
+      JSON.stringify({
+        type: "offer",
+        offer: pc.localDescription,
+        target: receiverName,
+      })
+      
+    );
+    console.log("Offer sent success");
+  
+    return pc;
+  });
 }
 
 
