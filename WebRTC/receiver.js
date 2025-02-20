@@ -92,6 +92,8 @@ async function acceptPeerConnection() {
   peerConnection.ontrack = (event) => {
     if (event.track.kind === 'video') {
       receivedTracks.push(event.track);
+
+      // Stream the left camera
       if (nextCamera === "left") {
         const newVideo = document.getElementById('video-left');
         newVideo.srcObject = new MediaStream([event.track]);
@@ -99,10 +101,25 @@ async function acceptPeerConnection() {
         console.log("Left video stream has started");
       }
 
+      // Stream the front camera
       else if (nextCamera === "front") {
         const newVideo = document.getElementById('video-front');
         newVideo.srcObject = new MediaStream([event.track]);
-        console.log("Left video stream has started");
+        console.log("Front video stream has started");
+      }
+
+      // Stream the right camera
+      else if (nextCamera === "right") {
+        const newVideo = document.getElementById('video-right');
+        newVideo.srcObject = new MediaStream([event.track]);
+        console.log("Right video stream has started");
+      }
+
+      // Stream the Manip camera
+      else if (nextCamera === "manip") {
+        const newVideo = document.getElementById('video-manip');
+        newVideo.srcObject = new MediaStream([event.track]);
+        console.log("Manip video stream has started");
       }
 
       else {
