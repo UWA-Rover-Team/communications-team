@@ -213,7 +213,6 @@ async function renegotiateOffer(pc) {
 
   pc.createOffer().then ((offer) => {
     pc.setLocalDescription(offer);
-
   }).then (() => {
     console.log("Local description set succesfully");
 

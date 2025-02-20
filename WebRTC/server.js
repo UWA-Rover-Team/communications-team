@@ -15,7 +15,7 @@ wss.on("connection", (ws) => {
             if (clients[data.target]) {
                 clients[data.target].send(JSON.stringify({
                     type: data.type,
-                    sdp: data[data.type].sdp // Ensure proper structure
+                    sdp: data[data.offer]
                 }));
                 console.log(`Forwarded ${data.type} to ${data.target}`);
             } 
