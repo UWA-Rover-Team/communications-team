@@ -97,105 +97,102 @@ function checkForNewDevices() {
 }
 
 
-// Capture video and create offer
-function connectCameras(pc) {
-  
-  // List devices and then filter videoinput ones
-  navigator.mediaDevices.enumerateDevices().then (devices => {
-    const videoDevices = devices.filter(device => device.kind === 'videoinput');
-    // Loop through all found video inputs and send them over their own track
-    for (const [index, device] of videoDevices.entries()) {
+async function connectCameras(pc) {
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  const videoDevices = devices.filter(device => device.kind === 'videoinput');
 
-      // Connect Front Camera
-      if (device.deviceId === frontCameraId) {
-        const camera = cameraMap.get('frontCameraTrackId');
-        if (camera !== null) {
-          console.log("front camera already connected.");
-        } else {
-          console.log("Front camera has connected, updating offer");
-          addStream('front', device.deviceId, pc)
-        }
-      }
-
-      // Connect Left Camera
-      if (device.deviceId === leftCameraId) {
-        const camera = cameraMap.get('leftCameraTrackId');
-        if (camera !== null) {
-          console.log("Left camera already connected.");
-        } else {
-          console.log("Left camera has connected, updating offer");
-          addStream('left', device.deviceId, pc)
-        }
-      }
-
-      // Connect Right Camera
-      if (device.deviceId === rightCameraId) {
-        const camera = cameraMap.get('rightCameraTrackId');
-        if (camera !== null) {
-          console.log("Right camera already connected.");
-        } else {
-          console.log("Right camera has connected, updating offer");
-          addStream('right', device.deviceId, pc)
-        }
-      }
-
-      // Connect Manipulator Camera
-      if (device.deviceId === manipCameraId) {
-        const camera = cameraMap.get('manipCameraTrackId');
-        if (camera !== null) {
-          console.log("Manip camera already connected.");
-        } else {
-          console.log("Manip camera has connected, updating offer");
-          addStream('manip', device.deviceId, pc);
-        }
+  // Loop through each video device sequentially
+  for (const device of videoDevices) {
+    if (device.deviceId === frontCameraId) {
+      if (cameraMap.get('frontCameraTrackId') !== null) {
+        console.log("Front camera already connected.");
+      } else {
+        console.log("Attaching front camera sequentially");
+        await addStream('front', device.deviceId, pc);
       }
     }
-  });
-
-  console.log("Read all devices connected");
+    
+    if (device.deviceId === leftCameraId) {
+      if (cameraMap.get('leftCameraTrackId') !== null) {
+        console.log("Left camera already connected.");
+      } else {
+        console.log("Attaching left camera sequentially");
+        await addStream('left', device.deviceId, pc);
+      }
+    }
+    
+    if (device.deviceId === rightCameraId) {
+      if (cameraMap.get('rightCameraTrackId') !== null) {
+        console.log("Right camera already connected.");
+      } else {
+        console.log("Attaching right camera sequentially");
+        await addStream('right', device.deviceId, pc);
+      }
+    }
+    
+    if (device.deviceId === manipCameraId) {
+      if (cameraMap.get('manipCameraTrackId') !== null) {
+        console.log("Manip camera already connected.");
+      } else {
+        console.log("Attaching manip camera sequentially");
+        await addStream('manip', device.deviceId, pc);
+      }
+    }
+  }
+  console.log("All cameras have been attached sequentially.");
 }
+
 
 
 function addStream(camera, cameraId, pc) {
-
-  // Define the constraints we want to use
-  const cameraConstraints = { video: {deviceId: cameraId,
-    width: { ideal: 640 }, 
-    height: { ideal: 480 }}, 
-    audio: false 
+  const cameraConstraints = {
+    video: {
+      deviceId: cameraId,
+      width: { ideal: 640 },
+      height: { ideal: 480 }
+    },
+    audio: false
   };
-  
-  navigator.mediaDevices.getUserMedia(cameraConstraints).then ((stream) => {
-    const tracks = stream.getTracks();
-    const videoTrack = tracks[0];
-  
-    cameraMap.set(`${camera}CameraTrackId`, videoTrack);
-    const sender = pc.addTrack(videoTrack, stream);
 
-    // Update sender parameters
-    const parameters = sender.getParameters();
-    parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
-    console.log("Offer updated");
-    sender.setParameters(parameters);
-  
-    videoTrack.onended = () => {
-      console.log(`${camera} camera track ended. The device might have been disconnected.`);
-      pc.removeTrack(sender);
-      renegotiateOffer(pc);
-      cameraMap.set(`${camera}CameraTrackId`, null);
-      console.log(cameraMap);
-    };
-    
-    return console.log("track added:", camera);
-  }).then (() => {
-    socket.send(JSON.stringify({ 
-      type: "nextCamera",
-      camera: camera,
-      target: receiverName 
-    }));
-    return renegotiateOffer(peerConnection);
-  })
+  return navigator.mediaDevices.getUserMedia(cameraConstraints)
+    .then((stream) => {
+      const tracks = stream.getTracks();
+      const videoTrack = tracks[0];
+
+      // Store the track for later reference
+      cameraMap.set(`${camera}CameraTrackId`, videoTrack);
+
+      // Add the track to the peer connection
+      const sender = pc.addTrack(videoTrack, stream);
+
+      // Optionally update sender parameters
+      const parameters = sender.getParameters();
+      if (parameters.encodings && parameters.encodings.length > 0) {
+        parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
+        sender.setParameters(parameters);
+      }
+
+      videoTrack.onended = () => {
+        console.log(`${camera} camera track ended. The device might have been disconnected.`);
+        pc.removeTrack(sender);
+        renegotiateOffer(pc);
+        cameraMap.set(`${camera}CameraTrackId`, null);
+      };
+
+      console.log("Track added for:", camera);
+    })
+    .then(() => {
+      // Send socket update that this camera is now active
+      socket.send(JSON.stringify({
+        type: "nextCamera",
+        camera: camera,
+        target: receiverName
+      }));
+      // Then renegotiate the offer
+      return renegotiateOffer(peerConnection);
+    });
 }
+
 
 
 // Function to resend the offer
