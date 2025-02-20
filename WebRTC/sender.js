@@ -190,7 +190,8 @@ function addStream(camera, cameraId, pc) {
     // Then renegotiate the offer
     return renegotiateOffer(peerConnection);
   });
-  return;
+
+  return pc;
 }
 
 
