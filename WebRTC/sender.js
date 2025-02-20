@@ -186,14 +186,14 @@ function addStream(camera, cameraId, pc) {
       console.log(cameraMap);
     };
     
-    console.log("track added:", camera);
+    return console.log("track added:", camera);
   }).then (() => {
     socket.send(JSON.stringify({ 
       type: "nextCamera",
       camera: camera,
       target: receiverName 
     }));
-    renegotiateOffer(peerConnection);
+    return renegotiateOffer(peerConnection);
   })
 }
 
@@ -212,7 +212,7 @@ function renegotiateOffer(pc) {
   };
 
   pc.createOffer().then ((offer) => {
-    pc.setLocalDescription(offer);
+    return pc.setLocalDescription(offer);
   }).then (() => {
     console.log("Local description set succesfully");
 
