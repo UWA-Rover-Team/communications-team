@@ -97,101 +97,103 @@ function checkForNewDevices() {
 }
 
 
-async function connectCameras(pc) {
-  const devices = await navigator.mediaDevices.enumerateDevices();
-  const videoDevices = devices.filter(device => device.kind === 'videoinput');
+function connectCameras(pc) {
+  
+  // List devices and then filter videoinput ones
+  navigator.mediaDevices.enumerateDevices().then (devices => {
+    const videoDevices = devices.filter(device => device.kind === 'videoinput');
+    // Loop through all found video inputs and send them over their own track
+    for (const [index, device] of videoDevices.entries()) {
 
-  // Loop through each video device sequentially
-  for (const device of videoDevices) {
-    if (device.deviceId === frontCameraId) {
-      if (cameraMap.get('frontCameraTrackId') !== null) {
-        console.log("Front camera already connected.");
-      } else {
-        console.log("Attaching front camera");
-        await addStream('front', device.deviceId, pc);
+      // Connect Front Camera
+      if (device.deviceId === frontCameraId) {
+        const camera = cameraMap.get('frontCameraTrackId');
+        if (camera !== null) {
+          console.log("front camera already connected.");
+        } else {
+          console.log("Connecting Front Camera");
+          addStream('front', device.deviceId, pc)
+        }
+      }
+
+      // Connect Left Camera
+      if (device.deviceId === leftCameraId) {
+        const camera = cameraMap.get('leftCameraTrackId');
+        if (camera !== null) {
+          console.log("Left camera already connected.");
+        } else {
+          console.log("Connecting Left Camera");
+          addStream('left', device.deviceId, pc)
+        }
+      }
+
+      // Connect Right Camera
+      if (device.deviceId === rightCameraId) {
+        const camera = cameraMap.get('rightCameraTrackId');
+        if (camera !== null) {
+          console.log("Right camera already connected.");
+        } else {
+          console.log("Connecting Right Camera");
+          addStream('right', device.deviceId, pc)
+        }
+      }
+
+      // Connect Manipulator Camera
+      if (device.deviceId === manipCameraId) {
+        const camera = cameraMap.get('manipCameraTrackId');
+        if (camera !== null) {
+          console.log("Manip camera already connected.");
+        } else {
+          console.log("Connecting Manip Camera");
+          addStream('manip', device.deviceId, pc);
+        }
       }
     }
-    
-    if (device.deviceId === leftCameraId) {
-      if (cameraMap.get('leftCameraTrackId') !== null) {
-        console.log("Left camera already connected.");
-      } else {
-        console.log("Attaching left camera");
-        await addStream('left', device.deviceId, pc);
-      }
-    }
-    
-    if (device.deviceId === rightCameraId) {
-      if (cameraMap.get('rightCameraTrackId') !== null) {
-        console.log("Right camera already connected.");
-      } else {
-        console.log("Attaching right camera");
-        await addStream('right', device.deviceId, pc);
-      }
-    }
-    
-    if (device.deviceId === manipCameraId) {
-      if (cameraMap.get('manipCameraTrackId') !== null) {
-        console.log("Manip camera already connected.");
-      } else {
-        console.log("Attaching manip camera");
-        await addStream('manip', device.deviceId, pc);
-      }
-    }
-  }
-  console.log("All cameras have been attached");
+  });
+
+  console.log("Read all devices connected");
 }
 
 
-
 function addStream(camera, cameraId, pc) {
-  const cameraConstraints = {
-    video: {
-      deviceId: cameraId,
-      width: { ideal: 640 },
-      height: { ideal: 480 }
-    },
-    audio: false
-  };
 
-  navigator.mediaDevices.getUserMedia(cameraConstraints).then((stream) => {
+  // Define the constraints we want to use
+  const cameraConstraints = { video: {deviceId: cameraId,
+    width: { ideal: 640 }, 
+    height: { ideal: 480 }}, 
+    audio: false 
+  };
+  
+  navigator.mediaDevices.getUserMedia(cameraConstraints).then ((stream) => {
     const tracks = stream.getTracks();
     const videoTrack = tracks[0];
-
-    // Store the track for later reference
+  
     cameraMap.set(`${camera}CameraTrackId`, videoTrack);
-
-    // Add the track to the peer connection
     const sender = pc.addTrack(videoTrack, stream);
 
-    // Optionally update sender parameters
+    // Update sender parameters
     const parameters = sender.getParameters();
-    if (parameters.encodings && parameters.encodings.length > 0) {
-      parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
-      sender.setParameters(parameters);
-    }
-
+    parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
+    console.log("Offer updated");
+    sender.setParameters(parameters);
+  
     videoTrack.onended = () => {
       console.log(`${camera} camera track ended. The device might have been disconnected.`);
       pc.removeTrack(sender);
       renegotiateOffer(pc);
       cameraMap.set(`${camera}CameraTrackId`, null);
+      console.log(cameraMap);
     };
-
-    console.log("Track added for:", camera);
-  })
-  .then(() => {
-    // Send socket update that this camera is now active
-    socket.send(JSON.stringify({
+    
+    return console.log("track added:", camera);
+  }).then (() => {
+    socket.send(JSON.stringify({ 
       type: "nextCamera",
       camera: camera,
-      target: receiverName
+      target: receiverName 
     }));
-    // Then renegotiate the offer
     return renegotiateOffer(peerConnection);
-  });
-
-  return pc;
+  })
 }
 
 
