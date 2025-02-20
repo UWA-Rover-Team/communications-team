@@ -155,41 +155,42 @@ function addStream(camera, cameraId, pc) {
   };
 
   navigator.mediaDevices.getUserMedia(cameraConstraints).then((stream) => {
-      const tracks = stream.getTracks();
-      const videoTrack = tracks[0];
+    const tracks = stream.getTracks();
+    const videoTrack = tracks[0];
 
-      // Store the track for later reference
-      cameraMap.set(`${camera}CameraTrackId`, videoTrack);
+    // Store the track for later reference
+    cameraMap.set(`${camera}CameraTrackId`, videoTrack);
 
-      // Add the track to the peer connection
-      const sender = pc.addTrack(videoTrack, stream);
+    // Add the track to the peer connection
+    const sender = pc.addTrack(videoTrack, stream);
 
-      // Optionally update sender parameters
-      const parameters = sender.getParameters();
-      if (parameters.encodings && parameters.encodings.length > 0) {
-        parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
-        sender.setParameters(parameters);
-      }
+    // Optionally update sender parameters
+    const parameters = sender.getParameters();
+    if (parameters.encodings && parameters.encodings.length > 0) {
+      parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
+      sender.setParameters(parameters);
+    }
 
-      videoTrack.onended = () => {
-        console.log(`${camera} camera track ended. The device might have been disconnected.`);
-        pc.removeTrack(sender);
-        renegotiateOffer(pc);
-        cameraMap.set(`${camera}CameraTrackId`, null);
-      };
+    videoTrack.onended = () => {
+      console.log(`${camera} camera track ended. The device might have been disconnected.`);
+      pc.removeTrack(sender);
+      renegotiateOffer(pc);
+      cameraMap.set(`${camera}CameraTrackId`, null);
+    };
 
-      console.log("Track added for:", camera);
-    })
-    .then(() => {
-      // Send socket update that this camera is now active
-      socket.send(JSON.stringify({
-        type: "nextCamera",
-        camera: camera,
-        target: receiverName
-      }));
-      // Then renegotiate the offer
-      return renegotiateOffer(peerConnection);
-    });
+    console.log("Track added for:", camera);
+  })
+  .then(() => {
+    // Send socket update that this camera is now active
+    socket.send(JSON.stringify({
+      type: "nextCamera",
+      camera: camera,
+      target: receiverName
+    }));
+    // Then renegotiate the offer
+    return renegotiateOffer(peerConnection);
+  });
+  return;
 }
 
 
