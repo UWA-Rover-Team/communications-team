@@ -10,7 +10,6 @@ console.log("WebSocket server running on ws://0.0.0.0:8080");
 wss.on("connection", (ws) => {
 
     ws.on("message", (message) => {
-    	console.log("Received message");
         const data = JSON.parse(message);
         if (data.type === "offer" || data.type === "answer") {
             if (clients[data.target]) {
