@@ -154,6 +154,8 @@ async function connectCameras(pc) {
       }
     }
   });
+
+  console.log("Read all devices connected");
 }
 
 
@@ -173,7 +175,6 @@ async function addStream(camera, cameraId, pc) {
     cameraMap.set(`${camera}CameraTrackId`, videoTrack);
     const sender = pc.addTrack(videoTrack, stream);
 
-  
     // Update sender parameters
     const parameters = sender.getParameters();
     parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
