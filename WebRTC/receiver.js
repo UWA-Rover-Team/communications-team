@@ -1,166 +1,155 @@
 // receiver.js
+// This file now creates and manages a separate RTCPeerConnection per camera.
 
-const remoteVideo = document.getElementById("remoteVideo");
+const videoElements = {
+  front: document.getElementById("video-front"),
+  left: document.getElementById("video-left"),
+  right: document.getElementById("video-right"),
+  manip: document.getElementById("video-manip")
+};
+
 const socket = new WebSocket("ws://192.168.2.173:8080"); // Replace with correct WebSocket server IP
 const receiverName = "receiver";
 const senderName = "sender";
-let cameraCount = 0;
-const receivedTracks = []; // Global array
-let peerConnection = new RTCPeerConnection();
-let nextCamera = null;
 
+// Object to store a peer connection per camera
+const peerConnections = {};
+
+// Global array to store received tracks (if needed)
+const receivedTracks = [];
 
 console.log("receiver.js has started");
 
 // Register as receiver
 socket.onopen = () => {
-	socket.send(JSON.stringify({ 
-		type: "register", 
-		name: receiverName 
-	}));
-}
-
+  socket.send(JSON.stringify({ 
+    type: "register", 
+    name: receiverName 
+  }));
+};
 
 socket.onmessage = async (event) => {
   const data = JSON.parse(event.data);
 
   if (data.type === "offer") {
-    console.log("Received a new offer");
-    await acceptPeerConnection();
-  
-    // Reconstruct the offer object expected by setRemoteDescription
+    // Expecting a camera identifier in the offer message.
+    const camera = data.camera;
+    console.log(`Received offer for camera: ${camera}`);
+
+    // Create a new RTCPeerConnection for this camera
+    const pc = new RTCPeerConnection();
+
+    // Set up ICE candidate handling for this connection.
+    pc.onicecandidate = (event) => {
+      if (event.candidate) {
+        socket.send(JSON.stringify({
+          type: "candidate",
+          candidate: event.candidate,
+          target: senderName,
+          camera: camera  // Include the camera identifier.
+        }));
+      }
+    };
+
+    // Set up track event handler to assign the incoming video track
+    pc.ontrack = (event) => {
+      if (event.track.kind === "video") {
+        receivedTracks.push(event.track);
+        const videoElem = videoElements[camera];
+        if (videoElem) {
+          videoElem.srcObject = new MediaStream([event.track]);
+          console.log(`${camera} video stream has started`);
+        } else {
+          console.warn(`No video element found for camera: ${camera}`);
+        }
+      }
+    };
+
+    // Save this peer connection in our map.
+    peerConnections[camera] = pc;
+
+    // Set the remote description using the received offer.
     const offer = { type: "offer", sdp: data.sdp };
-    await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
-    console.log("Remote description set successfully.");
-  
-    // Create an answer to the offer
-    const answer = await peerConnection.createAnswer();
-    await peerConnection.setLocalDescription(answer);
-    console.log("Local description set successfully.");
-    
-    // Send the answer to the sender after a brief delay (allowing ICE gathering)
+    await pc.setRemoteDescription(new RTCSessionDescription(offer));
+    console.log(`Remote description set for camera: ${camera}`);
+
+    // Create an answer for this offer.
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+    console.log(`Local description set for camera: ${camera}`);
+
+    // Send the answer back to the sender with the camera identifier.
     socket.send(JSON.stringify({
-       type: "answer",
-       answer: peerConnection.localDescription,
-       target: senderName
+      type: "answer",
+      sdp: pc.localDescription.sdp,
+      target: senderName,
+      camera: camera
     }));
-    console.log("Answer sent successfully");
+    console.log(`Answer sent for camera: ${camera}`);
   } 
-  
   else if (data.type === "candidate") {
-    await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
-  }
-
-  else if (data.type === "nextCamera") {
-    console.log("The next camera will be:", data.camera);
-    nextCamera = data.camera;
-  }
-
-  else if(data.type === "peerdisconnect") {
-    peerConnection.close()
-    receivedTracks.forEach(track => track.stop());
-    console.log("Sender has left the chat. Closing peer connection and closing tracks");
-  }
-  
-   else {
+    // Add the ICE candidate to the appropriate peer connection.
+    const camera = data.camera;
+    if (peerConnections[camera]) {
+      await peerConnections[camera].addIceCandidate(new RTCIceCandidate(data.candidate));
+      console.log(`ICE candidate added for camera: ${camera}`);
+    } else {
+      console.warn(`Received candidate for unknown camera: ${camera}`);
+    }
+  } 
+  else if (data.type === "peerdisconnect") {
+    // Close all peer connections and stop all received tracks.
+    Object.keys(peerConnections).forEach(camera => {
+      if (peerConnections[camera]) {
+        peerConnections[camera].close();
+        delete peerConnections[camera];
+      }
+    });
+    Object.values(videoElements).forEach(videoElem => {
+      if (videoElem.srcObject) {
+        videoElem.srcObject.getTracks().forEach(track => track.stop());
+      }
+    });
+    console.log("Sender has disconnected. Closed all peer connections and tracks.");
+  } 
+  else {
     console.warn("Receiver received unknown message type:", data);
   }
 };
 
-
-
-async function acceptPeerConnection() {
-
-  // Open new RTCPeerConnection if needed
-  if (!peerConnection || 
-    peerConnection.connectionState === 'closed' || 
-    peerConnection.connectionState === 'failed') {
-    peerConnection = new RTCPeerConnection();
-    console.log("Opening new RTC Session");
-  }
-
-  peerConnection.onicecandidate = (event) => {
-    if (event.candidate) {
-      socket.send(JSON.stringify({
-        type: "candidate",
-        candidate: event.candidate,
-        target: senderName
-      }));
-    }
-  };
-
-  peerConnection.ontrack = (event) => {
-    if (event.track.kind === 'video') {
-      receivedTracks.push(event.track);
-
-      // Stream the left camera
-      if (nextCamera === "left") {
-        const newVideo = document.getElementById('video-left');
-        newVideo.srcObject = new MediaStream([event.track]);
-        console.log("Left video stream has started");
-      }
-
-      // Stream the front camera
-      else if (nextCamera === "front") {
-        const newVideo = document.getElementById('video-front');
-        newVideo.srcObject = new MediaStream([event.track]);
-        console.log("Front video stream has started");
-      }
-
-      // Stream the right camera
-      else if (nextCamera === "right") {
-        const newVideo = document.getElementById('video-right');
-        newVideo.srcObject = new MediaStream([event.track]);
-        console.log("Right video stream has started");
-      }
-
-      // Stream the Manip camera
-      else if (nextCamera === "manip") {
-        const newVideo = document.getElementById('video-manip');
-        newVideo.srcObject = new MediaStream([event.track]);
-        console.log("Manip video stream has started");
-      }
-
-      else {
-        console.log("unknown camera location for camera", nextCamera);
-      }
-    }
-  };  
-}
-
-
-// Object to store previous stats for calculation
+// (Optional) Stats gathering logic remains similar; you could extend it to iterate over all connections if needed.
 const lastStats = {};
 const getStats = false;
-
-// Run every 1 second to measure inbound video bandwidth and latency
 setInterval(() => {
   if (getStats) {
-    peerConnection.getStats().then(stats => {
-      stats.forEach(report => {
-        // Process inbound video bitrate
-        if (report.type === 'inbound-rtp' && report.kind === 'video') {
-          if (lastStats[report.id]) {
-            const bytesReceivedDiff = report.bytesReceived - lastStats[report.id].bytesReceived;
-            const bitrate = (bytesReceivedDiff * 8) / 1000000; // Converts to mbps
-            console.log(`Video bitrate: ${bitrate.toFixed(3)} mbps`);
+    Object.keys(peerConnections).forEach(async (camera) => {
+      const pc = peerConnections[camera];
+      if (pc) {
+        const stats = await pc.getStats();
+        stats.forEach(report => {
+          // Process inbound video bitrate
+          if (report.type === 'inbound-rtp' && report.kind === 'video') {
+            if (lastStats[report.id]) {
+              const bytesReceivedDiff = report.bytesReceived - lastStats[report.id].bytesReceived;
+              const bitrate = (bytesReceivedDiff * 8) / 1000000; // mbps
+              console.log(`Camera ${camera} video bitrate: ${bitrate.toFixed(3)} mbps`);
+            }
+            lastStats[report.id] = {
+              bytesReceived: report.bytesReceived,
+              timestamp: report.timestamp 
+            };
           }
-          lastStats[report.id] = {
-            bytesReceived: report.bytesReceived,
-            timestamp: report.timestamp 
-          };
-        }
-        
-        // Process latency from candidate pair stats
-        if (report.type === 'candidate-pair' && (report.selected || report.nominated)) {
-          const rtt = report.currentRoundTripTime;
-          if (typeof rtt === 'number') {
-            console.log(`Current round trip time: ${rtt * 1000} ms`);
-          } else {
-            console.log('RTT not available yet.');
+          // Process latency from candidate pair stats
+          if (report.type === 'candidate-pair' && (report.selected || report.nominated)) {
+            const rtt = report.currentRoundTripTime;
+            if (typeof rtt === 'number') {
+              console.log(`Camera ${camera} round trip time: ${(rtt * 1000).toFixed(0)} ms`);
+            } else {
+              console.log(`Camera ${camera} RTT not available yet.`);
+            }
           }
-        }
-      });
+        });
+      }
     });
   }
 }, 1000);

@@ -1,236 +1,244 @@
 // sender.js
+// This file now creates a separate RTCPeerConnection per camera,
+// and includes the camera identifier in signaling messages.
 
-
-// deviceID of cameras
 const frontCameraId =   "UUeWY3GwAp3rogYYRKjMix0ETJSCdiDG/neZ5xLoPVQ=";
 const leftCameraId =    "LQXeVP21cCGt44HPH73pUvFC7Gc8ld1b8Zi136vnzzQ=";
 const rightCameraId =   "2noqUGsn6qKXNB9fjiWc4SoBOttpdywjT+jQfNLESGs=";
 const manipCameraId =   "DhFg29xQSsnPa9y4zu6Rh0uKQsdHDIfuv/HVVe0D12A=";
 
 const socket = new WebSocket("ws://192.168.2.173:8080");
-let peerConnection = new RTCPeerConnection();
 
 const senderName = "sender";
 const receiverName = "receiver";
 
+// Map to track video tracks for each camera.
 const cameraMap = new Map([
-                          ['frontCameraTrackId', null],
-                          ['leftCameraTrackId', null],
-                          ['rightCameraTrackId', null],
-                          ['manipCameraTrackId', null]
-                        ]);
+  ['frontCameraTrackId', null],
+  ['leftCameraTrackId', null],
+  ['rightCameraTrackId', null],
+  ['manipCameraTrackId', null]
+]);
 
+// Object to store separate peer connections for each camera.
+const peerConnections = {
+  front: null,
+  left: null,
+  right: null,
+  manip: null,
+};
 
-
-// Register sender
+// Register sender with the signaling server.
 socket.onopen = () => {
   socket.send(JSON.stringify({ 
       type: "register", 
       name: senderName 
   }));
   console.log("Registered to the server");
-}
+};
 
-
-// Handle incoming messages
+// Handle incoming signaling messages.
 socket.onmessage = async (event) => {
   const data = JSON.parse(event.data);
 
   if (data.type === "answer") {
-    // Reconstruct the full answer object expected by setRemoteDescription
-    const answer = { type: "answer", sdp: data.sdp };
-    console.log("Answer received");
-    await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
-    console.log("Remote description set successfully.");
+    // Use the camera property to determine which connection to update.
+    const camera = data.camera;
+    if (peerConnections[camera]) {
+      const answer = { type: "answer", sdp: data.sdp };
+      console.log(`Answer received for camera: ${camera}`);
+      await peerConnections[camera].setRemoteDescription(new RTCSessionDescription(answer));
+      console.log(`Remote description set for camera: ${camera}`);
+    } else {
+      console.warn("No peer connection found for camera", camera);
+    }
   } 
-  
   else if (data.type === "candidate") {
-    console.log("ICE candidate received from receiver:", data.candidate);
-    await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
-    console.log("ICE candidate added successfully.");
+    const camera = data.camera;
+    console.log(`ICE candidate received for camera ${camera}:`, data.candidate);
+    if (peerConnections[camera]) {
+      await peerConnections[camera].addIceCandidate(new RTCIceCandidate(data.candidate));
+      console.log(`ICE candidate added for camera ${camera}.`);
+    }
   } 
-  
   else if(data.type === "new_receiver") {
-    console.log("New receiver found. Sending Offer...");
+    console.log("New receiver found. Initiating connections for cameras...");
+    // Use a temporary stream to trigger getUserMedia permission, then stop its tracks.
     await navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
       stream.getTracks().forEach(track => track.stop());
-    })
-
-    peerConnection = new RTCPeerConnection();
-    await checkForNewDevices();
+    });
+    checkForNewDevices();
   }
-
   else if(data.type === "peerdisconnect") {
-    peerConnection.close()
+    // Close all connections and reset state.
+    for (const camera in peerConnections) {
+      if (peerConnections[camera]) {
+        peerConnections[camera].close();
+        peerConnections[camera] = null;
+      }
+    }
     previousVideoDevices = [];
     cameraMap.forEach((value, key) => {
       cameraMap.set(key, null);
     });
-    console.log("Receiver has left the chat. Closing peer connection");
+    console.log("Receiver has left the chat. Closed all peer connections.");
   }
-
   else {
     console.warn("Sender received unknown message type:", data);
   }
 };
 
-
 let previousVideoDevices = [];
+// Check for new devices and trigger connection creation.
 function checkForNewDevices() {
-  console.log("previous devices are:", previousVideoDevices);
-  navigator.mediaDevices.enumerateDevices().then (devices => {
+  console.log("Previous devices:", previousVideoDevices);
+  navigator.mediaDevices.enumerateDevices().then(devices => {
     const currentVideoDevices = devices.filter(device => device.kind === "videoinput");
-    console.log("current devices:", currentVideoDevices);
-    // Compare previous list with current list
+    console.log("Current video devices:", currentVideoDevices);
     const previousIds = previousVideoDevices.map(device => device.deviceId);
     const newDevices = currentVideoDevices.filter(device => !previousIds.includes(device.deviceId));
-    
-    // Update the previous devices list for future comparisons
     previousVideoDevices = currentVideoDevices;
-    return newDevices
-  }).then ((newDevices)=> {
+    return newDevices;
+  }).then(newDevices => {
     if (newDevices.length > 0) {
-      connectCameras(peerConnection);
+      connectCameras();
       console.log("New device(s) added:", newDevices);
     }
-  })
+  });
 }
 
-
-function connectCameras(pc) {
-  
-  // List devices and then filter videoinput ones
-  navigator.mediaDevices.enumerateDevices().then (devices => {
+// Create a new RTCPeerConnection for each camera as needed and add its stream.
+function connectCameras() {
+  navigator.mediaDevices.enumerateDevices().then(devices => {
     const videoDevices = devices.filter(device => device.kind === 'videoinput');
-    // Loop through all found video inputs and send them over their own track
-    for (const [index, device] of videoDevices.entries()) {
+    for (const device of videoDevices) {
 
-      // Connect Front Camera
+      // Front Camera
       if (device.deviceId === frontCameraId) {
-        const camera = cameraMap.get('frontCameraTrackId');
-        if (camera !== null) {
-          console.log("front camera already connected.");
+        if (cameraMap.get('frontCameraTrackId') !== null) {
+          console.log("Front camera already connected.");
         } else {
           console.log("Connecting Front Camera");
-          addStream('front', device.deviceId, pc)
+          peerConnections.front = new RTCPeerConnection();
+          setupPeerConnectionEventHandlers(peerConnections.front, 'front');
+          addStream('front', device.deviceId, peerConnections.front);
         }
       }
 
-      // Connect Left Camera
-      if (device.deviceId === leftCameraId) {
-        const camera = cameraMap.get('leftCameraTrackId');
-        if (camera !== null) {
+      // Left Camera
+      else if (device.deviceId === leftCameraId) {
+        if (cameraMap.get('leftCameraTrackId') !== null) {
           console.log("Left camera already connected.");
         } else {
           console.log("Connecting Left Camera");
-          addStream('left', device.deviceId, pc)
+          peerConnections.left = new RTCPeerConnection();
+          setupPeerConnectionEventHandlers(peerConnections.left, 'left');
+          addStream('left', device.deviceId, peerConnections.left);
         }
       }
 
-      // Connect Right Camera
-      if (device.deviceId === rightCameraId) {
-        const camera = cameraMap.get('rightCameraTrackId');
-        if (camera !== null) {
+      // Right Camera
+      else if (device.deviceId === rightCameraId) {
+        if (cameraMap.get('rightCameraTrackId') !== null) {
           console.log("Right camera already connected.");
         } else {
           console.log("Connecting Right Camera");
-          addStream('right', device.deviceId, pc)
+          peerConnections.right = new RTCPeerConnection();
+          setupPeerConnectionEventHandlers(peerConnections.right, 'right');
+          addStream('right', device.deviceId, peerConnections.right);
         }
       }
 
-      // Connect Manipulator Camera
-      if (device.deviceId === manipCameraId) {
-        const camera = cameraMap.get('manipCameraTrackId');
-        if (camera !== null) {
+      // Manipulator Camera
+      else if (device.deviceId === manipCameraId) {
+        if (cameraMap.get('manipCameraTrackId') !== null) {
           console.log("Manip camera already connected.");
         } else {
           console.log("Connecting Manip Camera");
-          addStream('manip', device.deviceId, pc);
+          peerConnections.manip = new RTCPeerConnection();
+          setupPeerConnectionEventHandlers(peerConnections.manip, 'manip');
+          addStream('manip', device.deviceId, peerConnections.manip);
         }
       }
     }
   });
-
-  console.log("Read all devices connected");
+  console.log("Read all devices connected.");
 }
 
+// Setup ICE candidate handling for a peer connection.
+function setupPeerConnectionEventHandlers(pc, camera) {
+  pc.onicecandidate = (event) => {
+    if (event.candidate) {
+      socket.send(JSON.stringify({
+        type: "candidate",
+        candidate: event.candidate,
+        target: receiverName,
+        camera: camera // Include camera identifier in signaling
+      }));
+    }
+  };
+}
 
+// Add a camera's stream to its peer connection and initiate offer negotiation.
 function addStream(camera, cameraId, pc) {
-
-  // Define the constraints we want to use
-  const cameraConstraints = { video: {deviceId: cameraId,
-    width: { ideal: 640 }, 
-    height: { ideal: 480 }}, 
+  const cameraConstraints = { 
+    video: { 
+      deviceId: cameraId,
+      width: { ideal: 640 }, 
+      height: { ideal: 480 }
+    }, 
     audio: false 
   };
   
-  navigator.mediaDevices.getUserMedia(cameraConstraints).then ((stream) => {
+  navigator.mediaDevices.getUserMedia(cameraConstraints).then(stream => {
     const tracks = stream.getTracks();
     const videoTrack = tracks[0];
   
     cameraMap.set(`${camera}CameraTrackId`, videoTrack);
     const sender = pc.addTrack(videoTrack, stream);
 
-    // Update sender parameters
+    // Update sender parameters if available.
     const parameters = sender.getParameters();
-    parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
-    console.log("Offer updated");
-    sender.setParameters(parameters);
+    if (parameters.encodings && parameters.encodings.length > 0) {
+      parameters.encodings[0].maxBitrate = 100000; // 0.1 Mbps
+      sender.setParameters(parameters);
+    }
+    console.log("Track added for camera:", camera);
   
+    // Handle track end.
     videoTrack.onended = () => {
       console.log(`${camera} camera track ended. The device might have been disconnected.`);
       pc.removeTrack(sender);
-      renegotiateOffer(pc);
+      renegotiateOffer(pc, camera);
       cameraMap.set(`${camera}CameraTrackId`, null);
       console.log(cameraMap);
     };
     
-    return console.log("track added:", camera);
-  }).then (() => {
+    // Notify receiver that a camera is connected and renegotiate offer.
     socket.send(JSON.stringify({ 
       type: "nextCamera",
       camera: camera,
-      target: receiverName 
+      target: receiverName
     }));
-    return renegotiateOffer(peerConnection);
-  })
-}
-
-
-
-// Function to resend the offer
-function renegotiateOffer(pc) {
-  
-  pc.onicecandidate = (event) => {
-    if (event.candidate) {
-      socket.send(JSON.stringify({
-        type: "candidate",
-        candidate: event.candidate,
-        target: receiverName
-      }));
-    }
-  };
-
-  pc.createOffer().then ((offer) => {
-    return pc.setLocalDescription(offer);
-  }).then (() => {
-    console.log("Local description set succesfully");
-
-    socket.send(
-      JSON.stringify({
-        type: "offer",
-        offer: pc.localDescription,
-        target: receiverName,
-      })
-      
-    );
-    console.log("Offer sent success");
-  
-    return pc;
+    renegotiateOffer(pc, camera);
   });
 }
 
+// Create an offer for the given peer connection and send it via the socket.
+function renegotiateOffer(pc, camera) {
+  pc.createOffer().then(offer => {
+    return pc.setLocalDescription(offer);
+  }).then(() => {
+    console.log(`Local description set successfully for camera: ${camera}`);
+    socket.send(JSON.stringify({
+      type: "offer",
+      offer: pc.localDescription,
+      target: receiverName,
+      camera: camera // Include camera identifier for proper association on the receiver side.
+    }));
+    console.log(`Offer sent successfully for camera: ${camera}`);
+  });
+}
 
-// Listen for device changes
+// Optionally, you can listen for device changes to trigger checkForNewDevices.
 // navigator.mediaDevices.ondevicechange = checkForNewDevices;
-
