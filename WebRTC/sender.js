@@ -116,15 +116,7 @@ async function connectCameras(pc) {
           console.log("front camera already connected.");
         } else {
           console.log("Front camera has connected, updating offer");
-          // Add the stream and then renegotiate the offer
-          addStream('front', device.deviceId, pc).then(() => {
-            socket.send(JSON.stringify({ 
-              type: "nextCamera",
-              camera: "front",
-              target: receiverName 
-            }));
-            renegotiateOffer(peerConnection);
-          });
+          addStream('front', device.deviceId, pc)
         }
       }
 
@@ -135,14 +127,7 @@ async function connectCameras(pc) {
           console.log("Left camera already connected.");
         } else {
           console.log("Left camera has connected, updating offer");
-          addStream('left', device.deviceId, pc).then(() => {
-            socket.send(JSON.stringify({ 
-              type: "nextCamera",
-              camera: "left",
-              target: receiverName 
-            }));
-            renegotiateOffer(peerConnection);
-          });
+          addStream('left', device.deviceId, pc)
         }
       }
 
@@ -153,14 +138,7 @@ async function connectCameras(pc) {
           console.log("Right camera already connected.");
         } else {
           console.log("Right camera has connected, updating offer");
-          addStream('right', device.deviceId, pc).then(() => {
-            socket.send(JSON.stringify({ 
-              type: "nextCamera",
-              camera: "right",
-              target: receiverName 
-            }));
-            renegotiateOffer(peerConnection);
-          });
+          addStream('right', device.deviceId, pc)
         }
       }
 
@@ -171,14 +149,7 @@ async function connectCameras(pc) {
           console.log("Manip camera already connected.");
         } else {
           console.log("Manip camera has connected, updating offer");
-          addStream('manip', device.deviceId, pc).then(() => {
-            socket.send(JSON.stringify({ 
-              type: "nextCamera",
-              camera: "manip",
-              target: receiverName 
-            }));
-            renegotiateOffer(peerConnection);
-          });
+          addStream('manip', device.deviceId, pc);
         }
       }
     }
@@ -218,13 +189,20 @@ async function addStream(camera, cameraId, pc) {
     };
     
     console.log("track added:", camera);
-    return;
-  });
+  }).then (() => {
+    socket.send(JSON.stringify({ 
+      type: "nextCamera",
+      camera: camera,
+      target: receiverName 
+    }));
+    renegotiateOffer(peerConnection);
+  })
 }
 
 
 // Function to resend the offer
 async function renegotiateOffer(pc) {
+  
   pc.onicecandidate = (event) => {
     if (event.candidate) {
       socket.send(JSON.stringify({
@@ -254,5 +232,5 @@ async function renegotiateOffer(pc) {
 
 
 // Listen for device changes
-navigator.mediaDevices.ondevicechange = checkForNewDevices;
+// navigator.mediaDevices.ondevicechange = checkForNewDevices;
 
