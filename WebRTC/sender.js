@@ -165,7 +165,7 @@ async function addStream(camera, cameraId, pc) {
     audio: false 
   };
   
-  navigator.mediaDevices.getUserMedia(cameraConstraints).then ((stream) => { // Want to remove the await, but it doesnt work for now
+  navigator.mediaDevices.getUserMedia(cameraConstraints).then ((stream) => {
     const tracks = stream.getTracks();
     const videoTrack = tracks[0];
   
@@ -213,7 +213,7 @@ async function renegotiateOffer(pc) {
 
   pc.createOffer().then ((offer) => {
     pc.setLocalDescription(offer);
-    
+
   }).then (() => {
     console.log("Local description set succesfully");
 
