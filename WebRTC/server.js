@@ -15,7 +15,7 @@ wss.on("connection", (ws) => {
             if (clients[data.target]) {
                 clients[data.target].send(JSON.stringify({
                     type: data.type,
-                    sdp: data[data.offer]
+                    sdp: data[data.type].sdp // Ensure proper structure
                 }));
                 console.log(`Forwarded ${data.type} to ${data.target}`);
             } 
@@ -32,7 +32,7 @@ wss.on("connection", (ws) => {
                     camera: data.camera
                 }));
             }
-            console.log("sent next camera to receiver");
+            console.log("sent next camera to receiver:", data.camera);
         }
 
         else if (data.type === "candidate") {
