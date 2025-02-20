@@ -107,7 +107,7 @@ async function connectCameras(pc) {
       if (cameraMap.get('frontCameraTrackId') !== null) {
         console.log("Front camera already connected.");
       } else {
-        console.log("Attaching front camera sequentially");
+        console.log("Attaching front camera");
         await addStream('front', device.deviceId, pc);
       }
     }
@@ -116,7 +116,7 @@ async function connectCameras(pc) {
       if (cameraMap.get('leftCameraTrackId') !== null) {
         console.log("Left camera already connected.");
       } else {
-        console.log("Attaching left camera sequentially");
+        console.log("Attaching left camera");
         await addStream('left', device.deviceId, pc);
       }
     }
@@ -125,7 +125,7 @@ async function connectCameras(pc) {
       if (cameraMap.get('rightCameraTrackId') !== null) {
         console.log("Right camera already connected.");
       } else {
-        console.log("Attaching right camera sequentially");
+        console.log("Attaching right camera");
         await addStream('right', device.deviceId, pc);
       }
     }
@@ -134,12 +134,12 @@ async function connectCameras(pc) {
       if (cameraMap.get('manipCameraTrackId') !== null) {
         console.log("Manip camera already connected.");
       } else {
-        console.log("Attaching manip camera sequentially");
+        console.log("Attaching manip camera");
         await addStream('manip', device.deviceId, pc);
       }
     }
   }
-  console.log("All cameras have been attached sequentially.");
+  console.log("All cameras have been attached");
 }
 
 
@@ -154,8 +154,7 @@ function addStream(camera, cameraId, pc) {
     audio: false
   };
 
-  return navigator.mediaDevices.getUserMedia(cameraConstraints)
-    .then((stream) => {
+  navigator.mediaDevices.getUserMedia(cameraConstraints).then((stream) => {
       const tracks = stream.getTracks();
       const videoTrack = tracks[0];
 
