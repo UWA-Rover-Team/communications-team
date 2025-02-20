@@ -76,7 +76,7 @@ socket.onmessage = async (event) => {
 
 
 let previousVideoDevices = [];
-async function checkForNewDevices() {
+function checkForNewDevices() {
   console.log("previous devices are:", previousVideoDevices);
   navigator.mediaDevices.enumerateDevices().then (devices => {
     const currentVideoDevices = devices.filter(device => device.kind === "videoinput");
@@ -98,7 +98,7 @@ async function checkForNewDevices() {
 
 
 // Capture video and create offer
-async function connectCameras(pc) {
+function connectCameras(pc) {
   
   // List devices and then filter videoinput ones
   navigator.mediaDevices.enumerateDevices().then (devices => {
@@ -156,7 +156,7 @@ async function connectCameras(pc) {
 }
 
 
-async function addStream(camera, cameraId, pc) {
+function addStream(camera, cameraId, pc) {
 
   // Define the constraints we want to use
   const cameraConstraints = { video: {deviceId: cameraId,
@@ -199,7 +199,7 @@ async function addStream(camera, cameraId, pc) {
 
 
 // Function to resend the offer
-async function renegotiateOffer(pc) {
+function renegotiateOffer(pc) {
   
   pc.onicecandidate = (event) => {
     if (event.candidate) {
