@@ -134,7 +134,7 @@ async function connectCameras(pc) {
       }
 
       // Connect Right Camera
-      if (device.deviceId === leftCameraId) {
+      if (device.deviceId === rightCameraId) {
         const camera = cameraMap.get('rightCameraTrackId');
         if (camera !== null) {
           console.log("Right camera already connected.");
@@ -145,7 +145,7 @@ async function connectCameras(pc) {
       }
 
       // Connect Manipulator Camera
-      if (device.deviceId === leftCameraId) {
+      if (device.deviceId === manipCameraId) {
         const camera = cameraMap.get('manipCameraTrackId');
         if (camera !== null) {
           console.log("Manip camera already connected.");
