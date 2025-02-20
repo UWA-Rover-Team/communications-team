@@ -6,8 +6,10 @@
 
 
 // deviceID of cameras
-const frontCameraId = "LQXeVP21cCGt44HPH73pUvFC7Gc8ld1b8Zi136vnzzQ=";
-const leftCameraId = "2noqUGsn6qKXNB9fjiWc4SoBOttpdywjT+jQfNLESGs=";
+const frontCameraId =   "LQXeVP21cCGt44HPH73pUvFC7Gc8ld1b8Zi136vnzzQ=";
+const leftCameraId =    "2noqUGsn6qKXNB9fjiWc4SoBOttpdywjT+jQfNLESGs=";
+const rightCameraId =   "UUeWY3GwAp3rogYYRKjMix0ETJSCdiDG/neZ5xLoPVQ=";
+const manipCameraId =   "DhFg29xQSsnPa9y4zu6Rh0uKQsdHDIfuv/HVVe0D12A=";
 
 const socket = new WebSocket("ws://192.168.2.173:8080");
 let peerConnection = new RTCPeerConnection();
@@ -105,6 +107,8 @@ async function connectCameras(pc) {
     const videoDevices = devices.filter(device => device.kind === 'videoinput');
     // Loop through all found video inputs and send them over their own track
     for (const [index, device] of videoDevices.entries()) {
+
+      // Connect Front Camera
       if (device.deviceId === frontCameraId) {
         const camera = cameraMap.get('frontCameraTrackId');
         if (camera !== null) {
@@ -123,6 +127,7 @@ async function connectCameras(pc) {
         }
       }
 
+      // Connect Left Camera
       if (device.deviceId === leftCameraId) {
         const camera = cameraMap.get('leftCameraTrackId');
         if (camera !== null) {
@@ -133,6 +138,42 @@ async function connectCameras(pc) {
             socket.send(JSON.stringify({ 
               type: "nextCamera",
               camera: "left",
+              target: receiverName 
+            }));
+            renegotiateOffer(peerConnection);
+          });
+        }
+      }
+
+      // Connect Right Camera
+      if (device.deviceId === leftCameraId) {
+        const camera = cameraMap.get('rightCameraTrackId');
+        if (camera !== null) {
+          console.log("Right camera already connected.");
+        } else {
+          console.log("Right camera has connected, updating offer");
+          addStream('right', device.deviceId, pc).then(() => {
+            socket.send(JSON.stringify({ 
+              type: "nextCamera",
+              camera: "right",
+              target: receiverName 
+            }));
+            renegotiateOffer(peerConnection);
+          });
+        }
+      }
+
+      // Connect Manipulator Camera
+      if (device.deviceId === leftCameraId) {
+        const camera = cameraMap.get('manipCameraTrackId');
+        if (camera !== null) {
+          console.log("Manip camera already connected.");
+        } else {
+          console.log("Manip camera has connected, updating offer");
+          addStream('manip', device.deviceId, pc).then(() => {
+            socket.send(JSON.stringify({ 
+              type: "nextCamera",
+              camera: "manip",
               target: receiverName 
             }));
             renegotiateOffer(peerConnection);
