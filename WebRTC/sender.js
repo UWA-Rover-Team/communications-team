@@ -195,7 +195,7 @@ async function addStream(camera, cameraId, pc) {
     audio: false 
   };
   
-  await navigator.mediaDevices.getUserMedia(cameraConstraints).then ((stream) => { // Want to remove the await, but it doesnt work for now
+  navigator.mediaDevices.getUserMedia(cameraConstraints).then ((stream) => { // Want to remove the await, but it doesnt work for now
     const tracks = stream.getTracks();
     const videoTrack = tracks[0];
   
@@ -216,9 +216,10 @@ async function addStream(camera, cameraId, pc) {
       cameraMap.set(`${camera}CameraTrackId`, null);
       console.log(cameraMap);
     };
+    
+    console.log("track added:", camera);
+    return;
   });
-
-  console.log("track added:", camera);
 }
 
 
