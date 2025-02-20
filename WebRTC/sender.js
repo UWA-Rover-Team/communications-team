@@ -6,9 +6,9 @@
 
 
 // deviceID of cameras
-const frontCameraId =   "LQXeVP21cCGt44HPH73pUvFC7Gc8ld1b8Zi136vnzzQ=";
+const frontCameraId =   "UUeWY3GwAp3rogYYRKjMix0ETJSCdiDG/neZ5xLoPVQ=";
 const leftCameraId =    "2noqUGsn6qKXNB9fjiWc4SoBOttpdywjT+jQfNLESGs=";
-const rightCameraId =   "UUeWY3GwAp3rogYYRKjMix0ETJSCdiDG/neZ5xLoPVQ=";
+const rightCameraId =   "LQXeVP21cCGt44HPH73pUvFC7Gc8ld1b8Zi136vnzzQ=";
 const manipCameraId =   "DhFg29xQSsnPa9y4zu6Rh0uKQsdHDIfuv/HVVe0D12A=";
 
 const socket = new WebSocket("ws://192.168.2.173:8080");
