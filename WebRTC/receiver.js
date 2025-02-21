@@ -10,7 +10,13 @@ const videoElements = {
 
 const socket = new WebSocket("ws://192.168.2.173:8080"); // Replace with correct WebSocket server IP
 const receiverName = "receiver";
-const senderName = "sender";
+const senderNames = {
+  left: "sender_periph",
+  right: "sender_periph",
+  front: "sender_main",
+  manip: "sender_main"
+};
+
 
 // Object to store a peer connection per camera
 const peerConnections = {
@@ -48,7 +54,7 @@ socket.onmessage = async (event) => {
         socket.send(JSON.stringify({
           type: "candidate",
           candidate: event.candidate,
-          target: senderName,
+          target: senderNames.camera,
           camera: camera 
         }));
       }
@@ -81,7 +87,7 @@ socket.onmessage = async (event) => {
     socket.send(JSON.stringify({
       type: "answer",
       sdp: pc.localDescription.sdp,
-      target: senderName,
+      target: senderNames[camera],
       camera: camera
     }));
     console.log(`Answer sent for camera: ${camera}`);
