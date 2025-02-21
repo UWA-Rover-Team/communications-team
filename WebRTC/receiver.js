@@ -37,26 +37,24 @@ socket.onmessage = async (event) => {
   const data = JSON.parse(event.data);
 
   if (data.type === "offer") {
-    // Expecting a camera identifier in the offer message.
+
     const camera = data.camera;
     console.log(`Received offer for camera: ${camera}`);
-
-    // Create a new RTCPeerConnection for this camera
     const pc = new RTCPeerConnection();
 
-    // Set up ICE candidate handling for this connection.
+    // Set up ICE listner
     pc.onicecandidate = (event) => {
       if (event.candidate) {
         socket.send(JSON.stringify({
           type: "candidate",
           candidate: event.candidate,
           target: senderName,
-          camera: camera  // Include the camera identifier.
+          camera: camera 
         }));
       }
     };
 
-    // Set up track event handler to assign the incoming video track
+    // Set up track listener
     pc.ontrack = (event) => {
       if (event.track.kind === "video") {
         receivedTracks.push(event.track);
@@ -71,6 +69,7 @@ socket.onmessage = async (event) => {
     };
 
     peerConnections[camera] = pc;
+    console.log("SDP data description:", data.sdp);
     const offer = { type: "offer", sdp: data.sdp };
     await pc.setRemoteDescription(new RTCSessionDescription(offer));
     console.log(`Remote description set for camera: ${camera}`);

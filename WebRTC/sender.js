@@ -89,7 +89,8 @@ socket.onmessage = async (event) => {
 };
 
 let previousVideoDevices = [];
-// Check for new devices and trigger connection creation.
+
+// Connect the new connections
 function checkForNewDevices() {
   console.log("Previous devices:", previousVideoDevices);
   navigator.mediaDevices.enumerateDevices().then(devices => {
@@ -165,7 +166,7 @@ function connectCameras() {
   console.log("Read all devices connected.");
 }
 
-// Setup ICE candidate handling for a peer connection.
+// Setup listener of ICE candidate. Need to set this up for each camera
 function setupPeerConnectionEventHandlers(pc, camera) {
   pc.onicecandidate = (event) => {
     if (event.candidate) {
@@ -179,7 +180,7 @@ function setupPeerConnectionEventHandlers(pc, camera) {
   };
 }
 
-// Add a camera's stream to its peer connection and initiate offer negotiation.
+// Add the camera stream to its peerConnection
 function addStream(camera, cameraId, pc) {
   const cameraConstraints = { 
     video: { 
@@ -213,13 +214,6 @@ function addStream(camera, cameraId, pc) {
       cameraMap.set(`${camera}CameraTrackId`, null);
       console.log(cameraMap);
     };
-    
-    // Notify receiver that a camera is connected and renegotiate offer.
-    socket.send(JSON.stringify({ 
-      type: "nextCamera",
-      camera: camera,
-      target: receiverName
-    }));
 
     pc.createOffer().then(offer => {
       return pc.setLocalDescription(offer);
