@@ -221,7 +221,7 @@ function addStream(camera, cameraId, pc) {
       console.log(`Local description set successfully for camera: ${camera}`);
       socket.send(JSON.stringify({
         type: "offer",
-        offer: pc.localDescription,
+        sdp: pc.localDescription.sdp,
         target: receiverName,
         camera: camera // Include camera identifier for proper association on the receiver side.
       }));

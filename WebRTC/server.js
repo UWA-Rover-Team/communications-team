@@ -14,8 +14,8 @@ wss.on("connection", (ws) => {
         // Forward sdp and camera for offer/answer messages
         clients[data.target].send(JSON.stringify({
           type: data.type,
-          sdp: data[data.type].sdp,       
-          camera: data.camera
+          sdp: data.sdp,       
+          camera: data.camera  // include the camera identifier
         }));
         console.log(`Forwarded ${data.type} for camera ${data.camera} to ${data.target}`);
       } else {
