@@ -5,3 +5,4 @@
 echo "Starting sender scripts"
 firefox /home/uwa-rover/Documents/rover2025/communications-team/WebRTC/sender_main.html &
 firefox /home/uwa-rover/Documents/rover2025/communications-team/WebRTC/sender_periph.html &
+firefox /home/uwa-rover/Documents/rover2025/communications-team/WebRTC/receiver.html &
