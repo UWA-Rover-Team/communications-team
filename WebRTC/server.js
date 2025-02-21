@@ -50,10 +50,8 @@ wss.on("connection", (ws) => {
       clients[data.name] = ws;
       console.log(`Client registered as ${data.name}`);
       
-      if ((data.name === "receiver" && clients["sender_main"]) ||
-          (data.name === "sender_main" && clients["receiver"]) ||
-          (data.name === "receiver" && clients["sender_periph"]) ||
-          (data.name === "sender_periph" && clients["receiver"])) {
+      if ((data.name === "receiver" && clients["sender_main"] && clients["sender_periph"]) ||
+          (data.name === "sender_main" && clients["sender_periph"] && clients["receiver"])) {
         clients["sender_main"].send(JSON.stringify({ type: "new_receiver" }));
         clients["sender_periph"].send(JSON.stringify({ type: "new_receiver" }));
         console.log("Notified sender about new receiver connection.");
