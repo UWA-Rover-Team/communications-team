@@ -3,7 +3,7 @@
 // and includes the camera identifier in signaling messages.
 
 const frontCameraId =   "CPCzDkgEpvOqkvAfv9UFxA4mxG8xikCtXtWXIgjlHD0=";
-const manipCameraId =   "+02XaXkOoSeK54GA3nlGoz1wSaq7HL3MnWAO6ar16Uc=";
+const manipCameraId =   "+02XaXkOoSeK54GA3n1Goz1wSaq7HL3MnWAO6ar16Uc=";
 
 const socket = new WebSocket("ws://192.168.2.173:8080");
 
