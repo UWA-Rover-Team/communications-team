@@ -2,8 +2,8 @@
 // This file now creates a separate RTCPeerConnection per camera,
 // and includes the camera identifier in signaling messages.
 
-const frontCameraId =   "UUeWY3GwAp3rogYYRKjMix0ETJSCdiDG/neZ5xLoPVQ=";
-const manipCameraId =   "DhFg29xQSsnPa9y4zu6Rh0uKQsdHDIfuv/HVVe0D12A=";
+const frontCameraId =   "CPCzDkgEpvOqkvAfv9UFxA4mxG8xikCtXtWXIgjlHD0=";
+const manipCameraId =   "+02XaXkOoSeK54GA3nlGozlwSaq7HL3MnWAO6ar16Uc=";
 
 const socket = new WebSocket("ws://192.168.2.173:8080");
 
