@@ -13,7 +13,12 @@ const receiverName = "receiver";
 const senderName = "sender";
 
 // Object to store a peer connection per camera
-const peerConnections = {};
+const peerConnections = {
+  front: null,
+  left: null,
+  right: null,
+  manip: null,
+};
 
 // Global array to store received tracks (if needed)
 const receivedTracks = [];
@@ -65,20 +70,15 @@ socket.onmessage = async (event) => {
       }
     };
 
-    // Save this peer connection in our map.
     peerConnections[camera] = pc;
-
-    // Set the remote description using the received offer.
     const offer = { type: "offer", sdp: data.sdp };
     await pc.setRemoteDescription(new RTCSessionDescription(offer));
     console.log(`Remote description set for camera: ${camera}`);
 
-    // Create an answer for this offer.
+    // Answer the offer
     const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
     console.log(`Local description set for camera: ${camera}`);
-
-    // Send the answer back to the sender with the camera identifier.
     socket.send(JSON.stringify({
       type: "answer",
       sdp: pc.localDescription.sdp,
@@ -87,8 +87,8 @@ socket.onmessage = async (event) => {
     }));
     console.log(`Answer sent for camera: ${camera}`);
   } 
+
   else if (data.type === "candidate") {
-    // Add the ICE candidate to the appropriate peer connection.
     const camera = data.camera;
     if (peerConnections[camera]) {
       await peerConnections[camera].addIceCandidate(new RTCIceCandidate(data.candidate));
@@ -97,12 +97,13 @@ socket.onmessage = async (event) => {
       console.warn(`Received candidate for unknown camera: ${camera}`);
     }
   } 
+
   else if (data.type === "peerdisconnect") {
     // Close all peer connections and stop all received tracks.
     Object.keys(peerConnections).forEach(camera => {
       if (peerConnections[camera]) {
         peerConnections[camera].close();
-        delete peerConnections[camera];
+        peerConnections[camera] = null;
       }
     });
     Object.values(videoElements).forEach(videoElem => {
@@ -112,6 +113,7 @@ socket.onmessage = async (event) => {
     });
     console.log("Sender has disconnected. Closed all peer connections and tracks.");
   } 
+
   else {
     console.warn("Receiver received unknown message type:", data);
   }

@@ -220,23 +220,19 @@ function addStream(camera, cameraId, pc) {
       camera: camera,
       target: receiverName
     }));
-    renegotiateOffer(pc, camera);
-  });
-}
 
-// Create an offer for the given peer connection and send it via the socket.
-function renegotiateOffer(pc, camera) {
-  pc.createOffer().then(offer => {
-    return pc.setLocalDescription(offer);
-  }).then(() => {
-    console.log(`Local description set successfully for camera: ${camera}`);
-    socket.send(JSON.stringify({
-      type: "offer",
-      offer: pc.localDescription,
-      target: receiverName,
-      camera: camera // Include camera identifier for proper association on the receiver side.
-    }));
-    console.log(`Offer sent successfully for camera: ${camera}`);
+    pc.createOffer().then(offer => {
+      return pc.setLocalDescription(offer);
+    }).then(() => {
+      console.log(`Local description set successfully for camera: ${camera}`);
+      socket.send(JSON.stringify({
+        type: "offer",
+        offer: pc.localDescription,
+        target: receiverName,
+        camera: camera // Include camera identifier for proper association on the receiver side.
+      }));
+      console.log(`Offer sent successfully for camera: ${camera}`);
+    });
   });
 }
 
