@@ -5,6 +5,8 @@
 #include "esp_event.h"
 #include "esp_event_loop.h"
 #include "nvs_flash.h"
+#include <serial_com.h>
+#include <trilateralisation.h>
 
 
 uint8_t target_macs[3][6] = {{0x3C, 0x58, 0x5D, 0x82, 0xB9, 0x75}, 
