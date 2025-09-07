@@ -11,20 +11,16 @@ using namespace VmbCPP;
 int main() {
     // Start VimbaX
     VmbSystem& system = VmbSystem::GetInstance();
-    system.Startup();
+    VmbError_t err = system.Startup();
 
-    // Get first camera
-    CameraPtrVector cameras; // List of all cameras found by VimbaX
-    system.GetCameras(cameras);
-    if (cameras.empty()) {
-        std::cout << "No cameras found" << std::endl;
+
+    CameraPtr camera1;
+    err = system.OpenCameraByID("169.254.24.139", VmbAccessModeFull, camera1); // OpenCameraById returns an error. If not error, will edit camera1 object to read only from ID
+    if (VmbErrorSuccess != err) {
+        std::cerr << "Failed to open camera: " << err << std::endl;
         system.Shutdown();
-        return 1;
+        return -1;
     }
-    CameraPtr camera1object = cameras[0]; // Initialises a "smart pointer" to the CameraPtr Object
-
-    // Setup camera configuration
-    camera1object->Open(VmbAccessModeFull);
     FeaturePtr pixelFormatFeature;
 
     std::cout << "Capturing frames every second..." << std::endl;
@@ -32,7 +28,7 @@ int main() {
     // Capture 5 frames
     for (int i = 1; i <= 5; ++i) {
         FramePtr frame;
-        camera1object->AcquireSingleImage(frame, 2000);  // 2 second timeout. Runs the member function AcquireSingleImage
+        camera1->AcquireSingleImage(frame, 2000);  // 2 second timeout. Runs the member function AcquireSingleImage
 
         // Get raw pixel data
         VmbUchar_t* buffer;
@@ -51,7 +47,7 @@ int main() {
     }
 
     // Cleanup
-    camera1object->Close();
+    camera1->Close();
     system.Shutdown();
 
     return 0;
