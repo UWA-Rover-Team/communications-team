@@ -1,0 +1,1 @@
+/usr/bin/cc -rdynamic CMakeFiles/ListCameras_VmbC.dir/main.c.o CMakeFiles/ListCameras_VmbC.dir/ListCamerasProg.c.o -o ListCameras_VmbC  -Wl,-rpath,/home/manta/Downloads/VimbaX_2025-2/api/lib /home/manta/Downloads/VimbaX_2025-2/api/lib/libVmbC.so VmbCExamplesCommon_build/libVmbCExamplesCommon.a 

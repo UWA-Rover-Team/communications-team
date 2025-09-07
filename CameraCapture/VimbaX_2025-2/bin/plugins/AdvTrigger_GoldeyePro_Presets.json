@@ -1,0 +1,209 @@
+{
+    "#presets": [
+        "Turn Off All",
+        "Reset All",
+        "Custom",
+        "Frame Trigger Software",
+        "Frame Trigger IO Line3 Edge",
+        "Frame Trigger IO Line3 Level",
+        "Frame Trigger IO Line3 Bulk"
+    ],
+    
+    "Turn Off All": {
+        "#tooltip": "All trigger and source settings are off but other trigger settings like e.g. TimerDelay or TriggerActivation remain.",
+        "TriggerSelector": {
+            "#value": "<all>",
+            "TriggerSource": "Software",
+            "TriggerMode": "Off"
+        },
+        "LineSelector": [
+			{
+				"#value": "Line0",
+				"LineMode": "Output",
+				"LineInverter": false,
+				"LineSource": "Off"
+			},
+			{
+				"#value": "Line1",
+				"LineMode": "Output",
+				"LineInverter": false,
+				"LineSource": "Off"
+			},
+			{
+				"#value": "Line2",
+				"LineMode": "Output",
+				"LineInverter": false,
+				"LineSource": "Off"
+			},
+			{
+				"#value": "Line3",
+				"LineMode": "Input",
+				"LineInverter": false
+			},
+			{
+				"#value": "Line4",
+				"LineMode": "Input",
+				"LineInverter": false
+			},
+			{
+				"#value": "Line5",
+				"LineMode": "Input",
+				"LineInverter": false
+			},
+			{
+				"#value": "Line6",
+				"LineMode": "Input",
+				"LineInverter": false
+			},
+			{
+				"#value": "Line7",
+				"LineMode": "Input",
+				"LineInverter": false
+			}
+        ],
+        "TimerSelector": {
+            "#value": "<all>",
+            "TimerTriggerSource": "Off"
+        },
+        "CounterSelector": {
+            "#value": "<all>",
+            "CounterEventSource": "Off"
+        }
+    },
+    "Reset All": {
+        "#tooltip": "All trigger and source settings are off, other settings reset to default values (s. below).",
+        "TriggerSelector": {
+            "#value": "<all>_FrameStart",
+            "TriggerSource": "Software",
+            "TriggerMode": "Off",
+            "AcquisitionMode": "Continuous",
+            "ExposureMode": "Timed",
+            "TriggerDelay": "0"
+        },
+
+        "LineSelector": [
+			{
+				"#value": "Line0",
+				"LineMode": "Output",
+				"LineInverter": false,
+				"LineSource": "Off"
+			},			
+			{
+				"#value": "Line1",
+				"LineMode": "Output",
+				"LineInverter": false,
+				"LineSource": "Off"
+			},
+			{
+				"#value": "Line2",
+				"LineMode": "Output",
+				"LineInverter": false,
+				"LineSource": "Off"
+			},
+			{
+				"#value": "Line3",
+				"LineMode": "Input",
+				"LineInverter": false,
+                "LineDebounceMode": "Off",
+                "LineDebounceDuration": "0"
+			},
+			{
+				"#value": "Line4",
+				"LineMode": "Input",
+				"LineInverter": false,
+                "LineDebounceMode": "Off",
+                "LineDebounceDuration": "0"
+			},
+			{
+				"#value": "Line5",
+				"LineMode": "Input",
+				"LineInverter": false,
+                "LineDebounceMode": "Off",
+                "LineDebounceDuration": "0"
+			},
+			{
+				"#value": "Line6",
+				"LineMode": "Input",
+				"LineInverter": false,
+                "LineDebounceMode": "Off",
+                "LineDebounceDuration": "0"
+			},
+			{
+				"#value": "Line7",
+				"LineMode": "Input",
+				"LineInverter": false,
+                "LineDebounceMode": "Off",
+                "LineDebounceDuration": "0"
+			}
+        ],
+        "TimerSelector": {
+            "#value": "<all>",
+            "TimerTriggerSource": "Off",
+            "TimerDelay": "0",
+            "TimerDuration": "0"
+        },
+        "CounterSelector": {
+            "#value": "<all>",
+            "CounterEventSource": "Off",
+            "CounterValue": "0",
+            "CounterDuration": "0"
+        }
+    },
+    "Custom": {
+        "#tooltip": "Does not change anything when selected, but is active when user makes any trigger changes and activates a trigger counter or timer."
+    },
+     "Frame Trigger Software": {
+        "TriggerSelector": {
+            "#value": "FrameStart",
+            "TriggerActivation": "RisingEdge",
+            "TriggerSource": "Software",
+            "AcquisitionMode": "Continuous",
+            "ExposureMode": "Timed",
+            "TriggerMode": "On"
+        }
+    },
+                 
+    "Frame Trigger IO Line3 Edge": {
+        "TriggerSelector": {
+            "#value": "FrameStart",
+            "TriggerActivation": "RisingEdge",
+            "TriggerSource": "Line3",
+            "AcquisitionMode": "Continuous",
+            "ExposureMode": "Timed",
+            "TriggerMode": "On"
+            },
+        "LineSelector": {
+            "#value": "Line3",
+            "LineMode": "Input",
+            "LineDebounceMode": "Off"
+        }
+    },
+    
+    "Frame Trigger IO Line3 Level": {
+        "TriggerSelector": {
+            "#value": "FrameStart",
+            "TriggerActivation": "LevelHigh",
+            "TriggerSource": "Line3",
+            "AcquisitionMode": "Continuous",
+            "ExposureMode": "Timed",
+            "TriggerMode": "On"
+        },
+        "LineSelector": {
+            "#value": "Line3",
+            "LineMode": "Input",
+            "LineDebounceMode": "Off"
+        }
+    },
+    
+    "Frame Trigger IO Line3 Bulk": {
+        "TriggerSelector": {
+            "#value": "FrameStart",
+            "TriggerActivation": "RisingEdge",
+            "TriggerSource": "Line3",
+            "AcquisitionMode": "MultiFrame",
+            "AcquisitionFrameCount": "10",
+            "ExposureMode": "Timed",
+            "TriggerMode": "On"
+        }
+    }
+}

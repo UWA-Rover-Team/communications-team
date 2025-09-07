@@ -1,0 +1,1 @@
+/usr/bin/c++ -rdynamic CMakeFiles/ListCameras_VmbCPP.dir/main.cpp.o CMakeFiles/ListCameras_VmbCPP.dir/ListCameras.cpp.o -o ListCameras_VmbCPP  -Wl,-rpath,/home/manta/Downloads/VimbaX_2025-2/api/lib /home/manta/Downloads/VimbaX_2025-2/api/lib/libVmbCPP.so /home/manta/Downloads/VimbaX_2025-2/api/lib/libVmbC.so 
