@@ -1,1 +1,0 @@
-/usr/bin/c++ CMakeFiles/CameraCapture.dir/main.cpp.o -o CameraCapture   -L/home/manta/Documents/CameraCapture/CameraCode/../VimbaX_2025-2/api/lib  -Wl,-rpath,/home/manta/Documents/CameraCapture/CameraCode/../VimbaX_2025-2/api/lib -lVmbCPP 

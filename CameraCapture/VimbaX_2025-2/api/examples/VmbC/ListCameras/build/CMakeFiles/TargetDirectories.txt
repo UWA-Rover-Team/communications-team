@@ -1,6 +1,0 @@
-/home/manta/Downloads/VimbaX_2025-2/api/examples/VmbC/ListCameras/build/CMakeFiles/ListCameras_VmbC.dir
-/home/manta/Downloads/VimbaX_2025-2/api/examples/VmbC/ListCameras/build/CMakeFiles/edit_cache.dir
-/home/manta/Downloads/VimbaX_2025-2/api/examples/VmbC/ListCameras/build/CMakeFiles/rebuild_cache.dir
-/home/manta/Downloads/VimbaX_2025-2/api/examples/VmbC/ListCameras/build/VmbCExamplesCommon_build/CMakeFiles/VmbCExamplesCommon.dir
-/home/manta/Downloads/VimbaX_2025-2/api/examples/VmbC/ListCameras/build/VmbCExamplesCommon_build/CMakeFiles/edit_cache.dir
-/home/manta/Downloads/VimbaX_2025-2/api/examples/VmbC/ListCameras/build/VmbCExamplesCommon_build/CMakeFiles/rebuild_cache.dir

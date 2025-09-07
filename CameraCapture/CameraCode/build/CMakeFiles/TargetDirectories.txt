@@ -1,3 +1,0 @@
-/home/manta/Documents/CameraCapture/CameraCode/build/CMakeFiles/CameraCapture.dir
-/home/manta/Documents/CameraCapture/CameraCode/build/CMakeFiles/edit_cache.dir
-/home/manta/Documents/CameraCapture/CameraCode/build/CMakeFiles/rebuild_cache.dir

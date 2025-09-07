@@ -1,3 +1,0 @@
-/home/manta/Downloads/VimbaX_2025-2/api/examples/VmbCPP/ListCameras/build/CMakeFiles/ListCameras_VmbCPP.dir
-/home/manta/Downloads/VimbaX_2025-2/api/examples/VmbCPP/ListCameras/build/CMakeFiles/edit_cache.dir
-/home/manta/Downloads/VimbaX_2025-2/api/examples/VmbCPP/ListCameras/build/CMakeFiles/rebuild_cache.dir
