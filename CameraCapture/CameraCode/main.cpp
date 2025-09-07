@@ -11,11 +11,16 @@ using namespace VmbCPP;
 int main() {
     // Start VimbaX
     VmbSystem& system = VmbSystem::GetInstance();
-    system.Startup();
+    VmbError_t err = system.Startup();
 
-    // Setup camera configuration
+
     CameraPtr camera1;
-    system.OpenCameraByID( "192.168.0.42", VmbAccessModeFull, camera1);
+    err = system.OpenCameraByID("169.254.24.139", VmbAccessModeFull, camera1); // OpenCameraById returns an error. If not error, will edit camera1 object to read only from ID
+    if (VmbErrorSuccess != err) {
+        std::cerr << "Failed to open camera: " << err << std::endl;
+        system.Shutdown();
+        return -1;
+    }
     FeaturePtr pixelFormatFeature;
 
     std::cout << "Capturing frames every second..." << std::endl;
