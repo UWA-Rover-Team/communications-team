@@ -1,0 +1,7 @@
+{
+    "ColorCorrectionMatrix3x3": [1.0, 1.0, 1.0,
+                                 1.0, 1.0, 1.0,
+                                 1.0, 1.0, 1.0],
+    "DebayerMode": "Filter3x3",
+    "GammaCorrection": 1.0
+}
