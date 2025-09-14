@@ -17,6 +17,9 @@
 //   // tpc=topic;
 //   // typ=type;
 // }
+scom::scom() {
+    // Constructor implementation
+}
 void scom::comLoop(){
       if (doesloop){
         // talkloop(); 
