@@ -5,8 +5,20 @@
 
 using namespace VmbCPP;
 
-//TODO:     Find a function for me to set pixel formats
-//          Find a function to help set exposure levels and other editing of the camera format
+// Setting up call back for queueing frames
+class FrameObserver : public IFrameObserver
+{
+public:
+   FrameObserver(CameraPtr pCamera);
+   void FrameReceived(const FramePtr pFrame);
+};
+FrameObserver::FrameObserver(CameraPtr pCamera) : IFrameObserver(pCamera) {}
+
+// Frame callback for processing what i want to do with each frame
+void FrameObserver::FrameReceived(const FramePtr pFrame){
+   m_pCamera->QueueFrame(pFrame);
+}
+
 
 int main() {
     // Start VimbaX
@@ -21,30 +33,8 @@ int main() {
         system.Shutdown();
         return -1;
     }
-    FeaturePtr pixelFormatFeature;
 
-    std::cout << "Capturing frames every second..." << std::endl;
-
-    // Capture 5 frames
-    for (int i = 1; i <= 5; ++i) {
-        FramePtr frame;
-        camera1->AcquireSingleImage(frame, 2000);  // 2 second timeout. Runs the member function AcquireSingleImage
-
-        // Get raw pixel data
-        VmbUchar_t* buffer;
-        VmbUint32_t size;
-        frame->GetImage(buffer); // Sets buffer as a pointer to array inside FramePtr object
-        frame->GetBufferSize(size); // Directly writes the number of bytes to size
-
-        // Print first 20 pixel values
-        std::cout << "Frame " << i << ": ";
-        for (int j = 0; j < 20 && j < size; j++) {
-            std::cout << (int)buffer[j] << " ";
-        }
-        std::cout << std::endl;
-
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-    }
+    camera1->StartContinuousImageAcquisition(5, IFrameObserverPtr( new FrameObserver(camera1) ) );
 
     // Cleanup
     camera1->Close();
