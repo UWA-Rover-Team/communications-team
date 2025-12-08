@@ -1,3 +1,4 @@
 /CameraCode/Lib
-/CameraCode/build/
+/CameraCode/build/*
+
 .vscode/
