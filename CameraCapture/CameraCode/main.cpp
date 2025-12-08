@@ -2,7 +2,7 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
-
+        
 using namespace VmbCPP;
 
 // Setting up call back for queueing frames
