@@ -1,4 +1,5 @@
 export type clients = "BASE_STATION" | "ROVER" | "SERVER";
+export type cameras = "FRONT" | "BACK" | "LEFT" | "RIGHT" | "MANIP"
 
 export interface WebRTCMessage {
     client: clients;
