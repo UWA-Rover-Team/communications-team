@@ -1,7 +1,5 @@
 #include <VmbCPP/VmbCPP.h>
 #include <iostream>
-#include <thread>
-#include <chrono>
 #include <napi.h>
         
 using namespace VmbCPP;
@@ -9,16 +7,21 @@ using namespace VmbCPP;
 // Setting up call back for queueing frames
 class FrameObserver : public IFrameObserver
 {
+    private:
+    Napi::ThreadSafeFunction tsfn;
 public:
-   FrameObserver(CameraPtr pCamera);
+   FrameObserver(CameraPtr pCamera, Napi::ThreadSafeFunction threadsafefunction);
    void FrameReceived(const FramePtr pFrame);
 };
-FrameObserver::FrameObserver(CameraPtr pCamera) : IFrameObserver(pCamera) {}
+
+FrameObserver::FrameObserver(CameraPtr pCamera, Napi::ThreadSafeFunction tsfn) : IFrameObserver(pCamera) {}
 
 // Frame callback for processing what i want to do with each frame
 void FrameObserver::FrameReceived(const FramePtr pFrame){
    m_pCamera->QueueFrame(pFrame);
 }
+
+
 
 int main() {
     // Start VimbaX
