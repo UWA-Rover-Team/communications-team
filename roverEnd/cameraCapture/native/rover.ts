@@ -1,7 +1,7 @@
 import WebSocket from 'ws';
 import { RTCPeerConnection, RTCSessionDescription, RTCIceCandidate, nonstandard, MediaStream} from '@roamhq/wrtc';
 import { WebRTCMessage, clients, cameras, resolution } from './webRtcStreamObject';
-
+const vimbax = require('./build/Release/addon');
 
 const socket = new WebSocket("ws://192.168.56.1:8080");
 
@@ -33,7 +33,7 @@ async function createStream(camera: cameras, resolution: resolution): Promise<vo
   };
   
   const mediaStream = new MediaStream;
-  const mediaTrack = createMockVideoTrack(resolution);
+  const mediaTrack = requestCamera(camera);
   
   pcCAM.addTrack(mediaTrack, mediaStream); // Media stream is a collection of tracks (audio, visual etc.)
   
@@ -52,6 +52,21 @@ async function createStream(camera: cameras, resolution: resolution): Promise<vo
   
   console.log(`Set camera ${camera}`);
 } 
+
+
+function requestCamera(cameraId: string) {
+  const camera = new vimbax.VimbaXCamera();
+  
+  camera.startCapture((frameBuffer: Buffer) => {
+    console.log(`Received frame: ${frameBuffer.length} bytes`);
+  });
+  
+  console.log(`Started capturing from camera`);
+  
+  // Return camera object so you can stop it later
+  return camera;
+}
+
 
 function createMockVideoTrack(resolution: resolution): MediaStreamTrack {
   const source = new nonstandard.RTCVideoSource();

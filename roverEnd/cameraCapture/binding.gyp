@@ -1,12 +1,37 @@
 {
-  "targets": [{ # you can have multiple targets. generlly only need one
-    "target_name": "addon", # THe output file name
-    "sources": [ "src/main.cpp" ], # All the cpp files that need to be compiled if they are linked
-    "include_dirs": [ # Where to find header files
-      "<!@(node -p \"require('node-addon-api').include\")"
-    ],
-    "cflags!": [ "-fno-exceptions" ], # remove compieer flags
-    "cflags_cc!": [ "-fno-exceptions" ], # remove compiler flags
-    "defines": [ "NAPI_DISABLE_CPP_EXCEPTIONS" ] #ignore cpp exceptions
-  }]
+  "targets": [
+    {
+      "target_name": "addon",
+      "sources": [ "src/main.cpp" ],
+      "include_dirs": [
+        "<!@(node -p \"require('node-addon-api').include\")",
+        "C:/Program Files/Allied Vision/Vimba X/api/include"
+      ],
+      "conditions": [
+        ["OS=='win'", {
+          "libraries": [
+            "C:/Program Files/Allied Vision/Vimba X/api/lib/VmbCPP.lib"
+          ],
+          "msvs_settings": {
+            "VCCLCompilerTool": {
+              "ExceptionHandling": 1
+            },
+            "VCLinkerTool": {
+              "AdditionalLibraryDirectories": [
+                "C:/Program Files/Allied Vision/Vimba X/api/lib"
+              ]
+            }
+          },
+          "copies": [
+            {
+              "destination": "<(module_root_dir)/build/Release/",
+              "files": [
+                "C:/Program Files/Allied Vision/Vimba X/api/bin/VmbCPP.dll"
+              ]
+            }
+          ]
+        }]
+      ]
+    }
+  ]
 }
