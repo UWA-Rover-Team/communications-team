@@ -7,13 +7,7 @@ using namespace VmbCPP;
 class FrameObserver;
 class VimbaXCamera;
 
-Napi::Object Init(Napi::Env env, Napi::Object exports) {
-    Napi::Function func = VimbaXCamera::GetClass(env);
-    exports.Set("VimbaXCamera", func);
-    return exports;
-}
 
-NODE_API_MODULE(addon, Init);
 
 // =================== Bridging class the VimbaX will call, and will then call JScript ==============================
 class FrameObserver : public IFrameObserver
@@ -60,6 +54,7 @@ class VimbaXCamera : public Napi::ObjectWrap<VimbaXCamera> {
         std::shared_ptr<FrameObserver> myFrameObserver; // smart pointer. is nullptr currently
 
     public:
+
         static Napi::Function GetClass(Napi::Env env) {
             return DefineClass(env, "VimbaXCamera", {
                 VimbaXCamera::InstanceMethod("startCapture", &VimbaXCamera::StartCapture)
@@ -109,4 +104,13 @@ Napi::Value VimbaXCamera::StartCapture(const Napi::CallbackInfo& info) {
 
     return env.Undefined();
 }
+
+
+Napi::Object Init(Napi::Env env, Napi::Object exports) {
+    Napi::Function func = VimbaXCamera::GetClass(env);
+    exports.Set("VimbaXCamera", func);
+    return exports;
+}
+
+NODE_API_MODULE(addon, Init);
 
