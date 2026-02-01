@@ -1,8 +1,10 @@
-#include <VmbCPP/Include/VmbCPP.h>
+#include <VmbCPP/VmbCPP.h>
 #include <iostream>
 #include <napi.h>
         
 using namespace VmbCPP;
+
+NODE_API_MODULE(addon, Init);
 
 // =================== Bridging class the VimbaX will call, and will then call JScript ==============================
 class FrameObserver : public IFrameObserver
