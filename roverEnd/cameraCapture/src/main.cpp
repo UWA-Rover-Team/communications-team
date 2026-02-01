@@ -4,6 +4,13 @@
         
 using namespace VmbCPP;
 
+
+Napi::Object Init(Napi::Env env, Napi::Object exports) {
+    Napi::Function func = VimbaXCamera::GetClass(env);
+    exports.Set("VimbaXCamera", func);
+    return exports;
+}
+
 NODE_API_MODULE(addon, Init);
 
 // =================== Bridging class the VimbaX will call, and will then call JScript ==============================
