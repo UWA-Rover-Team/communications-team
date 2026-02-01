@@ -1,4 +1,4 @@
-#include <VmbCPP/VmbCPP.h>
+#include <VmbCPP/Include/VmbCPP.h>
 #include <iostream>
 #include <napi.h>
         
