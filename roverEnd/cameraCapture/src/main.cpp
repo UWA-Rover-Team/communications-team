@@ -4,6 +4,8 @@
         
 using namespace VmbCPP;
 
+class FrameObserver;
+class VimbaXCamera;
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
     Napi::Function func = VimbaXCamera::GetClass(env);
