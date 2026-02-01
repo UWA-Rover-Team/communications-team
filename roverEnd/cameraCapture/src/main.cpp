@@ -58,8 +58,13 @@ class VimbaXCamera : public Napi::ObjectWrap<VimbaXCamera> {
         std::shared_ptr<FrameObserver> myFrameObserver; // smart pointer. is nullptr currently
 
     public:
-        VimbaXCamera(const Napi::CallbackInfo& info);
+        static Napi::Function GetClass(Napi::Env env) {
+            return DefineClass(env, "VimbaXCamera", {
+                VimbaXCamera::InstanceMethod("startCapture", &VimbaXCamera::StartCapture)
+            });
+        }
 
+        VimbaXCamera(const Napi::CallbackInfo& info);
         Napi::Value StartCapture(const Napi::CallbackInfo& info);
 };
 
