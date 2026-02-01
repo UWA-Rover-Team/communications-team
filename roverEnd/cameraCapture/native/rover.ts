@@ -1,7 +1,7 @@
 import WebSocket from 'ws';
 import { RTCPeerConnection, RTCSessionDescription, RTCIceCandidate, nonstandard, MediaStream} from '@roamhq/wrtc';
 import { WebRTCMessage, clients, cameras, resolution } from './webRtcStreamObject';
-const vimbax = require('./build/Release/addon');
+const vimbax = require('../build/Release/addon');
 
 const socket = new WebSocket("ws://192.168.56.1:8080");
 
