@@ -132,7 +132,7 @@ Napi::Value VimbaXSystem::StartCapture(const Napi::CallbackInfo& info) {
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
     Napi::Function func = VimbaXSystem::GetClass(env);
-    exports.Set("VimbaXCamera", func);
+    exports.Set("VimbaXSystem", func);
     return exports;
 }
 
