@@ -3,7 +3,7 @@ import { RTCPeerConnection, RTCSessionDescription, RTCIceCandidate, nonstandard,
 import { WebRTCMessage, clients, cameras, resolution } from './webRtcStreamObject';
 const vimbax = require('../build/Release/addon');
 
-const socket = new WebSocket("ws://192.168.56.1:8080");
+const socket = new WebSocket("ws://192.168.2.164:8080");
 
 const vimbaSystem = vimbax.VimbaXSystem();
 
