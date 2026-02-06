@@ -62,7 +62,7 @@ class VimbaXSystem : public Napi::ObjectWrap<VimbaXSystem> {
     public:
 
         static Napi::Function GetClass(Napi::Env env) {
-            return DefineClass(env, "VimbaXCamera", {
+            return DefineClass(env, "VimbaXSystem", {
                 VimbaXSystem::InstanceMethod("startCapture", &VimbaXSystem::StartCapture)
             });
         }
