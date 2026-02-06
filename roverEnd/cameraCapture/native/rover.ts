@@ -5,6 +5,8 @@ const vimbax = require('../build/Release/addon');
 
 const socket = new WebSocket("ws://192.168.56.1:8080");
 
+const vimbaSystem = vimbax.VimbaXSystem();
+
 // ======================== Create new Stream Functions ===================
 // Global storage for cameras. Undefined == Disconnected
 const peerConnections: Record<cameras, RTCPeerConnection | undefined> = { // records are like dictionary types
@@ -55,16 +57,15 @@ async function createStream(camera: cameras, resolution: resolution): Promise<vo
 
 
 function requestCamera(cameraId: string) {
-  const camera = new vimbax.VimbaXCamera();
-  
-  camera.startCapture((frameBuffer: Buffer) => {
+
+  vimbaSystem.startCapture(cameraId, (frameBuffer: Buffer) => {
     console.log(`Received frame: ${frameBuffer.length} bytes`);
   });
   
   console.log(`Started capturing from camera`);
   
   // Return camera object so you can stop it later
-  return camera;
+  return vimbaSystem;
 }
 
 
