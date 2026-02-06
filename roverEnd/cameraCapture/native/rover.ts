@@ -5,7 +5,7 @@ const vimbax = require('../build/Release/addon');
 
 const socket = new WebSocket("ws://192.168.2.164:8080");
 
-const vimbaSystem = vimbax.VimbaXSystem();
+const vimbaSystem = new vimbax.VimbaXSystem();
 
 // ======================== Create new Stream Functions ===================
 // Global storage for cameras. Undefined == Disconnected
