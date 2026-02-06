@@ -3,6 +3,8 @@ import { RTCPeerConnection, RTCSessionDescription, RTCIceCandidate, nonstandard,
 import { WebRTCMessage, clients, cameras, resolution } from './webRtcStreamObject';
 const vimbax = require('../build/Release/addon');
 
+const { RTCVideoSource } = nonstandard;
+
 const socket = new WebSocket("ws://192.168.2.164:8080");
 
 const vimbaSystem = new vimbax.VimbaXSystem();
@@ -34,9 +36,9 @@ async function createStream(camera: cameras, resolution: resolution): Promise<vo
     }
   };
   
-  const mediaStream = new MediaStream;
   const mediaTrack = requestCamera(camera);
-  
+  const mediaStream = new MediaStream([mediaTrack]); 
+    
   pcCAM.addTrack(mediaTrack, mediaStream); // Media stream is a collection of tracks (audio, visual etc.)
   
   
@@ -56,16 +58,27 @@ async function createStream(camera: cameras, resolution: resolution): Promise<vo
 } 
 
 
-function requestCamera(cameraId: string) {
-
-  vimbaSystem.startCapture(cameraId, (frameBuffer: Buffer) => {
-    console.log(`Received frame: ${frameBuffer.length} bytes`);
+function requestCamera(cameraId: string): MediaStreamTrack {
+  // Create a video source
+  const source = new RTCVideoSource();
+  const track = source.createTrack();
+  
+  let frameCount = 0;
+  
+  vimbaSystem.startCapture(cameraId, (frameData: { buffer: Buffer, width: number, height: number }) => {
+    // Feed frames to the source
+    const frame = {
+      width: frameData.width,
+      height: frameData.height,
+      data: new Uint8Array(frameData.buffer),
+    };
+    
+    source.onFrame(frame);
   });
   
-  console.log(`Started capturing from camera`);
+  console.log(`Started capturing from camera ${cameraId}`);
   
-  // Return camera object so you can stop it later
-  return vimbaSystem;
+  return track;
 }
 
 

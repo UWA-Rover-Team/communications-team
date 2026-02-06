@@ -20,6 +20,7 @@ class FrameObserver : public IFrameObserver
 {
 private:
     Napi::ThreadSafeFunction tsfnJScriptCallback;
+    std::vector<uint8_t>* RGB8toRGBA(VmbUchar_t* rgb, uint32_t width, uint32_t height);
 public:
    FrameObserver(CameraPtr pCamera, Napi::ThreadSafeFunction threadsafefunction);
    void FrameReceived(const FramePtr pFrame);
@@ -30,25 +31,52 @@ FrameObserver::FrameObserver(CameraPtr pCamera, Napi::ThreadSafeFunction tsfnJSc
 
 // Frame callback for processing what i want to do with each frame. Will 
 void FrameObserver::FrameReceived(const FramePtr pFrame){
-
-    VmbUchar_t* pBuffer; // Pointer to array beginning (char is 8 bit). VimbaX already created it. need to double check the camera settings or it might send nonsense
-    VmbUint32_t bufferSize; // Stores the size of the buffer that is being pointed to
+    VmbUchar_t* pBuffer;
+    VmbUint32_t bufferSize;
+    VmbUint32_t width, height;
 
     pFrame->GetBuffer(pBuffer);
     pFrame->GetBufferSize(bufferSize);
+    pFrame->GetWidth(width);
+    pFrame->GetHeight(height);
 
-    // Vector is a fancy array given by C++
-    std::vector<uint8_t>* frameData = new std::vector<uint8_t>(pBuffer, pBuffer + bufferSize); // Beginning to end of array
+    std::vector<uint8_t>* rgbaData = RGB8toRGBA(pBuffer, width, height);
 
-    auto translateFunction = [](Napi::Env env, Napi::Function jsCallback, std::vector<uint8_t>* data){
-        Napi::Buffer<uint8_t> buffer = Napi::Buffer<uint8_t>::Copy(env, data->data(), data->size());
-        jsCallback.Call({buffer});
-        delete data;
+    struct FrameInfo {
+        std::vector<uint8_t>* data;
+        uint32_t width;
+        uint32_t height;
+    };
+    
+    FrameInfo* info = new FrameInfo{rgbaData, width, height};
+
+    auto translateFunction = [](Napi::Env env, Napi::Function jsCallback, FrameInfo* info){
+        Napi::Object obj = Napi::Object::New(env);
+        obj.Set("buffer", Napi::Buffer<uint8_t>::Copy(env, info->data->data(), info->data->size()));
+        obj.Set("width", info->width);
+        obj.Set("height", info->height);
+        
+        jsCallback.Call({obj});
+        
+        delete info->data;
+        delete info;
     };
 
-    tsfnJScriptCallback.BlockingCall(frameData, translateFunction); // Blocking call will take the jscript parameters and a lambda function that tells it how to convert, then call the actual jscript function using the lambda function
+    tsfnJScriptCallback.BlockingCall(info, translateFunction);
+    m_pCamera->QueueFrame(pFrame);
+}
 
-   m_pCamera->QueueFrame(pFrame);
+std::vector<uint8_t>* FrameObserver::RGB8toRGBA(VmbUchar_t* rgb, uint32_t width, uint32_t height) {
+    std::vector<uint8_t>* rgba = new std::vector<uint8_t>(width * height * 4);
+    
+    for(uint32_t i = 0; i < width * height; i++) {
+        (*rgba)[i*4 + 0] = rgb[i*3 + 0]; 
+        (*rgba)[i*4 + 1] = rgb[i*3 + 1]; 
+        (*rgba)[i*4 + 2] = rgb[i*3 + 2];
+        (*rgba)[i*4 + 3] = 255;         
+    }
+    
+    return rgba;
 }
 
 
@@ -75,6 +103,7 @@ class VimbaXSystem : public Napi::ObjectWrap<VimbaXSystem> {
 VimbaXSystem::VimbaXSystem(const Napi::CallbackInfo& info) 
 : Napi::ObjectWrap<VimbaXSystem>(info), system(VmbSystem::GetInstance()) {
     VmbError_t err = system.Startup();
+    std::cerr << "Succesfully initisalised system" << std::endl;
 }
 
 // =============================== Javascript calls to begin capture ======================
@@ -82,6 +111,7 @@ VimbaXSystem::VimbaXSystem(const Napi::CallbackInfo& info)
 Napi::Value VimbaXSystem::StartCapture(const Napi::CallbackInfo& info) {
     VmbError_t err;
     Napi::ThreadSafeFunction tsfnJScriptCallback;
+    FeaturePtr pFormatFeature;
 
     Napi::Env env = info.Env(); // Info on the runtime enviroment
 
@@ -98,7 +128,10 @@ Napi::Value VimbaXSystem::StartCapture(const Napi::CallbackInfo& info) {
             if (VmbErrorSuccess != err) {
                 std::cerr << "Failed to open camera: " << err << std::endl;
                 system.Shutdown();
-            }
+            } else std::cerr << "Opened FRONT camera" << std::endl;
+
+            err = camera1->GetFeatureByName("PixelFormat", pFormatFeature);
+            pFormatFeature->SetValue(VmbPixelFormatRgb8);
 
             tsfnJScriptCallback = Napi::ThreadSafeFunction::New( // Turn the callback function into threadsafe so that we can access the javascript function from the C++ thread
                 env, // The runtime code, taken from the info
