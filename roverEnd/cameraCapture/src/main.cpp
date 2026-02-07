@@ -90,22 +90,19 @@ std::vector<uint8_t> FrameObserver::convertYUV422toYUV420(VmbUchar_t* yuv422, ui
             uint32_t yuv422_idx = (row * width + col) * 2;
             uint32_t y_idx = row * width + col;
             
-            // Copy Y values
-            y_plane[y_idx] = yuv422[yuv422_idx];          // Y0
-            y_plane[y_idx + 1] = yuv422[yuv422_idx + 2];  // Y1
-            
-            // Only process U/V on even rows (subsample vertically)
+            // If the format is UYVY (U0 Y0 V0 Y1), use this:
+            y_plane[y_idx] = yuv422[yuv422_idx + 1];      // Y0
+            y_plane[y_idx + 1] = yuv422[yuv422_idx + 3];  // Y1
+
             if (row % 2 == 0) {
                 uint32_t uv_idx = (row / 2) * (width / 2) + (col / 2);
-                
-                // Average U and V from current and next row if possible
                 if (row + 1 < height) {
                     uint32_t yuv422_idx_next = ((row + 1) * width + col) * 2;
-                    v_plane[uv_idx] = (yuv422[yuv422_idx + 1] + yuv422[yuv422_idx_next + 1]) / 2;
-                    u_plane[uv_idx] = (yuv422[yuv422_idx + 3] + yuv422[yuv422_idx_next + 3]) / 2;
+                    u_plane[uv_idx] = (yuv422[yuv422_idx] + yuv422[yuv422_idx_next]) / 2;
+                    v_plane[uv_idx] = (yuv422[yuv422_idx + 2] + yuv422[yuv422_idx_next + 2]) / 2;
                 } else {
-                    u_plane[uv_idx] = yuv422[yuv422_idx + 1];
-                    v_plane[uv_idx] = yuv422[yuv422_idx + 3];
+                    u_plane[uv_idx] = yuv422[yuv422_idx];
+                    v_plane[uv_idx] = yuv422[yuv422_idx + 2];
                 }
             }
         }
