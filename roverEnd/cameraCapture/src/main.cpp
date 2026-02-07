@@ -178,70 +178,62 @@ VimbaXSystem::VimbaXSystem(const Napi::CallbackInfo& info)
 VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr& camera, std::shared_ptr<FrameObserver>& observer, Napi::ThreadSafeFunction& tsfn) {
     VmbError_t err;
     
-    // Open camera
     err = system.OpenCameraByID(cameraIP.c_str(), VmbAccessModeFull, camera);
     if (VmbErrorSuccess != err) {
         return err;
     }
 
-    // === CRITICAL: Set TriggerSelector to FrameStart, then disable trigger ===
-    FeaturePtr pTriggerSelector;
-    if (camera->GetFeatureByName("TriggerSelector", pTriggerSelector) == VmbErrorSuccess) {
-        pTriggerSelector->SetValue("FrameStart");
-    }
-    
-    FeaturePtr pTriggerMode;
-    if (camera->GetFeatureByName("TriggerMode", pTriggerMode) == VmbErrorSuccess) {
-        pTriggerMode->SetValue("Off");
-    }
-
-    // Set AcquisitionMode to Continuous
     FeaturePtr pAcqMode;
     if (camera->GetFeatureByName("AcquisitionMode", pAcqMode) == VmbErrorSuccess) {
         pAcqMode->SetValue("Continuous");
     }
 
-    // Use binning to get close to 240x240 with full FOV
     FeaturePtr pBinningH, pBinningV;
     if (camera->GetFeatureByName("BinningHorizontal", pBinningH) == VmbErrorSuccess) {
-        pBinningH->SetValue(8);  // 2064 / 8 ≈ 258
+        pBinningH->SetValue(8);
+        std::cerr << "Horizontal binning: 8x" << std::endl;
     }
     if (camera->GetFeatureByName("BinningVertical", pBinningV) == VmbErrorSuccess) {
-        pBinningV->SetValue(6);  // 1544 / 6 ≈ 257
+        pBinningV->SetValue(6);
+        std::cerr << "Vertical binning: 6x" << std::endl;
     }
 
-    // Set pixel format
+    // Check what resolution we got
+    FeaturePtr pWidth, pHeight;
+    camera->GetFeatureByName("Width", pWidth);
+    camera->GetFeatureByName("Height", pHeight);
+    
+    VmbInt64_t actualW, actualH;
+    pWidth->GetValue(actualW);
+    pHeight->GetValue(actualH);
+    std::cerr << "Using full binned resolution: " << actualW << "x" << actualH << std::endl;
+
     FeaturePtr pFormat;
     if (camera->GetFeatureByName("PixelFormat", pFormat) == VmbErrorSuccess) {
         pFormat->SetValue("RGB8Packed");
     }
 
-    // GigE packet settings
     FeaturePtr pPacketSize;
     if (camera->GetFeatureByName("GevSCPSPacketSize", pPacketSize) == VmbErrorSuccess) {
         pPacketSize->SetValue(1500);
     }
 
-    // Enable auto gain
     FeaturePtr pGainAuto;
     if (camera->GetFeatureByName("GainAuto", pGainAuto) == VmbErrorSuccess) {
         pGainAuto->SetValue("Continuous");
     }
     
-    // Enable auto exposure
     FeaturePtr pExposureAuto;
     if (camera->GetFeatureByName("ExposureAuto", pExposureAuto) == VmbErrorSuccess) {
         pExposureAuto->SetValue("Continuous");
     }
 
-    // Start acquisition 
     observer = std::make_shared<FrameObserver>(camera, tsfn);
     err = camera->StartContinuousImageAcquisition(30, IFrameObserverPtr(observer));
     if (VmbErrorSuccess != err) {
         return err;
     }
 
-    // === CRITICAL: Run AcquisitionStart command ===
     FeaturePtr pAcqStart;
     err = camera->GetFeatureByName("AcquisitionStart", pAcqStart);
     if (VmbErrorSuccess == err) {
