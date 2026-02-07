@@ -141,9 +141,7 @@ VimbaXSystem::VimbaXSystem(const Napi::CallbackInfo& info)
 }
 
 // ================== General camera capture Function ================
-VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr& camera, 
-                                          std::shared_ptr<FrameObserver>& observer, 
-                                          Napi::ThreadSafeFunction& tsfn) {
+VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr& camera, std::shared_ptr<FrameObserver>& observer, Napi::ThreadSafeFunction& tsfn) {
     VmbError_t err;
     
     // Open camera
@@ -179,7 +177,7 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
     // Set pixel format
     FeaturePtr pFormat;
     if (camera->GetFeatureByName("PixelFormat", pFormat) == VmbErrorSuccess) {
-        err = pFormat->SetValue("RGB8Packed");
+        err = pFormat->SetValue("YUV422Packed");
         if (err != VmbErrorSuccess) {
             pFormat->SetValue("RGB8");
         }
