@@ -1,5 +1,11 @@
 export type clients = "BASE_STATION" | "ROVER" | "SERVER";
-export type cameras = "FRONT" | "BACK" | "LEFT" | "RIGHT" | "MANIP"
+export enum cameras {
+    FRONT = 1,
+    BACK = 2,
+    LEFT = 3,
+    RIGHT = 4,
+    MANIP = 5
+}
 export type resolution = [width: number, height: number];
 
 export interface WebRTCMessage {

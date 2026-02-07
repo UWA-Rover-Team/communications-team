@@ -23,6 +23,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { requestCameraStream, registerVideoElement } from '$lib/cameraFunctions';
+  import { cameras } from '$lib/webRtcStreamObject';
   import '../lib/cameraStyles.css';
   import '../lib/controlPanelStyle.css'
 
@@ -33,23 +34,23 @@
   let manipVideo = $state<HTMLVideoElement>();
 
   $effect(() => {
-    if (frontVideo) registerVideoElement('FRONT', frontVideo);
+    if (frontVideo) registerVideoElement(cameras.FRONT, frontVideo);
   });
   
   $effect(() => {
-    if (backVideo) registerVideoElement('BACK', backVideo);
+    if (backVideo) registerVideoElement(cameras.BACK, backVideo);
   });
   
   $effect(() => {
-    if (leftVideo) registerVideoElement('LEFT', leftVideo);
+    if (leftVideo) registerVideoElement(cameras.LEFT, leftVideo);
   });
   
   $effect(() => {
-    if (rightVideo) registerVideoElement('RIGHT', rightVideo);
+    if (rightVideo) registerVideoElement(cameras.RIGHT, rightVideo);
   });
   
   $effect(() => {
-    if (manipVideo) registerVideoElement('MANIP', manipVideo);
+    if (manipVideo) registerVideoElement(cameras.MANIP, manipVideo);
   });
 
   let focusFront = $state(true);
@@ -59,11 +60,11 @@
   let focusManip = $state(false);
 
   onMount(() => {
-    requestCameraStream("FRONT", [240,240]);
-    requestCameraStream("LEFT", [240,240]);
-    requestCameraStream("RIGHT", [240,240]); 
-    requestCameraStream("BACK", [240,240]);
-    requestCameraStream("MANIP", [240,240]);
+    requestCameraStream(1, [240,240]); // Need to change cameras to 1-5 enum, rather than string
+    // requestCameraStream("LEFT", [240,240]);
+    // requestCameraStream("RIGHT", [240,240]); 
+    // requestCameraStream("BACK", [240,240]);
+    // requestCameraStream("MANIP", [240,240]);
   });
 
 
@@ -370,7 +371,7 @@
     <!-- svelte-ignore a11y_click_events_have_key_events --><!-- svelte-ignore a11y_no_static_element_interactions -->
     <div class="videoBaseFocus videoButton" onclick={() => {
       focusFront = false;
-      requestCameraStream("FRONT", [240,240]);
+      requestCameraStream(cameras.FRONT, [240,240]);
     }}>
       <span class="videoLabel">Front</span>
       <video bind:this={frontVideo} autoplay playsinline class="videoBaseFocus videoStream"></video>
@@ -380,7 +381,7 @@
     <!-- svelte-ignore a11y_click_events_have_key_events --><!-- svelte-ignore a11y_no_static_element_interactions -->
     <div class="videoBaseFocus videoButton" onclick={() => {
       focusLeft = false;
-      requestCameraStream("LEFT", [240,240]);
+      requestCameraStream(cameras.LEFT, [240,240]);
     }}>
       <span class="videoLabel">Left</span>
       <video bind:this={leftVideo} autoplay playsinline class="videoBaseFocus videoStream"></video>
@@ -390,7 +391,7 @@
     <!-- svelte-ignore a11y_click_events_have_key_events --><!-- svelte-ignore a11y_no_static_element_interactions -->
     <div class="videoBaseFocus videoButton" onclick={() => {
       focusRight = false;
-      requestCameraStream("RIGHT", [240,240]);
+      requestCameraStream(cameras.RIGHT, [240,240]);
     }}>
       <span class="videoLabel">Right</span>
       <video bind:this={rightVideo} autoplay playsinline class="videoBaseFocus videoStream"></video>
@@ -400,7 +401,7 @@
     <!-- svelte-ignore a11y_click_events_have_key_events --><!-- svelte-ignore a11y_no_static_element_interactions -->
     <div class="videoBaseFocus videoButton" onclick={() => {
       focusBack = false;
-      requestCameraStream("BACK", [240,240]);
+      requestCameraStream(cameras.BACK, [240,240]);
     }}>
       <span class="videoLabel">Back</span>
       <video bind:this={backVideo} autoplay playsinline class="videoBaseFocus videoStream"></video>
@@ -410,7 +411,7 @@
     <!-- svelte-ignore a11y_click_events_have_key_events --><!-- svelte-ignore a11y_no_static_element_interactions -->
     <div class="videoBaseFocus videoButton" onclick={() => {
       focusManip = false;
-      requestCameraStream("MANIP", [240,240]);
+      requestCameraStream(cameras.MANIP, [240,240]);
     }}>
       <span class="videoLabel">Manipulator</span>
       <video bind:this={manipVideo} autoplay playsinline class="videoBaseFocus videoStream"></video>

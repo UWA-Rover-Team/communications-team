@@ -12,12 +12,12 @@ const vimbaSystem = new vimbax.VimbaXSystem();
 
 // ======================== Create new Stream Functions ===================
 // Global storage for cameras. Undefined == Disconnected
-const peerConnections: Record<cameras, RTCPeerConnection | undefined> = { // records are like dictionary types
-FRONT: undefined,
-BACK: undefined,
-LEFT: undefined,
-RIGHT: undefined,
-MANIP: undefined
+const peerConnections: Record<cameras, RTCPeerConnection | undefined> = {
+  [cameras.FRONT]: undefined,
+  [cameras.BACK]: undefined,
+  [cameras.LEFT]: undefined,
+  [cameras.RIGHT]: undefined,
+  [cameras.MANIP]: undefined
 };
 
 async function createStream(camera: cameras, resolution: resolution): Promise<void> {
@@ -64,7 +64,7 @@ async function createStream(camera: cameras, resolution: resolution): Promise<vo
 }
 
 // Make this return a Promise
-function requestCamera(cameraId: string): Promise<MediaStreamTrack> {
+function requestCamera(cameraId: Number): Promise<MediaStreamTrack> {
   return new Promise((resolve, reject) => {
     const source = new RTCVideoSource();
     const track = source.createTrack();
