@@ -41,13 +41,12 @@ async function createStream(camera: cameras, resolution: resolution): Promise<vo
   const mediaStream = new MediaStream([mediaTrack]); 
     
   pcCAM.addTrack(mediaTrack, mediaStream); // Media stream is a collection of tracks (audio, visual etc.)
-  console.log('Sender:', pcCAM);
   const senders = pcCAM.getSenders();
-  console.log('Senders:', senders.map(s => s.track));
   
   // Create and send the offer
   const offerCAM = await pcCAM.createOffer();
   await pcCAM.setLocalDescription(offerCAM);
+  console.log('Offer SDP:', offerCAM.sdp);
   
   socket.send(JSON.stringify({
     type: "OFFER",
