@@ -185,18 +185,7 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
     if (VmbErrorSuccess != err) {
         return err;
     }
-
-    // Set TriggerSelector to FrameStart, then disable trigger
-    FeaturePtr pTriggerSelector;
-    if (camera->GetFeatureByName("TriggerSelector", pTriggerSelector) == VmbErrorSuccess) {
-        pTriggerSelector->SetValue("FrameStart");
-    }
     
-    FeaturePtr pTriggerMode;
-    if (camera->GetFeatureByName("TriggerMode", pTriggerMode) == VmbErrorSuccess) {
-        pTriggerMode->SetValue("Off");
-    }
-
     // Set AcquisitionMode to Continuous
     FeaturePtr pAcqMode;
     if (camera->GetFeatureByName("AcquisitionMode", pAcqMode) == VmbErrorSuccess) {
@@ -228,29 +217,6 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
         // Try 1500 first (standard MTU)
         pPacketSize->SetValue(1500);
         std::cerr << "Set packet size to 1500" << std::endl;
-    }
-
-    // Add small inter-packet delay for reliability
-    FeaturePtr pDelay;
-    if (camera->GetFeatureByName("GevSCPD", pDelay) == VmbErrorSuccess) {
-        pDelay->SetValue(1000);  // 1 microsecond delay
-        std::cerr << "Set inter-packet delay to 1000ns" << std::endl;
-    }
-
-    // Enable frame rate control
-    FeaturePtr pFrameRateEnable;
-    if (camera->GetFeatureByName("AcquisitionFrameRateEnable", pFrameRateEnable) == VmbErrorSuccess) {
-        pFrameRateEnable->SetValue(true);
-    }
-
-    // Set to 60 FPS
-    FeaturePtr pFrameRate;
-    if (camera->GetFeatureByName("AcquisitionFrameRate", pFrameRate) == VmbErrorSuccess) {
-        pFrameRate->SetValue(60.0);
-        
-        double actualFPS;
-        pFrameRate->GetValue(actualFPS);
-        std::cerr << "Set FPS to: " << actualFPS << std::endl;
     }
 
     // Enable auto gain
