@@ -180,13 +180,14 @@ VimbaXSystem::VimbaXSystem(const Napi::CallbackInfo& info)
 VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr& camera, std::shared_ptr<FrameObserver>& observer, Napi::ThreadSafeFunction& tsfn) {
     VmbError_t err;
     
-    // Open camera
     err = system.OpenCameraByID(cameraIP.c_str(), VmbAccessModeFull, camera);
     if (VmbErrorSuccess != err) {
         return err;
     }
+    
+    std::cerr << "\n========== FULL CAMERA DIAGNOSTIC ==========" << std::endl;
 
-    // Set TriggerSelector to FrameStart, then disable trigger
+    // Trigger settings
     FeaturePtr pTriggerSelector;
     if (camera->GetFeatureByName("TriggerSelector", pTriggerSelector) == VmbErrorSuccess) {
         pTriggerSelector->SetValue("FrameStart");
@@ -197,91 +198,181 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
         pTriggerMode->SetValue("Off");
     }
 
-    // Set AcquisitionMode to Continuous
     FeaturePtr pAcqMode;
     if (camera->GetFeatureByName("AcquisitionMode", pAcqMode) == VmbErrorSuccess) {
         pAcqMode->SetValue("Continuous");
     }
 
-    // Set resolution BEFORE other settings
+    // Resolution
     FeaturePtr pWidth, pHeight;
     camera->GetFeatureByName("Width", pWidth);
     camera->GetFeatureByName("Height", pHeight);
     pWidth->SetValue(240);
     pHeight->SetValue(240);
 
-    // Set pixel format
+    // Pixel format
     FeaturePtr pFormat;
     if (camera->GetFeatureByName("PixelFormat", pFormat) == VmbErrorSuccess) {
-        err = pFormat->SetValue("RGB8Packed");
-        if (err != VmbErrorSuccess) {
-            pFormat->SetValue("RGB8");
-        }
-        if (err != VmbErrorSuccess) {
-            pFormat->SetValue("Mono8");
-        }
+        pFormat->SetValue("RGB8Packed");
     }
 
-    // GigE packet settings - START CONSERVATIVE
-    FeaturePtr pPacketSize;
-    if (camera->GetFeatureByName("GevSCPSPacketSize", pPacketSize) == VmbErrorSuccess) {
-        // Try 1500 first (standard MTU)
-        pPacketSize->SetValue(1500);
-        std::cerr << "Set packet size to 1500" << std::endl;
-    }
-
-    // Add small inter-packet delay for reliability
-    FeaturePtr pDelay;
-    if (camera->GetFeatureByName("GevSCPD", pDelay) == VmbErrorSuccess) {
-        pDelay->SetValue(1000);  // 1 microsecond delay
-        std::cerr << "Set inter-packet delay to 1000ns" << std::endl;
-    }
-
-    // Enable frame rate control
-    FeaturePtr pFrameRateEnable;
-    if (camera->GetFeatureByName("AcquisitionFrameRateEnable", pFrameRateEnable) == VmbErrorSuccess) {
-        pFrameRateEnable->SetValue(true);
-    }
-
-    // Set to 60 FPS
-    FeaturePtr pFrameRate;
-    if (camera->GetFeatureByName("AcquisitionFrameRate", pFrameRate) == VmbErrorSuccess) {
-        pFrameRate->SetValue(60.0);
-        
-        double actualFPS;
-        pFrameRate->GetValue(actualFPS);
-        std::cerr << "Set FPS to: " << actualFPS << std::endl;
-    }
-
-    // Enable auto gain
-    FeaturePtr pGainAuto;
-    if (camera->GetFeatureByName("GainAuto", pGainAuto) == VmbErrorSuccess) {
-        pGainAuto->SetValue("Continuous");
-    }
-
-    // Enable auto exposure
+    // === CHECK WHAT'S LIMITING FRAME RATE ===
+    
+    // 1. Check exposure time FIRST
+    std::cerr << "\n--- Exposure Settings ---" << std::endl;
     FeaturePtr pExposureAuto;
     if (camera->GetFeatureByName("ExposureAuto", pExposureAuto) == VmbErrorSuccess) {
-        pExposureAuto->SetValue("Continuous");
+        std::string exposureMode;
+        pExposureAuto->GetValue(exposureMode);
+        std::cerr << "ExposureAuto (BEFORE): " << exposureMode << std::endl;
+        
+        // FORCE it off
+        pExposureAuto->SetValue("Off");
+        pExposureAuto->GetValue(exposureMode);
+        std::cerr << "ExposureAuto (AFTER):  " << exposureMode << std::endl;
+    }
+    
+    FeaturePtr pExposure;
+    if (camera->GetFeatureByName("ExposureTime", pExposure) == VmbErrorSuccess) {
+        double currentExp;
+        pExposure->GetValue(currentExp);
+        std::cerr << "ExposureTime (BEFORE): " << currentExp << " µs (" << (currentExp/1000.0) << " ms)" << std::endl;
+        
+        // Set very short exposure for testing
+        pExposure->SetValue(5000);  // 5ms
+        
+        pExposure->GetValue(currentExp);
+        std::cerr << "ExposureTime (AFTER):  " << currentExp << " µs (" << (currentExp/1000.0) << " ms)" << std::endl;
+        std::cerr << "Max theoretical FPS from exposure: " << (1000000.0 / currentExp) << std::endl;
     }
 
-    // Start acquisition with MORE buffers
+    // 2. Check gain
+    std::cerr << "\n--- Gain Settings ---" << std::endl;
+    FeaturePtr pGainAuto;
+    if (camera->GetFeatureByName("GainAuto", pGainAuto) == VmbErrorSuccess) {
+        std::string gainMode;
+        pGainAuto->GetValue(gainMode);
+        std::cerr << "GainAuto: " << gainMode << std::endl;
+        pGainAuto->SetValue("Off");
+    }
+    
+    FeaturePtr pGain;
+    if (camera->GetFeatureByName("Gain", pGain) == VmbErrorSuccess) {
+        double gain;
+        pGain->GetValue(gain);
+        std::cerr << "Gain: " << gain << " dB" << std::endl;
+        pGain->SetValue(10.0);  // Boost for short exposure
+    }
+
+    // 3. Check frame rate settings
+    std::cerr << "\n--- Frame Rate Settings ---" << std::endl;
+    FeaturePtr pFrameRateEnable;
+    if (camera->GetFeatureByName("AcquisitionFrameRateEnable", pFrameRateEnable) == VmbErrorSuccess) {
+        bool enabled;
+        pFrameRateEnable->GetValue(enabled);
+        std::cerr << "FrameRateEnable (BEFORE): " << (enabled ? "true" : "false") << std::endl;
+        
+        // Try DISABLING frame rate control to let it run free
+        pFrameRateEnable->SetValue(false);
+        
+        pFrameRateEnable->GetValue(enabled);
+        std::cerr << "FrameRateEnable (AFTER):  " << (enabled ? "true" : "false") << std::endl;
+    }
+    
+    FeaturePtr pFrameRate;
+    if (camera->GetFeatureByName("AcquisitionFrameRate", pFrameRate) == VmbErrorSuccess) {
+        double minFPS, maxFPS, currentFPS;
+        pFrameRate->GetRange(minFPS, maxFPS);
+        pFrameRate->GetValue(currentFPS);
+        std::cerr << "FrameRate range: " << minFPS << " - " << maxFPS << std::endl;
+        std::cerr << "FrameRate current: " << currentFPS << std::endl;
+    }
+
+    // 4. Check bandwidth settings
+    std::cerr << "\n--- Bandwidth Settings ---" << std::endl;
+    FeaturePtr pStreamBPS;
+    if (camera->GetFeatureByName("StreamBytesPerSecond", pStreamBPS) == VmbErrorSuccess) {
+        VmbInt64_t currentBPS, minBPS, maxBPS;
+        pStreamBPS->GetValue(currentBPS);
+        pStreamBPS->GetRange(minBPS, maxBPS);
+        std::cerr << "StreamBytesPerSecond (BEFORE): " << currentBPS << " bytes/sec" << std::endl;
+        std::cerr << "StreamBytesPerSecond range: " << minBPS << " - " << maxBPS << std::endl;
+        
+        // Set to maximum
+        pStreamBPS->SetValue(maxBPS);
+        pStreamBPS->GetValue(currentBPS);
+        std::cerr << "StreamBytesPerSecond (AFTER):  " << currentBPS << " bytes/sec" << std::endl;
+        
+        // Calculate expected FPS from bandwidth
+        uint32_t bytesPerFrame = 240 * 240 * 3;  // RGB8
+        double maxFPSfromBandwidth = (double)currentBPS / bytesPerFrame;
+        std::cerr << "Max FPS from bandwidth: " << maxFPSfromBandwidth << std::endl;
+    }
+
+    // 5. GigE settings
+    std::cerr << "\n--- GigE Settings ---" << std::endl;
+    FeaturePtr pPacketSize;
+    if (camera->GetFeatureByName("GevSCPSPacketSize", pPacketSize) == VmbErrorSuccess) {
+        VmbInt64_t packetSize;
+        pPacketSize->GetValue(packetSize);
+        std::cerr << "PacketSize (BEFORE): " << packetSize << std::endl;
+        
+        pPacketSize->SetValue(1500);
+        pPacketSize->GetValue(packetSize);
+        std::cerr << "PacketSize (AFTER):  " << packetSize << std::endl;
+    }
+
+    FeaturePtr pDelay;
+    if (camera->GetFeatureByName("GevSCPD", pDelay) == VmbErrorSuccess) {
+        VmbInt64_t delay;
+        pDelay->GetValue(delay);
+        std::cerr << "InterPacketDelay (BEFORE): " << delay << " ns" << std::endl;
+        
+        pDelay->SetValue(0);
+        pDelay->GetValue(delay);
+        std::cerr << "InterPacketDelay (AFTER):  " << delay << " ns" << std::endl;
+    }
+
+    // 6. Check DeviceLinkThroughputLimit
+    FeaturePtr pThroughputLimit;
+    if (camera->GetFeatureByName("DeviceLinkThroughputLimit", pThroughputLimit) == VmbErrorSuccess) {
+        VmbInt64_t throughput, maxThroughput;
+        pThroughputLimit->GetValue(throughput);
+        pThroughputLimit->GetRange(nullptr, &maxThroughput);
+        std::cerr << "DeviceLinkThroughputLimit (BEFORE): " << throughput << std::endl;
+        std::cerr << "DeviceLinkThroughputLimit max: " << maxThroughput << std::endl;
+        
+        pThroughputLimit->SetValue(maxThroughput);
+        pThroughputLimit->GetValue(throughput);
+        std::cerr << "DeviceLinkThroughputLimit (AFTER):  " << throughput << std::endl;
+    }
+
+    std::cerr << "\n========================================\n" << std::endl;
+
+    // Start acquisition
     observer = std::make_shared<FrameObserver>(camera, tsfn);
-    err = camera->StartContinuousImageAcquisition(30, IFrameObserverPtr(observer));  // Increased to 30
+    err = camera->StartContinuousImageAcquisition(30, IFrameObserverPtr(observer));
     if (VmbErrorSuccess != err) {
         return err;
     }
 
-    // Run AcquisitionStart command
     FeaturePtr pAcqStart;
     err = camera->GetFeatureByName("AcquisitionStart", pAcqStart);
     if (VmbErrorSuccess == err) {
         pAcqStart->RunCommand();
     }
     
-    err = VmbErrorSuccess;
-
-    return err;
+    // Wait a moment then check actual frame rate
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+    
+    std::cerr << "\n--- Actual Performance Check ---" << std::endl;
+    if (camera->GetFeatureByName("AcquisitionFrameRate", pFrameRate) == VmbErrorSuccess) {
+        double actualFPS;
+        pFrameRate->GetValue(actualFPS);
+        std::cerr << "Camera reporting FPS: " << actualFPS << std::endl;
+    }
+    
+    return VmbErrorSuccess;
 }
 
 // =============================== Specific camera capture function for jscript ======================
