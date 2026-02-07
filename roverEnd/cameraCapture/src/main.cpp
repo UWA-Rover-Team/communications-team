@@ -1,6 +1,8 @@
 #include <VmbCPP/VmbCPP.h>
 #include <iostream>
 #include <napi.h>
+#include <cstdint>
+#include <vector>
 
 #define FRONTCAMERA 1
 #define BACKCAMERA 2
@@ -20,7 +22,7 @@ class FrameObserver : public IFrameObserver
 {
 private:
     Napi::ThreadSafeFunction tsfnJScriptCallback;
-    std::vector<uint8_t>* convertYUV422toYUV420(VmbUchar_t* yuv422, uint32_t width, uint32_t height);
+    std::vector<uint8_t> convertYUV422toYUV420(VmbUchar_t* yuv422, uint32_t width, uint32_t height);
 public:
    FrameObserver(CameraPtr pCamera, Napi::ThreadSafeFunction threadsafefunction);
    void FrameReceived(const FramePtr pFrame);
@@ -42,7 +44,7 @@ void FrameObserver::FrameReceived(const FramePtr pFrame){
     pFrame->GetHeight(height);
 
     // Convert that data
-    std::vector<uint8_t>* yuv420data = convertYUV422toYUV420(pBuffer, width, height);
+    std::vector<uint8_t> yuv420data = convertYUV422toYUV420(pBuffer, width, height);
 
     struct FrameInfo {
         std::vector<uint8_t>* data;
@@ -50,7 +52,7 @@ void FrameObserver::FrameReceived(const FramePtr pFrame){
         uint32_t height;
     };
     
-    FrameInfo* info = new FrameInfo{yuv420data, width, height};
+    FrameInfo* info = new FrameInfo{&yuv420data, width, height};
 
     // Take the jscript callback given in the ts file, and call it passing our Napi object in
     auto translateFunction = [](Napi::Env env, Napi::Function jsCallback, FrameInfo* info){
@@ -69,10 +71,8 @@ void FrameObserver::FrameReceived(const FramePtr pFrame){
     m_pCamera->QueueFrame(pFrame);
 }
 
-#include <cstdint>
-#include <vector>
 
-std::vector<uint8_t> convertYUV422toYUV420(VmbUchar_t* yuv422, uint32_t width, uint32_t height) {
+std::vector<uint8_t> FrameObserver::convertYUV422toYUV420(VmbUchar_t* yuv422, uint32_t width, uint32_t height) {
     uint32_t y_size = width * height;
     uint32_t uv_size = (width / 2) * (height / 2);
     uint32_t total_size = y_size + 2 * uv_size;
@@ -116,7 +116,7 @@ std::vector<uint8_t> convertYUV422toYUV420(VmbUchar_t* yuv422, uint32_t width, u
     return yuv420;
 }
 
-
+// ------------------------------------------------------------------------------------------------------
 // ============================ VimbaX class to initialise in JScript ===================================
 class VimbaXSystem : public Napi::ObjectWrap<VimbaXSystem> {
     private:
