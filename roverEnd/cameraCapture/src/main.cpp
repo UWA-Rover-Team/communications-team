@@ -183,6 +183,16 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
         return err;
     }
 
+    FeaturePtr pTriggerSelector;
+    if (camera->GetFeatureByName("TriggerSelector", pTriggerSelector) == VmbErrorSuccess) {
+        pTriggerSelector->SetValue("FrameStart");
+    }
+    
+    FeaturePtr pTriggerMode;
+    if (camera->GetFeatureByName("TriggerMode", pTriggerMode) == VmbErrorSuccess) {
+        pTriggerMode->SetValue("Off");
+    }
+
     FeaturePtr pAcqMode;
     if (camera->GetFeatureByName("AcquisitionMode", pAcqMode) == VmbErrorSuccess) {
         pAcqMode->SetValue("Continuous");
