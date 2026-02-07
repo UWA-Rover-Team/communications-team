@@ -200,49 +200,7 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
         pAcqMode->SetValue("Continuous");
     }
 
-    // Enable frame rate control
-    FeaturePtr pFrameRateEnable;
-    if (camera->GetFeatureByName("AcquisitionFrameRateEnable", pFrameRateEnable) == VmbErrorSuccess) {
-        pFrameRateEnable->SetValue(true);  // Enable frame rate limiter
-    }
-
-    // Set to 60 FPS
-    FeaturePtr pFrameRate;
-    if (camera->GetFeatureByName("AcquisitionFrameRate", pFrameRate) == VmbErrorSuccess) {
-        double minFPS, maxFPS;
-        pFrameRate->GetRange(minFPS, maxFPS);
-        std::cerr << "FPS range: " << minFPS << " - " << maxFPS << std::endl;
-        
-        // Set to 60 (or max if 60 exceeds maximum)
-        double targetFPS = 60.0;
-        if (targetFPS > maxFPS) {
-            targetFPS = maxFPS;
-            std::cerr << "WARNING: 60 FPS exceeds max, using " << maxFPS << std::endl;
-        }
-        
-        pFrameRate->SetValue(targetFPS);
-        
-        // Verify it was set
-        double actualFPS;
-        pFrameRate->GetValue(actualFPS);
-        std::cerr << "Set FPS to: " << actualFPS << std::endl;
-    }
-
-    // Enable auto gain
-    FeaturePtr pGainAuto;
-    if (camera->GetFeatureByName("GainAuto", pGainAuto) == VmbErrorSuccess) {
-        pGainAuto->SetValue("Continuous");  // Options: "Off", "Once", "Continuous"
-        std::cerr << "Enabled auto gain" << std::endl;
-    }
-
-    // Enable auto exposure
-    FeaturePtr pExposureAuto;
-    if (camera->GetFeatureByName("ExposureAuto", pExposureAuto) == VmbErrorSuccess) {
-        pExposureAuto->SetValue("Continuous");  // Options: "Off", "Once", "Continuous"
-        std::cerr << "Enabled auto exposure" << std::endl;
-    }
-
-    // Set resolution
+    // Set resolution BEFORE other settings
     FeaturePtr pWidth, pHeight;
     camera->GetFeatureByName("Width", pWidth);
     camera->GetFeatureByName("Height", pHeight);
@@ -261,20 +219,52 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
         }
     }
 
-    // GigE packet settings
+    // GigE packet settings - START CONSERVATIVE
     FeaturePtr pPacketSize;
     if (camera->GetFeatureByName("GevSCPSPacketSize", pPacketSize) == VmbErrorSuccess) {
-        pPacketSize->SetValue(9000);
+        // Try 1500 first (standard MTU)
+        pPacketSize->SetValue(1500);
+        std::cerr << "Set packet size to 1500" << std::endl;
     }
 
+    // Add small inter-packet delay for reliability
     FeaturePtr pDelay;
     if (camera->GetFeatureByName("GevSCPD", pDelay) == VmbErrorSuccess) {
-        pDelay->SetValue(0);  // No delay between packets
+        pDelay->SetValue(1000);  // 1 microsecond delay
+        std::cerr << "Set inter-packet delay to 1000ns" << std::endl;
     }
 
-    // Start acquisition
+    // Enable frame rate control
+    FeaturePtr pFrameRateEnable;
+    if (camera->GetFeatureByName("AcquisitionFrameRateEnable", pFrameRateEnable) == VmbErrorSuccess) {
+        pFrameRateEnable->SetValue(true);
+    }
+
+    // Set to 60 FPS
+    FeaturePtr pFrameRate;
+    if (camera->GetFeatureByName("AcquisitionFrameRate", pFrameRate) == VmbErrorSuccess) {
+        pFrameRate->SetValue(60.0);
+        
+        double actualFPS;
+        pFrameRate->GetValue(actualFPS);
+        std::cerr << "Set FPS to: " << actualFPS << std::endl;
+    }
+
+    // Enable auto gain
+    FeaturePtr pGainAuto;
+    if (camera->GetFeatureByName("GainAuto", pGainAuto) == VmbErrorSuccess) {
+        pGainAuto->SetValue("Continuous");
+    }
+
+    // Enable auto exposure
+    FeaturePtr pExposureAuto;
+    if (camera->GetFeatureByName("ExposureAuto", pExposureAuto) == VmbErrorSuccess) {
+        pExposureAuto->SetValue("Continuous");
+    }
+
+    // Start acquisition with MORE buffers
     observer = std::make_shared<FrameObserver>(camera, tsfn);
-    err = camera->StartContinuousImageAcquisition(20, IFrameObserverPtr(observer));
+    err = camera->StartContinuousImageAcquisition(30, IFrameObserverPtr(observer));  // Increased to 30
     if (VmbErrorSuccess != err) {
         return err;
     }
@@ -286,7 +276,9 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
         pAcqStart->RunCommand();
     }
     
-    return VmbErrorSuccess;
+    err = VmbErrorSuccess;
+
+    return err;
 }
 
 // =============================== Specific camera capture function for jscript ======================
