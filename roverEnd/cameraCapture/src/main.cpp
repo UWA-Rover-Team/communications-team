@@ -36,38 +36,6 @@ void FrameObserver::FrameReceived(const FramePtr pFrame){
     VmbUchar_t* pBuffer;
     VmbUint32_t bufferSize;
     VmbUint32_t width, height;
-    VmbFrameStatusType status;
-
-    // Check frame status
-    VmbError_t err = pFrame->GetReceiveStatus(status);
-    std::cerr << "Frame status: " << status << " (0=Complete, -1=Incomplete, -2=TooSmall, -3=Invalid)" << std::endl;
-    
-    if (status != VmbFrameStatusComplete) {
-        std::cerr << "Frame not complete!" << std::endl;
-        m_pCamera->QueueFrame(pFrame);
-        return;
-    }
-
-    pFrame->GetBuffer(pBuffer);
-    pFrame->GetBufferSize(bufferSize);
-    pFrame->GetWidth(width);
-    pFrame->GetHeight(height);
-    
-    std::cerr << "Width: " << width << ", Height: " << height << ", BufferSize: " << bufferSize << std::endl;
-    
-    // Check if buffer is actually all zeros or just the first bytes
-    bool allZero = true;
-    for (int i = 0; i < std::min(1000, (int)bufferSize); i++) {
-        if (pBuffer[i] != 0) {
-            allZero = false;
-            std::cerr << "First non-zero byte at index " << i << ": " << (int)pBuffer[i] << std::endl;
-            break;
-        }
-    }
-    
-    if (allZero) {
-        std::cerr << "WARNING: Buffer appears to be all zeros!" << std::endl;
-    }
 
     pFrame->GetBuffer(pBuffer);
     pFrame->GetBufferSize(bufferSize);
@@ -167,6 +135,9 @@ Napi::Value VimbaXSystem::StartCapture(const Napi::CallbackInfo& info) {
     VmbError_t err;
     Napi::ThreadSafeFunction tsfnJScriptCallback;
     FeaturePtr pFormatFeature;
+    FeaturePtr pPayloadSizeFeature;
+    VmbInt64_t payloadSize;
+    FeaturePtr pAcqStartFeature;
 
     Napi::Env env = info.Env(); // Info on the runtime enviroment
 
@@ -185,8 +156,31 @@ Napi::Value VimbaXSystem::StartCapture(const Napi::CallbackInfo& info) {
                 system.Shutdown();
             } else std::cerr << "Opened FRONT camera" << std::endl;
 
+            // Configure pixel format
             err = camera1->GetFeatureByName("PixelFormat", pFormatFeature);
-            pFormatFeature->SetValue(VmbPixelFormatYuv422);
+            if (VmbErrorSuccess == err) {
+                err = pFormatFeature->SetValue(VmbPixelFormatYuv422);
+                std::cerr << "Set PixelFormat result: " << err << std::endl;
+            }
+            
+            // Set payload size (CRITICAL for frame completion)
+            err = camera1->GetFeatureByName("PayloadSize", pPayloadSizeFeature);
+            if (VmbErrorSuccess == err) {
+
+                pPayloadSizeFeature->GetValue(payloadSize);
+                std::cerr << "PayloadSize: " << payloadSize << std::endl;
+            }
+            
+            // Prepare camera for capture - IMPORTANT!
+            err = camera1->AnnounceFrame(FramePtr(new Frame(payloadSize)));
+            // or simpler:
+            
+            // Start acquisition ON THE CAMERA first
+            err = camera1->GetFeatureByName("AcquisitionStart", pAcqStartFeature);
+            if (VmbErrorSuccess == err) {
+                err = pAcqStartFeature->RunCommand();
+                std::cerr << "AcquisitionStart command result: " << err << std::endl;
+            }
 
             tsfnJScriptCallback = Napi::ThreadSafeFunction::New( // Turn the callback function into threadsafe so that we can access the javascript function from the C++ thread
                 env, // The runtime code, taken from the info
