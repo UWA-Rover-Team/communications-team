@@ -36,19 +36,43 @@ void FrameObserver::FrameReceived(const FramePtr pFrame){
     VmbUchar_t* pBuffer;
     VmbUint32_t bufferSize;
     VmbUint32_t width, height;
+    VmbFrameStatusType status;
+
+    // Check frame status
+    VmbError_t err = pFrame->GetReceiveStatus(status);
+    std::cerr << "Frame status: " << status << " (0=Complete, -1=Incomplete, -2=TooSmall, -3=Invalid)" << std::endl;
+    
+    if (status != VmbFrameStatusComplete) {
+        std::cerr << "Frame not complete!" << std::endl;
+        m_pCamera->QueueFrame(pFrame);
+        return;
+    }
 
     pFrame->GetBuffer(pBuffer);
     pFrame->GetBufferSize(bufferSize);
     pFrame->GetWidth(width);
     pFrame->GetHeight(height);
     
-    // Print first 32 bytes to see the pattern
-    std::cerr << "First 32 bytes of frame: ";
-    for (int i = 0; i < 32 && i < bufferSize; i++) {
-        std::cerr << std::hex << (int)pBuffer[i] << " ";
+    std::cerr << "Width: " << width << ", Height: " << height << ", BufferSize: " << bufferSize << std::endl;
+    
+    // Check if buffer is actually all zeros or just the first bytes
+    bool allZero = true;
+    for (int i = 0; i < std::min(1000, (int)bufferSize); i++) {
+        if (pBuffer[i] != 0) {
+            allZero = false;
+            std::cerr << "First non-zero byte at index " << i << ": " << (int)pBuffer[i] << std::endl;
+            break;
+        }
     }
-    std::cerr << std::dec << std::endl;
-    std::cerr << "Buffer size: " << bufferSize << ", expected for YUV422: " << (width * height * 2) << std::endl;
+    
+    if (allZero) {
+        std::cerr << "WARNING: Buffer appears to be all zeros!" << std::endl;
+    }
+
+    pFrame->GetBuffer(pBuffer);
+    pFrame->GetBufferSize(bufferSize);
+    pFrame->GetWidth(width);
+    pFrame->GetHeight(height);
 
     // Convert that data
     std::vector<uint8_t> yuv420data = convertYUV422toYUV420(pBuffer, width, height);
