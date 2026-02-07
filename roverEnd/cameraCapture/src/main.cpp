@@ -160,6 +160,7 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
     FeaturePtr pPayloadSizeFeature;
     VmbInt64_t payloadSize;
     FeaturePtr pAcqStartFeature;
+    FeaturePtr pWidth, pHeight;
 
     err = system.OpenCameraByID(cameraIP.c_str(), VmbAccessModeFull, camera);
     if (VmbErrorSuccess != err) {
@@ -167,6 +168,26 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
         return err;
     }
     std::cerr << "Opened camera at " << cameraIP << std::endl;
+
+    err = camera->GetFeatureByName("Width", pWidth);
+    if (VmbErrorSuccess == err) {
+        err = pWidth->SetValue(240);
+        if (VmbErrorSuccess == err) {
+            std::cerr << "Set Width to 240" << std::endl;
+        } else {
+            std::cerr << "Failed to set Width: " << err << std::endl;
+        }
+    }
+
+    err = camera->GetFeatureByName("Height", pHeight);
+    if (VmbErrorSuccess == err) {
+        err = pHeight->SetValue(240);
+        if (VmbErrorSuccess == err) {
+            std::cerr << "Set Height to 240" << std::endl;
+        } else {
+            std::cerr << "Failed to set Height: " << err << std::endl;
+        }
+    }
 
     err = camera->GetFeatureByName("PixelFormat", pFormatFeature);
     if (VmbErrorSuccess == err) {
@@ -182,7 +203,7 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
 
     observer = std::make_shared<FrameObserver>(camera, tsfn);
 
-    err = camera->StartContinuousImageAcquisition(5, IFrameObserverPtr(observer));
+    err = camera->StartContinuousImageAcquisition(20, IFrameObserverPtr(observer));
     if (VmbErrorSuccess != err) {
         std::cerr << "Failed to start continuous acquisition: " << err << std::endl;
         return err;
