@@ -38,6 +38,7 @@ async function createStream(camera: cameras, resolution: resolution): Promise<vo
   };
   
   const mediaTrack = requestCamera(camera);
+  console.log('Track created:', mediaTrack.id, mediaTrack.kind, mediaTrack.readyState);
   const mediaStream = new MediaStream([mediaTrack]); 
     
   pcCAM.addTrack(mediaTrack, mediaStream); // Media stream is a collection of tracks (audio, visual etc.)
@@ -65,6 +66,7 @@ function requestCamera(cameraId: string): MediaStreamTrack {
   const track = source.createTrack();
   
   vimbaSystem.startCapture(cameraId, (frameData: { buffer: Buffer, width: number, height: number }) => {
+    console.log(`Frame: ${frameData.width}x${frameData.height}, size: ${frameData.buffer.length}`);
     // Jscript callback lambda function
     const frame: RTCVideoFrame = {
       width: frameData.width,
