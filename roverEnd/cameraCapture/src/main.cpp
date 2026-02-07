@@ -208,7 +208,6 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
         std::cerr << "Vertical binning: 6x" << std::endl;
     }
 
-    // Check what resolution we got
     FeaturePtr pWidth, pHeight;
     camera->GetFeatureByName("Width", pWidth);
     camera->GetFeatureByName("Height", pHeight);
@@ -223,23 +222,74 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
         pFormat->SetValue("RGB8Packed");
     }
 
+    // === CRITICAL FIX: Slow down the camera ===
+    
+    // 1. Add inter-packet delay
+    FeaturePtr pDelay;
+    if (camera->GetFeatureByName("GevSCPD", pDelay) == VmbErrorSuccess) {
+        pDelay->SetValue(5000);  // 5 microseconds between packets
+        std::cerr << "Set inter-packet delay to 5000ns" << std::endl;
+    }
+    
+    // 2. Reduce packet size for more reliable transmission
     FeaturePtr pPacketSize;
     if (camera->GetFeatureByName("GevSCPSPacketSize", pPacketSize) == VmbErrorSuccess) {
         pPacketSize->SetValue(1500);
+        std::cerr << "Set packet size to 1500" << std::endl;
+    }
+    
+    // 3. Limit frame rate to 30 FPS
+    FeaturePtr pFrameRateEnable;
+    if (camera->GetFeatureByName("AcquisitionFrameRateEnable", pFrameRateEnable) == VmbErrorSuccess) {
+        pFrameRateEnable->SetValue(true);
+        std::cerr << "Frame rate control enabled" << std::endl;
+    }
+    
+    FeaturePtr pFrameRate;
+    if (camera->GetFeatureByName("AcquisitionFrameRate", pFrameRate) == VmbErrorSuccess) {
+        pFrameRate->SetValue(30.0);  // Start with 30 FPS
+        
+        double actualFPS;
+        pFrameRate->GetValue(actualFPS);
+        std::cerr << "Set frame rate to: " << actualFPS << " fps" << std::endl;
+    }
+    
+    // 4. Limit bandwidth
+    FeaturePtr pStreamBPS;
+    if (camera->GetFeatureByName("StreamBytesPerSecond", pStreamBPS) == VmbErrorSuccess) {
+        VmbInt64_t maxBPS;
+        pStreamBPS->GetRange(nullptr, &maxBPS);
+        
+        // Limit to 50% of max for reliability
+        VmbInt64_t targetBPS = maxBPS / 2;
+        pStreamBPS->SetValue(targetBPS);
+        std::cerr << "Limited bandwidth to: " << targetBPS << " bytes/sec" << std::endl;
     }
 
+    // Turn off auto exposure/gain for consistent frame timing
     FeaturePtr pGainAuto;
     if (camera->GetFeatureByName("GainAuto", pGainAuto) == VmbErrorSuccess) {
-        pGainAuto->SetValue("Continuous");
+        pGainAuto->SetValue("Off");
+    }
+    
+    FeaturePtr pGain;
+    if (camera->GetFeatureByName("Gain", pGain) == VmbErrorSuccess) {
+        pGain->SetValue(10.0);  // Fixed gain
     }
     
     FeaturePtr pExposureAuto;
     if (camera->GetFeatureByName("ExposureAuto", pExposureAuto) == VmbErrorSuccess) {
-        pExposureAuto->SetValue("Continuous");
+        pExposureAuto->SetValue("Off");
+    }
+    
+    FeaturePtr pExposure;
+    if (camera->GetFeatureByName("ExposureTime", pExposure) == VmbErrorSuccess) {
+        pExposure->SetValue(20000);  // 20ms exposure
     }
 
+    // Increase frame buffers
     observer = std::make_shared<FrameObserver>(camera, tsfn);
-    err = camera->StartContinuousImageAcquisition(30, IFrameObserverPtr(observer));
+    err = camera->StartContinuousImageAcquisition(50, IFrameObserverPtr(observer));  // Increased to 50
     if (VmbErrorSuccess != err) {
         return err;
     }
