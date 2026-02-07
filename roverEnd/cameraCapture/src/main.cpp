@@ -210,13 +210,6 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
         pBinningV->SetValue(6);  // 1544 / 6 ≈ 257
     }
 
-    // Set width/height to 240x240
-    FeaturePtr pWidth, pHeight;
-    camera->GetFeatureByName("Width", pWidth);
-    camera->GetFeatureByName("Height", pHeight);
-    pWidth->SetValue(240);
-    pHeight->SetValue(240);
-
     // Set pixel format
     FeaturePtr pFormat;
     if (camera->GetFeatureByName("PixelFormat", pFormat) == VmbErrorSuccess) {
