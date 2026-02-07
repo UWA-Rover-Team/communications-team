@@ -15,8 +15,8 @@ using namespace VmbCPP;
 class FrameObserver;
 class VimbaXSystem;
 
-
-
+// -----------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------
 // =================== Bridging class the VimbaX will call, and will then call JScript ==============================
 class FrameObserver : public IFrameObserver
 {
@@ -33,6 +33,19 @@ FrameObserver::FrameObserver(CameraPtr pCamera, Napi::ThreadSafeFunction tsfnJSc
 
 // Frame callback for processing what i want to do with each frame. Will 
 void FrameObserver::FrameReceived(const FramePtr pFrame){
+    VmbFrameStatusType status;
+    VmbError_t err = pFrame->GetReceiveStatus(status);
+    
+    std::cerr << "Frame status: " << status << " (0=Complete, -1=Incomplete)" << std::endl;
+    
+    if (status != VmbFrameStatusComplete) {
+        std::cerr << "Frame NOT complete, re-queuing" << std::endl;
+        m_pCamera->QueueFrame(pFrame);
+        return;
+    }
+    
+    std::cerr << "Frame is COMPLETE" << std::endl;
+    
     VmbUchar_t* pBuffer;
     VmbUint32_t bufferSize;
     VmbUint32_t width, height;
@@ -72,7 +85,6 @@ void FrameObserver::FrameReceived(const FramePtr pFrame){
 
 std::vector<uint8_t> FrameObserver::convertYUV422toYUV420(VmbUchar_t* yuv422, uint32_t width, uint32_t height) {
     
-    
     uint32_t y_size = width * height;
     uint32_t uv_size = (width / 2) * (height / 2);
     uint32_t total_size = y_size + 2 * uv_size;
@@ -102,6 +114,7 @@ std::vector<uint8_t> FrameObserver::convertYUV422toYUV420(VmbUchar_t* yuv422, ui
     return yuv420;
 }
 
+// ------------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------------
 // ============================ VimbaX class to initialise in JScript ===================================
 class VimbaXSystem : public Napi::ObjectWrap<VimbaXSystem> {
@@ -139,10 +152,9 @@ VimbaXSystem::VimbaXSystem(const Napi::CallbackInfo& info)
     std::cerr << "Successfully initialised system" << std::endl;
 }
 
-// ================== Helper Function ================
-VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr& camera,
-                                          std::shared_ptr<FrameObserver>& observer,
-                                          Napi::ThreadSafeFunction& tsfn) {
+// ================== General camera capture Function ================
+VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr& camera, std::shared_ptr<FrameObserver>& observer, Napi::ThreadSafeFunction& tsfn) {
+
     VmbError_t err;
     FeaturePtr pFormatFeature;
     FeaturePtr pPayloadSizeFeature;
@@ -186,7 +198,7 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
     return err;
 }
 
-// =============================== Javascript calls to begin capture ======================
+// =============================== Specific camera capture function for jscript ======================
 Napi::Value VimbaXSystem::StartCapture(const Napi::CallbackInfo& info) {
     VmbError_t err;
     Napi::Env env = info.Env();
@@ -228,7 +240,9 @@ Napi::Value VimbaXSystem::StartCapture(const Napi::CallbackInfo& info) {
     return env.Undefined();
 }
 
-
+// ----------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------
+// ====================== N-API linux init (for some reason) =========================================
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
     Napi::Function func = VimbaXSystem::GetClass(env);
     exports.Set("VimbaXSystem", func);

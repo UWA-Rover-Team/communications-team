@@ -51,7 +51,6 @@ async function createStream(camera: cameras, resolution: resolution): Promise<vo
     offerToReceiveVideo: false 
   });
   await pcCAM.setLocalDescription(offerCAM);
-  console.log('Offer SDP:', offerCAM.sdp);
   
   socket.send(JSON.stringify({
     type: "OFFER",
