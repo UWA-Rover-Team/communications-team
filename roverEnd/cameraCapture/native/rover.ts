@@ -39,6 +39,13 @@ async function createStream(camera: cameras, resolution: resolution): Promise<vo
   
   // Wait for track to be ready
   const mediaTrack = await requestCamera(camera);
+
+  await mediaTrack.applyConstraints({
+    width: { exact: 240 },
+    height: { exact: 240 },
+    frameRate: { ideal: 60 }
+  });
+
   const mediaStream = new MediaStream([mediaTrack]); 
     
   pcCAM.addTrack(mediaTrack, mediaStream);

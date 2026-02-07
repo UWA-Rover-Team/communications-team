@@ -192,13 +192,6 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
         pAcqMode->SetValue("Continuous");
     }
 
-    // Set resolution BEFORE other settings
-    FeaturePtr pWidth, pHeight;
-    camera->GetFeatureByName("Width", pWidth);
-    camera->GetFeatureByName("Height", pHeight);
-    pWidth->SetValue(240);
-    pHeight->SetValue(240);
-
     // Set pixel format
     FeaturePtr pFormat;
     if (camera->GetFeatureByName("PixelFormat", pFormat) == VmbErrorSuccess) {
