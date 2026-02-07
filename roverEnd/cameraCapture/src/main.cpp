@@ -185,7 +185,7 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
     if (VmbErrorSuccess != err) {
         return err;
     }
-    
+
     // Set AcquisitionMode to Continuous
     FeaturePtr pAcqMode;
     if (camera->GetFeatureByName("AcquisitionMode", pAcqMode) == VmbErrorSuccess) {
@@ -219,17 +219,19 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
         std::cerr << "Set packet size to 1500" << std::endl;
     }
 
+    /*
     // Enable auto gain
     FeaturePtr pGainAuto;
     if (camera->GetFeatureByName("GainAuto", pGainAuto) == VmbErrorSuccess) {
         pGainAuto->SetValue("Continuous");
     }
-
+    
     // Enable auto exposure
     FeaturePtr pExposureAuto;
     if (camera->GetFeatureByName("ExposureAuto", pExposureAuto) == VmbErrorSuccess) {
         pExposureAuto->SetValue("Continuous");
     }
+    */
 
     // Start acquisition with MORE buffers
     observer = std::make_shared<FrameObserver>(camera, tsfn);
