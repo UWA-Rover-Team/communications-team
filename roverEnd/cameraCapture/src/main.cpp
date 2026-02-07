@@ -33,19 +33,7 @@ FrameObserver::FrameObserver(CameraPtr pCamera, Napi::ThreadSafeFunction tsfnJSc
 
 // Frame callback for processing what i want to do with each frame. Will 
 void FrameObserver::FrameReceived(const FramePtr pFrame){
-    VmbFrameStatusType status;
-    VmbError_t err = pFrame->GetReceiveStatus(status);
-    
-    std::cerr << "Frame status: " << status << " (0=Complete, -1=Incomplete)" << std::endl;
-    
-    if (status != VmbFrameStatusComplete) {
-        std::cerr << "Frame NOT complete, re-queuing" << std::endl;
-        m_pCamera->QueueFrame(pFrame);
-        return;
-    }
-    
-    std::cerr << "Frame is COMPLETE" << std::endl;
-    
+
     VmbUchar_t* pBuffer;
     VmbUint32_t bufferSize;
     VmbUint32_t width, height;
