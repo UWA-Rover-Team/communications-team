@@ -192,6 +192,22 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
         pAcqMode->SetValue("Continuous");
     }
 
+    // In InitializeCamera - use heavy binning to get close to 240x240
+    FeaturePtr pBinningH, pBinningV;
+    if (camera->GetFeatureByName("BinningHorizontal", pBinningH) == VmbErrorSuccess) {
+        pBinningH->SetValue(8);  // 2064 / 8 ≈ 258
+    }
+    if (camera->GetFeatureByName("BinningVertical", pBinningV) == VmbErrorSuccess) {
+        pBinningV->SetValue(6);  // 1544 / 6 ≈ 257
+    }
+
+    // Then manually set width/height to 240x240 (camera will crop)
+    FeaturePtr pWidth, pHeight;
+    camera->GetFeatureByName("Width", pWidth);
+    camera->GetFeatureByName("Height", pHeight);
+    pWidth->SetValue(240);
+    pHeight->SetValue(240);
+
     // Set pixel format
     FeaturePtr pFormat;
     if (camera->GetFeatureByName("PixelFormat", pFormat) == VmbErrorSuccess) {

@@ -39,13 +39,6 @@ async function createStream(camera: cameras, resolution: resolution): Promise<vo
   
   // Wait for track to be ready
   const mediaTrack = await requestCamera(camera);
-
-  await mediaTrack.applyConstraints({
-    width: { exact: 240 },
-    height: { exact: 240 },
-    frameRate: { ideal: 60 }
-  });
-
   const mediaStream = new MediaStream([mediaTrack]); 
     
   pcCAM.addTrack(mediaTrack, mediaStream);
@@ -78,6 +71,7 @@ function requestCamera(cameraId: Number): Promise<MediaStreamTrack> {
 
     try {
       vimbaSystem.startCapture(cameraId, (frameData: { buffer: Buffer, width: number, height: number }) => {
+
         const frame: RTCVideoFrame = {
           width: frameData.width,
           height: frameData.height,
