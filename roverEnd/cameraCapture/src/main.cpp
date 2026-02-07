@@ -200,6 +200,34 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
         pAcqMode->SetValue("Continuous");
     }
 
+    // Enable frame rate control
+    FeaturePtr pFrameRateEnable;
+    if (camera->GetFeatureByName("AcquisitionFrameRateEnable", pFrameRateEnable) == VmbErrorSuccess) {
+        pFrameRateEnable->SetValue(true);  // Enable frame rate limiter
+    }
+
+    // Set to 60 FPS
+    FeaturePtr pFrameRate;
+    if (camera->GetFeatureByName("AcquisitionFrameRate", pFrameRate) == VmbErrorSuccess) {
+        double minFPS, maxFPS;
+        pFrameRate->GetRange(minFPS, maxFPS);
+        std::cerr << "FPS range: " << minFPS << " - " << maxFPS << std::endl;
+        
+        // Set to 60 (or max if 60 exceeds maximum)
+        double targetFPS = 60.0;
+        if (targetFPS > maxFPS) {
+            targetFPS = maxFPS;
+            std::cerr << "WARNING: 60 FPS exceeds max, using " << maxFPS << std::endl;
+        }
+        
+        pFrameRate->SetValue(targetFPS);
+        
+        // Verify it was set
+        double actualFPS;
+        pFrameRate->GetValue(actualFPS);
+        std::cerr << "Set FPS to: " << actualFPS << std::endl;
+    }
+
     // Enable auto gain
     FeaturePtr pGainAuto;
     if (camera->GetFeatureByName("GainAuto", pGainAuto) == VmbErrorSuccess) {
@@ -236,7 +264,12 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
     // GigE packet settings
     FeaturePtr pPacketSize;
     if (camera->GetFeatureByName("GevSCPSPacketSize", pPacketSize) == VmbErrorSuccess) {
-        pPacketSize->SetValue(1500);
+        pPacketSize->SetValue(9000);
+    }
+
+    FeaturePtr pDelay;
+    if (camera->GetFeatureByName("GevSCPD", pDelay) == VmbErrorSuccess) {
+        pDelay->SetValue(0);  // No delay between packets
     }
 
     // Start acquisition
