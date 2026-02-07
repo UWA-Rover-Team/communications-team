@@ -202,11 +202,11 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
     // Binning
     FeaturePtr pBinningH, pBinningV;
     if (camera->GetFeatureByName("BinningHorizontal", pBinningH) == VmbErrorSuccess) {
-        pBinningH->SetValue(4);  // Use 4 instead of 8
+        pBinningH->SetValue(1);  // Use 4 instead of 8
         std::cerr << "BinningHorizontal: 4x" << std::endl;
     }
     if (camera->GetFeatureByName("BinningVertical", pBinningV) == VmbErrorSuccess) {
-        pBinningV->SetValue(4);  // Use 4 instead of 6
+        pBinningV->SetValue(1);  // Use 4 instead of 6
         std::cerr << "BinningVertical: 4x" << std::endl;
     }
 
