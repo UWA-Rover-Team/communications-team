@@ -1,6 +1,7 @@
 import WebSocket from 'ws';
 import { RTCPeerConnection, RTCSessionDescription, RTCIceCandidate, nonstandard, MediaStream} from '@roamhq/wrtc';
 import { WebRTCMessage, clients, cameras, resolution } from './webRtcStreamObject';
+import { RTCVideoFrame } from '@roamhq/wrtc/types/nonstandard';
 const vimbax = require('../build/Release/addon');
 
 const { RTCVideoSource } = nonstandard;
@@ -63,16 +64,13 @@ function requestCamera(cameraId: string): MediaStreamTrack {
   const source = new RTCVideoSource();
   const track = source.createTrack();
   
-  let frameCount = 0;
-  
   vimbaSystem.startCapture(cameraId, (frameData: { buffer: Buffer, width: number, height: number }) => {
-    // Feed frames to the source
-    const frame = {
+    // Jscript callback lambda function
+    const frame: RTCVideoFrame = {
       width: frameData.width,
       height: frameData.height,
       data: new Uint8Array(frameData.buffer),
     };
-    
     source.onFrame(frame);
   });
   

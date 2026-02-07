@@ -20,7 +20,7 @@ class FrameObserver : public IFrameObserver
 {
 private:
     Napi::ThreadSafeFunction tsfnJScriptCallback;
-    std::vector<uint8_t>* RGB8toRGBA(VmbUchar_t* rgb, uint32_t width, uint32_t height);
+    std::vector<uint8_t>* convertYUV422toYUV420(VmbUchar_t* yuv422, uint32_t width, uint32_t height);
 public:
    FrameObserver(CameraPtr pCamera, Napi::ThreadSafeFunction threadsafefunction);
    void FrameReceived(const FramePtr pFrame);
@@ -35,12 +35,14 @@ void FrameObserver::FrameReceived(const FramePtr pFrame){
     VmbUint32_t bufferSize;
     VmbUint32_t width, height;
 
+    // From frame passed by VimbaX Camera, get the data on it
     pFrame->GetBuffer(pBuffer);
     pFrame->GetBufferSize(bufferSize);
     pFrame->GetWidth(width);
     pFrame->GetHeight(height);
 
-    std::vector<uint8_t>* rgbaData = RGB8toRGBA(pBuffer, width, height);
+    // Convert that data
+    std::vector<uint8_t>* yuv420data = convertYUV422toYUV420(pBuffer, width, height);
 
     struct FrameInfo {
         std::vector<uint8_t>* data;
@@ -48,8 +50,9 @@ void FrameObserver::FrameReceived(const FramePtr pFrame){
         uint32_t height;
     };
     
-    FrameInfo* info = new FrameInfo{rgbaData, width, height};
+    FrameInfo* info = new FrameInfo{yuv420data, width, height};
 
+    // Take the jscript callback given in the ts file, and call it passing our Napi object in
     auto translateFunction = [](Napi::Env env, Napi::Function jsCallback, FrameInfo* info){
         Napi::Object obj = Napi::Object::New(env);
         obj.Set("buffer", Napi::Buffer<uint8_t>::Copy(env, info->data->data(), info->data->size()));
@@ -62,21 +65,55 @@ void FrameObserver::FrameReceived(const FramePtr pFrame){
         delete info;
     };
 
-    tsfnJScriptCallback.BlockingCall(info, translateFunction);
+    tsfnJScriptCallback.NonBlockingCall(info, translateFunction);
     m_pCamera->QueueFrame(pFrame);
 }
 
-std::vector<uint8_t>* FrameObserver::RGB8toRGBA(VmbUchar_t* rgb, uint32_t width, uint32_t height) {
-    std::vector<uint8_t>* rgba = new std::vector<uint8_t>(width * height * 4);
+#include <cstdint>
+#include <vector>
+
+std::vector<uint8_t> convertYUV422toYUV420(VmbUchar_t* yuv422, uint32_t width, uint32_t height) {
+    uint32_t y_size = width * height;
+    uint32_t uv_size = (width / 2) * (height / 2);
+    uint32_t total_size = y_size + 2 * uv_size;
     
-    for(uint32_t i = 0; i < width * height; i++) {
-        (*rgba)[i*4 + 0] = rgb[i*3 + 0]; 
-        (*rgba)[i*4 + 1] = rgb[i*3 + 1]; 
-        (*rgba)[i*4 + 2] = rgb[i*3 + 2];
-        (*rgba)[i*4 + 3] = 255;         
+    std::vector<uint8_t> yuv420(total_size);
+
+    uint8_t* y_plane = yuv420.data();
+    uint8_t* u_plane = yuv420.data() + y_size;
+    uint8_t* v_plane = yuv420.data() + y_size + uv_size;
+    
+
+    for (uint32_t row = 0; row < height; row += 2) {
+        for (uint32_t col = 0; col < width; col += 2) {
+            uint32_t yuv422_idx = (row * width + col) * 2;
+            uint32_t y_idx = row * width + col;
+            uint32_t uv_idx = (row / 2) * (width / 2) + (col / 2);
+            
+
+            y_plane[y_idx] = yuv422[yuv422_idx];
+
+            y_plane[y_idx + 1] = yuv422[yuv422_idx + 2];
+            
+
+            if (row + 1 < height) {
+                uint32_t yuv422_idx_next = ((row + 1) * width + col) * 2;
+                uint32_t y_idx_next = (row + 1) * width + col;
+                
+                y_plane[y_idx_next] = yuv422[yuv422_idx_next];
+                y_plane[y_idx_next + 1] = yuv422[yuv422_idx_next + 2];
+                
+
+                u_plane[uv_idx] = (yuv422[yuv422_idx + 1] + yuv422[yuv422_idx_next + 1]) / 2;
+                v_plane[uv_idx] = (yuv422[yuv422_idx + 3] + yuv422[yuv422_idx_next + 3]) / 2;
+            } else {
+                u_plane[uv_idx] = yuv422[yuv422_idx + 1];
+                v_plane[uv_idx] = yuv422[yuv422_idx + 3];
+            }
+        }
     }
     
-    return rgba;
+    return yuv420;
 }
 
 
@@ -131,7 +168,7 @@ Napi::Value VimbaXSystem::StartCapture(const Napi::CallbackInfo& info) {
             } else std::cerr << "Opened FRONT camera" << std::endl;
 
             err = camera1->GetFeatureByName("PixelFormat", pFormatFeature);
-            pFormatFeature->SetValue(VmbPixelFormatRgb8);
+            pFormatFeature->SetValue(VmbPixelFormatYuv422);
 
             tsfnJScriptCallback = Napi::ThreadSafeFunction::New( // Turn the callback function into threadsafe so that we can access the javascript function from the C++ thread
                 env, // The runtime code, taken from the info
