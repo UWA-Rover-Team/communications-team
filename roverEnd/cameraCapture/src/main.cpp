@@ -174,9 +174,7 @@ VimbaXSystem::VimbaXSystem(const Napi::CallbackInfo& info)
 }
 
 // ================== General camera capture Function ================
-VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr& camera, 
-                                          std::shared_ptr<FrameObserver>& observer, 
-                                          Napi::ThreadSafeFunction& tsfn) {
+VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr& camera, std::shared_ptr<FrameObserver>& observer, Napi::ThreadSafeFunction& tsfn) {
     VmbError_t err;
     
     // Open camera
@@ -200,6 +198,20 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
     FeaturePtr pAcqMode;
     if (camera->GetFeatureByName("AcquisitionMode", pAcqMode) == VmbErrorSuccess) {
         pAcqMode->SetValue("Continuous");
+    }
+
+    // Enable auto gain
+    FeaturePtr pGainAuto;
+    if (camera->GetFeatureByName("GainAuto", pGainAuto) == VmbErrorSuccess) {
+        pGainAuto->SetValue("Continuous");  // Options: "Off", "Once", "Continuous"
+        std::cerr << "Enabled auto gain" << std::endl;
+    }
+
+    // Enable auto exposure
+    FeaturePtr pExposureAuto;
+    if (camera->GetFeatureByName("ExposureAuto", pExposureAuto) == VmbErrorSuccess) {
+        pExposureAuto->SetValue("Continuous");  // Options: "Off", "Once", "Continuous"
+        std::cerr << "Enabled auto exposure" << std::endl;
     }
 
     // Set resolution
