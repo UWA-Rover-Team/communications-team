@@ -82,15 +82,15 @@ std::vector<uint8_t> FrameObserver::convertYUV422toYUV420(VmbUchar_t* yuv422, ui
     uint8_t* u_plane = yuv420.data() + y_size;
     uint8_t* v_plane = yuv420.data() + y_size + uv_size;
     
-    // Extract only Y values - should give us grayscale
+    // Try UYVY format (U Y V Y)
     for (uint32_t row = 0; row < height; row++) {
-        for (uint32_t col = 0; col < width; col++) {
+        for (uint32_t col = 0; col < width; col += 2) {
             uint32_t yuv422_idx = (row * width + col) * 2;
             uint32_t y_idx = row * width + col;
             
-            // Try both possible Y positions
-            y_plane[y_idx] = yuv422[yuv422_idx];  // If YUYV
-            // OR try: y_plane[y_idx] = yuv422[yuv422_idx + 1];  // If UYVY
+            // UYVY: U0 Y0 V0 Y1
+            y_plane[y_idx] = yuv422[yuv422_idx + 1];      // Y0
+            y_plane[y_idx + 1] = yuv422[yuv422_idx + 3];  // Y1
         }
     }
     
