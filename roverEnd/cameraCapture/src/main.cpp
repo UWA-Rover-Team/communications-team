@@ -183,159 +183,64 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
         return err;
     }
 
-    std::cerr << "\n=== Camera Configuration ===" << std::endl;
-
-    // Check if settings are writable
-    FeaturePtr pTriggerMode;
-    if (camera->GetFeatureByName("TriggerMode", pTriggerMode) == VmbErrorSuccess) {
-        bool isWritable;
-        pTriggerMode->IsWritable(isWritable);
-        std::cerr << "TriggerMode writable? " << (isWritable ? "YES" : "NO") << std::endl;
-        
-        std::string before;
-        pTriggerMode->GetValue(before);
-        std::cerr << "TriggerMode BEFORE: " << before << std::endl;
-        
-        err = pTriggerMode->SetValue("Off");
-        std::cerr << "SetValue result: " << err << " (0=success)" << std::endl;
-        
-        std::string after;
-        pTriggerMode->GetValue(after);
-        std::cerr << "TriggerMode AFTER: " << after << std::endl;
-        
-        if (before == after && before != "Off") {
-            std::cerr << "⚠ WARNING: TriggerMode did NOT change!" << std::endl;
-        }
-    }
-
-    // Check TriggerSelector
+    // Trigger settings
     FeaturePtr pTriggerSelector;
     if (camera->GetFeatureByName("TriggerSelector", pTriggerSelector) == VmbErrorSuccess) {
-        std::string sel;
-        pTriggerSelector->GetValue(sel);
-        std::cerr << "TriggerSelector: " << sel << std::endl;
-        
         pTriggerSelector->SetValue("FrameStart");
-        pTriggerSelector->GetValue(sel);
-        std::cerr << "TriggerSelector after set: " << sel << std::endl;
+    }
+    
+    FeaturePtr pTriggerMode;
+    if (camera->GetFeatureByName("TriggerMode", pTriggerMode) == VmbErrorSuccess) {
+        pTriggerMode->SetValue("On");
     }
 
-    // Check AcquisitionMode
     FeaturePtr pAcqMode;
     if (camera->GetFeatureByName("AcquisitionMode", pAcqMode) == VmbErrorSuccess) {
-        std::string mode;
-        pAcqMode->GetValue(mode);
-        std::cerr << "AcquisitionMode: " << mode << std::endl;
-        
         pAcqMode->SetValue("Continuous");
-        pAcqMode->GetValue(mode);
-        std::cerr << "AcquisitionMode after set: " << mode << std::endl;
     }
 
-    // Check Binning
-    FeaturePtr pBinningH;
+    // Binning
+    FeaturePtr pBinningH, pBinningV;
     if (camera->GetFeatureByName("BinningHorizontal", pBinningH) == VmbErrorSuccess) {
-        bool isWritable;
-        pBinningH->IsWritable(isWritable);
-        std::cerr << "BinningHorizontal writable? " << (isWritable ? "YES" : "NO") << std::endl;
-        
-        VmbInt64_t before;
-        pBinningH->GetValue(before);
-        std::cerr << "BinningHorizontal BEFORE: " << before << std::endl;
-        
-        err = pBinningH->SetValue(8);
-        std::cerr << "SetValue(8) result: " << err << std::endl;
-        
-        VmbInt64_t after;
-        pBinningH->GetValue(after);
-        std::cerr << "BinningHorizontal AFTER: " << after << std::endl;
+        pBinningH->SetValue(4);  // Use 4 instead of 8
+        std::cerr << "BinningHorizontal: 4x" << std::endl;
     }
-
-    FeaturePtr pBinningV;
     if (camera->GetFeatureByName("BinningVertical", pBinningV) == VmbErrorSuccess) {
-        VmbInt64_t before;
-        pBinningV->GetValue(before);
-        std::cerr << "BinningVertical BEFORE: " << before << std::endl;
-        
-        pBinningV->SetValue(6);
-        
-        VmbInt64_t after;
-        pBinningV->GetValue(after);
-        std::cerr << "BinningVertical AFTER: " << after << std::endl;
+        pBinningV->SetValue(4);  // Use 4 instead of 6
+        std::cerr << "BinningVertical: 4x" << std::endl;
     }
 
     // Pixel format
     FeaturePtr pFormat;
     if (camera->GetFeatureByName("PixelFormat", pFormat) == VmbErrorSuccess) {
-        std::string before;
-        pFormat->GetValue(before);
-        std::cerr << "PixelFormat BEFORE: " << before << std::endl;
-        
         pFormat->SetValue("RGB8Packed");
-        
-        std::string after;
-        pFormat->GetValue(after);
-        std::cerr << "PixelFormat AFTER: " << after << std::endl;
     }
 
-    // GigE settings
+
     FeaturePtr pPacketSize;
     if (camera->GetFeatureByName("GevSCPSPacketSize", pPacketSize) == VmbErrorSuccess) {
-        VmbInt64_t before;
-        pPacketSize->GetValue(before);
-        std::cerr << "PacketSize BEFORE: " << before << std::endl;
-        
         pPacketSize->SetValue(1500);
-        
-        VmbInt64_t after;
-        pPacketSize->GetValue(after);
-        std::cerr << "PacketSize AFTER: " << after << std::endl;
     }
 
-    // Exposure
+    FeaturePtr pGainAuto;
+    if (camera->GetFeatureByName("GainAuto", pGainAuto) == VmbErrorSuccess) {
+        pGainAuto->SetValue("Continuous");
+    }
+    
     FeaturePtr pExposureAuto;
     if (camera->GetFeatureByName("ExposureAuto", pExposureAuto) == VmbErrorSuccess) {
-        std::string before;
-        pExposureAuto->GetValue(before);
-        std::cerr << "ExposureAuto BEFORE: " << before << std::endl;
-        
         pExposureAuto->SetValue("Off");
-        
-        std::string after;
-        pExposureAuto->GetValue(after);
-        std::cerr << "ExposureAuto AFTER: " << after << std::endl;
     }
 
     FeaturePtr pExposure;
     if (camera->GetFeatureByName("ExposureTime", pExposure) == VmbErrorSuccess) {
-        double before;
-        pExposure->GetValue(before);
-        std::cerr << "ExposureTime BEFORE: " << before << std::endl;
-        
-        pExposure->SetValue(9000);
-        
-        double after;
-        pExposure->GetValue(after);
-        std::cerr << "ExposureTime AFTER: " << after << std::endl;
+        pExposure->SetValue(9000);  
     }
-
-    // Gain
-    FeaturePtr pGainAuto;
-    if (camera->GetFeatureByName("GainAuto", pGainAuto) == VmbErrorSuccess) {
-        std::string mode;
-        pGainAuto->GetValue(mode);
-        std::cerr << "GainAuto: " << mode << std::endl;
-        
-        pGainAuto->SetValue("Continuous");
-    }
-
-    std::cerr << "============================\n" << std::endl;
 
     // Start acquisition
     observer = std::make_shared<FrameObserver>(camera, tsfn);
     err = camera->StartContinuousImageAcquisition(40, IFrameObserverPtr(observer));
     if (VmbErrorSuccess != err) {
-        std::cerr << "StartContinuousImageAcquisition FAILED: " << err << std::endl;
         return err;
     }
 
@@ -348,6 +253,7 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
     
     return VmbErrorSuccess;
 }
+
 // =============================== Specific camera capture function for jscript ======================
 Napi::Value VimbaXSystem::StartCapture(const Napi::CallbackInfo& info) {
     VmbError_t err;
