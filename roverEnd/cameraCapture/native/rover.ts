@@ -22,9 +22,8 @@ MANIP: undefined
 
 async function createStream(camera: cameras, resolution: resolution): Promise<void> {
   const pcCAM = new RTCPeerConnection();
-  peerConnections[camera] = pcCAM; // JavaScript DOES reference automatically, so this object reference is the same
+  peerConnections[camera] = pcCAM;
   
-  // OUTGOING ICE Listener event (every new ICE candidate this finds, run that)
   pcCAM.onicecandidate = (event) => { 
     if (event.candidate) {
       socket.send(JSON.stringify({
@@ -37,16 +36,18 @@ async function createStream(camera: cameras, resolution: resolution): Promise<vo
     }
   };
   
-  const mediaTrack = requestCamera(camera);
+  // Wait for track to be ready
+  const mediaTrack = await requestCamera(camera);
   const mediaStream = new MediaStream([mediaTrack]); 
     
-  pcCAM.addTrack(mediaTrack, mediaStream); // Media stream is a collection of tracks (audio, visual etc.)
-  const senders = pcCAM.getSenders();
+  pcCAM.addTrack(mediaTrack, mediaStream);
   
-  // Create and send the offer
+  // Give it a moment to ensure track is active
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
   const offerCAM = await pcCAM.createOffer({
-  offerToReceiveAudio: false,
-  offerToReceiveVideo: false 
+    offerToReceiveAudio: false,
+    offerToReceiveVideo: false 
   });
   await pcCAM.setLocalDescription(offerCAM);
   console.log('Offer SDP:', offerCAM.sdp);
@@ -60,27 +61,33 @@ async function createStream(camera: cameras, resolution: resolution): Promise<vo
   }));
   
   console.log(`Set camera ${camera}`);
-} 
+}
 
+// Make this return a Promise
+function requestCamera(cameraId: string): Promise<MediaStreamTrack> {
+  return new Promise((resolve, reject) => {
+    const source = new RTCVideoSource();
+    const track = source.createTrack();
 
-function requestCamera(cameraId: string): MediaStreamTrack {
-  // Create a video source
-  const source = new RTCVideoSource();
-  const track = source.createTrack();
-
-  vimbaSystem.startCapture(cameraId, (frameData: { buffer: Buffer, width: number, height: number }) => {
-    // Jscript callback lambda function
-    const frame: RTCVideoFrame = {
-      width: frameData.width,
-      height: frameData.height,
-      data: new Uint8Array(frameData.buffer),
-    };
-    source.onFrame(frame);
+    try {
+      vimbaSystem.startCapture(cameraId, (frameData: { buffer: Buffer, width: number, height: number }) => {
+        const frame: RTCVideoFrame = {
+          width: frameData.width,
+          height: frameData.height,
+          data: new Uint8Array(frameData.buffer),
+        };
+        source.onFrame(frame);
+      });
+      
+      console.log(`Started capturing from camera ${cameraId}`);
+      
+      // Resolve after first frame or timeout
+      setTimeout(() => resolve(track), 500);
+    } catch (error) {
+      console.error(`Failed to start camera ${cameraId}:`, error);
+      reject(error);
+    }
   });
-  
-  console.log(`Started capturing from camera ${cameraId}`);
-  
-  return track;
 }
 
 
