@@ -183,6 +183,7 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
         return err;
     }
 
+    // Trigger settings
     FeaturePtr pTriggerSelector;
     if (camera->GetFeatureByName("TriggerSelector", pTriggerSelector) == VmbErrorSuccess) {
         pTriggerSelector->SetValue("FrameStart");
@@ -198,16 +199,16 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
         pAcqMode->SetValue("Continuous");
     }
 
+    // Binning
     FeaturePtr pBinningH, pBinningV;
     if (camera->GetFeatureByName("BinningHorizontal", pBinningH) == VmbErrorSuccess) {
         pBinningH->SetValue(8);
-        std::cerr << "Horizontal binning: 8x" << std::endl;
     }
     if (camera->GetFeatureByName("BinningVertical", pBinningV) == VmbErrorSuccess) {
         pBinningV->SetValue(6);
-        std::cerr << "Vertical binning: 6x" << std::endl;
     }
 
+    // Check resolution
     FeaturePtr pWidth, pHeight;
     camera->GetFeatureByName("Width", pWidth);
     camera->GetFeatureByName("Height", pHeight);
@@ -215,68 +216,44 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
     VmbInt64_t actualW, actualH;
     pWidth->GetValue(actualW);
     pHeight->GetValue(actualH);
-    std::cerr << "Using full binned resolution: " << actualW << "x" << actualH << std::endl;
+    std::cerr << "Resolution: " << actualW << "x" << actualH << std::endl;
 
+    // Pixel format
     FeaturePtr pFormat;
     if (camera->GetFeatureByName("PixelFormat", pFormat) == VmbErrorSuccess) {
         pFormat->SetValue("RGB8Packed");
     }
 
-    
 
-    FeaturePtr pDelay;
-    if (camera->GetFeatureByName("GevSCPD", pDelay) == VmbErrorSuccess) {
-        pDelay->SetValue(5000);  // 5 microseconds between packets
-        std::cerr << "Set inter-packet delay to 5000ns" << std::endl;
-    }
-    
     FeaturePtr pPacketSize;
     if (camera->GetFeatureByName("GevSCPSPacketSize", pPacketSize) == VmbErrorSuccess) {
         pPacketSize->SetValue(1500);
-        std::cerr << "Set packet size to 1500" << std::endl;
     }
     
-    FeaturePtr pFrameRateEnable;
-    if (camera->GetFeatureByName("AcquisitionFrameRateEnable", pFrameRateEnable) == VmbErrorSuccess) {
-        pFrameRateEnable->SetValue(true);
-        std::cerr << "Frame rate control enabled" << std::endl;
-    }
-    
-    FeaturePtr pFrameRate;
-    if (camera->GetFeatureByName("AcquisitionFrameRate", pFrameRate) == VmbErrorSuccess) {
-        pFrameRate->SetValue(30.0);  // Start with 30 FPS
-        
-        double actualFPS;
-        pFrameRate->GetValue(actualFPS);
-        std::cerr << "Set frame rate to: " << actualFPS << " fps" << std::endl;
+    FeaturePtr pDelay;
+    if (camera->GetFeatureByName("GevSCPD", pDelay) == VmbErrorSuccess) {
+        pDelay->SetValue(3000);  // 3 microseconds
+        std::cerr << "Inter-packet delay: 3000ns" << std::endl;
     }
 
     FeaturePtr pGainAuto;
     if (camera->GetFeatureByName("GainAuto", pGainAuto) == VmbErrorSuccess) {
-        pGainAuto->SetValue("Off");
-    }
-    
-    FeaturePtr pGain;
-    if (camera->GetFeatureByName("Gain", pGain) == VmbErrorSuccess) {
-        pGain->SetValue(10.0); 
+        pGainAuto->SetValue("Continuous");
     }
     
     FeaturePtr pExposureAuto;
     if (camera->GetFeatureByName("ExposureAuto", pExposureAuto) == VmbErrorSuccess) {
-        pExposureAuto->SetValue("Off");
-    }
-    
-    FeaturePtr pExposure;
-    if (camera->GetFeatureByName("ExposureTime", pExposure) == VmbErrorSuccess) {
-        pExposure->SetValue(20000); 
+        pExposureAuto->SetValue("Continuous");
     }
 
+    // Start acquisition
     observer = std::make_shared<FrameObserver>(camera, tsfn);
-    err = camera->StartContinuousImageAcquisition(50, IFrameObserverPtr(observer)); 
+    err = camera->StartContinuousImageAcquisition(40, IFrameObserverPtr(observer));
     if (VmbErrorSuccess != err) {
         return err;
     }
 
+    // AcquisitionStart
     FeaturePtr pAcqStart;
     err = camera->GetFeatureByName("AcquisitionStart", pAcqStart);
     if (VmbErrorSuccess == err) {
