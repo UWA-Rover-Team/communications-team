@@ -203,12 +203,6 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
     FeaturePtr pFormat;
     if (camera->GetFeatureByName("PixelFormat", pFormat) == VmbErrorSuccess) {
         err = pFormat->SetValue("RGB8Packed");
-        if (err != VmbErrorSuccess) {
-            pFormat->SetValue("RGB8");
-        }
-        if (err != VmbErrorSuccess) {
-            pFormat->SetValue("Mono8");
-        }
     }
 
     // GigE packet settings
@@ -219,7 +213,7 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
         std::cerr << "Set packet size to 1500" << std::endl;
     }
 
-    /*
+    
     // Enable auto gain
     FeaturePtr pGainAuto;
     if (camera->GetFeatureByName("GainAuto", pGainAuto) == VmbErrorSuccess) {
@@ -231,9 +225,8 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
     if (camera->GetFeatureByName("ExposureAuto", pExposureAuto) == VmbErrorSuccess) {
         pExposureAuto->SetValue("Continuous");
     }
-    */
 
-    // Start acquisition with MORE buffers
+    // Start acquisition 
     observer = std::make_shared<FrameObserver>(camera, tsfn);
     err = camera->StartContinuousImageAcquisition(30, IFrameObserverPtr(observer));  
     if (VmbErrorSuccess != err) {
