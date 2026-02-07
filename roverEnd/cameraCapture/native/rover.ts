@@ -38,11 +38,12 @@ async function createStream(camera: cameras, resolution: resolution): Promise<vo
   };
   
   const mediaTrack = requestCamera(camera);
-  console.log('Track created:', mediaTrack.id, mediaTrack.kind, mediaTrack.readyState);
   const mediaStream = new MediaStream([mediaTrack]); 
     
   pcCAM.addTrack(mediaTrack, mediaStream); // Media stream is a collection of tracks (audio, visual etc.)
-  
+  console.log('Sender:', pcCAM);
+  const senders = pcCAM.getSenders();
+  console.log('Senders:', senders.map(s => s.track));
   
   // Create and send the offer
   const offerCAM = await pcCAM.createOffer();
@@ -64,16 +65,8 @@ function requestCamera(cameraId: string): MediaStreamTrack {
   // Create a video source
   const source = new RTCVideoSource();
   const track = source.createTrack();
-  
-  console.log('Track created:');
-  console.log('  id:', track.id);
-  console.log('  kind:', track.kind); // Should be 'video'
-  console.log('  readyState:', track.readyState); // Should be 'live'
-  console.log('  enabled:', track.enabled); // Should be true
-  console.log('  muted:', track.muted); // Should be false
 
   vimbaSystem.startCapture(cameraId, (frameData: { buffer: Buffer, width: number, height: number }) => {
-    console.log(`Frame: ${frameData.width}x${frameData.height}, size: ${frameData.buffer.length}`);
     // Jscript callback lambda function
     const frame: RTCVideoFrame = {
       width: frameData.width,
