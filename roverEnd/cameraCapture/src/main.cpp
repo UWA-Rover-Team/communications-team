@@ -82,32 +82,31 @@ std::vector<uint8_t> FrameObserver::convertYUV422toYUV420(VmbUchar_t* yuv422, ui
     uint8_t* u_plane = yuv420.data() + y_size;
     uint8_t* v_plane = yuv420.data() + y_size + uv_size;
     
-
-    for (uint32_t row = 0; row < height; row += 2) {
+    // YUV422 format is: Y0 U0 Y1 V0 Y2 U1 Y3 V1 (YUYV)
+    // We need to extract Y, and subsample U/V by 2 vertically for YUV420
+    
+    for (uint32_t row = 0; row < height; row++) {
         for (uint32_t col = 0; col < width; col += 2) {
             uint32_t yuv422_idx = (row * width + col) * 2;
             uint32_t y_idx = row * width + col;
-            uint32_t uv_idx = (row / 2) * (width / 2) + (col / 2);
             
-
-            y_plane[y_idx] = yuv422[yuv422_idx];
-
-            y_plane[y_idx + 1] = yuv422[yuv422_idx + 2];
+            // Copy Y values
+            y_plane[y_idx] = yuv422[yuv422_idx];          // Y0
+            y_plane[y_idx + 1] = yuv422[yuv422_idx + 2];  // Y1
             
-
-            if (row + 1 < height) {
-                uint32_t yuv422_idx_next = ((row + 1) * width + col) * 2;
-                uint32_t y_idx_next = (row + 1) * width + col;
+            // Only process U/V on even rows (subsample vertically)
+            if (row % 2 == 0) {
+                uint32_t uv_idx = (row / 2) * (width / 2) + (col / 2);
                 
-                y_plane[y_idx_next] = yuv422[yuv422_idx_next];
-                y_plane[y_idx_next + 1] = yuv422[yuv422_idx_next + 2];
-                
-
-                u_plane[uv_idx] = (yuv422[yuv422_idx + 1] + yuv422[yuv422_idx_next + 1]) / 2;
-                v_plane[uv_idx] = (yuv422[yuv422_idx + 3] + yuv422[yuv422_idx_next + 3]) / 2;
-            } else {
-                u_plane[uv_idx] = yuv422[yuv422_idx + 1];
-                v_plane[uv_idx] = yuv422[yuv422_idx + 3];
+                // Average U and V from current and next row if possible
+                if (row + 1 < height) {
+                    uint32_t yuv422_idx_next = ((row + 1) * width + col) * 2;
+                    u_plane[uv_idx] = (yuv422[yuv422_idx + 1] + yuv422[yuv422_idx_next + 1]) / 2;
+                    v_plane[uv_idx] = (yuv422[yuv422_idx + 3] + yuv422[yuv422_idx_next + 3]) / 2;
+                } else {
+                    u_plane[uv_idx] = yuv422[yuv422_idx + 1];
+                    v_plane[uv_idx] = yuv422[yuv422_idx + 3];
+                }
             }
         }
     }
