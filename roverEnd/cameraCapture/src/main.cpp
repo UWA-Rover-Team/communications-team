@@ -229,21 +229,22 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
     if (camera->GetFeatureByName("GevSCPSPacketSize", pPacketSize) == VmbErrorSuccess) {
         pPacketSize->SetValue(1500);
     }
-    
-    FeaturePtr pDelay;
-    if (camera->GetFeatureByName("GevSCPD", pDelay) == VmbErrorSuccess) {
-        pDelay->SetValue(3000);  // 3 microseconds
-        std::cerr << "Inter-packet delay: 3000ns" << std::endl;
-    }
 
     FeaturePtr pGainAuto;
     if (camera->GetFeatureByName("GainAuto", pGainAuto) == VmbErrorSuccess) {
         pGainAuto->SetValue("Continuous");
     }
     
+    // Turn off auto exposure
     FeaturePtr pExposureAuto;
     if (camera->GetFeatureByName("ExposureAuto", pExposureAuto) == VmbErrorSuccess) {
-        pExposureAuto->SetValue("Continuous");
+        pExposureAuto->SetValue("Off");
+    }
+
+    // Get the ExposureTime feature and set it
+    FeaturePtr pExposure;
+    if (camera->GetFeatureByName("ExposureTime", pExposure) == VmbErrorSuccess) {
+        pExposure->SetValue(10000);  // 10ms = 10000 µs
     }
 
     // Start acquisition
@@ -286,13 +287,13 @@ Napi::Value VimbaXSystem::StartCapture(const Napi::CallbackInfo& info) {
             err = InitializeCamera("169.254.24.139", cameraFront, frameObserverFront, tsfnJScriptCallback);
             break;
         case BACKCAMERA:
-            err = InitializeCamera("169.254.24.XXX", cameraBack, frameObserverBack, tsfnJScriptCallback);
+            err = InitializeCamera("169.254.234.45", cameraBack, frameObserverBack, tsfnJScriptCallback);
             break;
         case LEFTCAMERA:
-            err = InitializeCamera("169.254.24.XXX", cameraLeft, frameObserverLeft, tsfnJScriptCallback);
+            err = InitializeCamera("169.254.145.157", cameraLeft, frameObserverLeft, tsfnJScriptCallback);
             break;
         case RIGHTCAMERA:
-            err = InitializeCamera("169.254.24.XXX", cameraRight, frameObserverRight, tsfnJScriptCallback);
+            err = InitializeCamera("169.254.56.227", cameraRight, frameObserverRight, tsfnJScriptCallback);
             break;
         case MANIPCAMERA:
             err = InitializeCamera("169.254.24.XXX", cameraManip, frameObserverManip, tsfnJScriptCallback);
