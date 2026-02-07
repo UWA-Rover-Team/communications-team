@@ -180,79 +180,225 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
     
     err = system.OpenCameraByID(cameraIP.c_str(), VmbAccessModeFull, camera);
     if (VmbErrorSuccess != err) {
+        std::cerr << "Failed to open camera: " << err << std::endl;
         return err;
     }
 
-    // Trigger settings
+    std::cerr << "\n========== CAMERA SETTINGS VERIFICATION ==========" << std::endl;
+
+    // === TRIGGER SETTINGS ===
+    std::cerr << "\n--- Trigger Configuration ---" << std::endl;
     FeaturePtr pTriggerSelector;
     if (camera->GetFeatureByName("TriggerSelector", pTriggerSelector) == VmbErrorSuccess) {
+        std::string before, after;
+        pTriggerSelector->GetValue(before);
+        std::cerr << "TriggerSelector BEFORE: " << before << std::endl;
+        
         pTriggerSelector->SetValue("FrameStart");
+        
+        pTriggerSelector->GetValue(after);
+        std::cerr << "TriggerSelector AFTER:  " << after << std::endl;
+        if (before != after) std::cerr << "  ✓ Changed successfully" << std::endl;
     }
     
     FeaturePtr pTriggerMode;
     if (camera->GetFeatureByName("TriggerMode", pTriggerMode) == VmbErrorSuccess) {
-        pTriggerMode->SetValue("Off");
+        std::string before, after;
+        pTriggerMode->GetValue(before);
+        std::cerr << "TriggerMode BEFORE: " << before << std::endl;
+        
+        err = pTriggerMode->SetValue("Off");
+        std::cerr << "  SetValue('Off') returned: " << err << " (0=success)" << std::endl;
+        
+        pTriggerMode->GetValue(after);
+        std::cerr << "TriggerMode AFTER:  " << after << std::endl;
+        if (after != "Off") {
+            std::cerr << "  ✗ ERROR: Failed to set to Off!" << std::endl;
+        } else {
+            std::cerr << "  ✓ Set to Off successfully" << std::endl;
+        }
     }
 
-    // Acquisition mode
+    // === ACQUISITION MODE ===
+    std::cerr << "\n--- Acquisition Mode ---" << std::endl;
     FeaturePtr pAcqMode;
     if (camera->GetFeatureByName("AcquisitionMode", pAcqMode) == VmbErrorSuccess) {
+        std::string before, after;
+        pAcqMode->GetValue(before);
+        std::cerr << "AcquisitionMode BEFORE: " << before << std::endl;
+        
         pAcqMode->SetValue("Continuous");
+        
+        pAcqMode->GetValue(after);
+        std::cerr << "AcquisitionMode AFTER:  " << after << std::endl;
     }
 
-    // Binning
+    // === BINNING ===
+    std::cerr << "\n--- Binning ---" << std::endl;
     FeaturePtr pBinningH;
     if (camera->GetFeatureByName("BinningHorizontal", pBinningH) == VmbErrorSuccess) {
-        pBinningH->SetValue(1);
+        VmbInt64_t min, max, inc, before, after;
+        pBinningH->GetRange(min, max);
+        pBinningH->GetIncrement(inc);
+        std::cerr << "BinningHorizontal range: " << min << "-" << max << " (increment: " << inc << ")" << std::endl;
+        
+        pBinningH->GetValue(before);
+        std::cerr << "BinningHorizontal BEFORE: " << before << std::endl;
+        
+        err = pBinningH->SetValue(1);
+        std::cerr << "  SetValue(4) returned: " << err << std::endl;
+        
+        pBinningH->GetValue(after);
+        std::cerr << "BinningHorizontal AFTER:  " << after << std::endl;
     }
 
-    // Pixel format
+    // === RESOLUTION ===
+    std::cerr << "\n--- Resolution ---" << std::endl;
+    FeaturePtr pWidth, pHeight;
+    camera->GetFeatureByName("Width", pWidth);
+    camera->GetFeatureByName("Height", pHeight);
+    
+    VmbInt64_t width, height;
+    pWidth->GetValue(width);
+    pHeight->GetValue(height);
+    std::cerr << "Resolution: " << width << " x " << height << std::endl;
+
+    // === PIXEL FORMAT ===
+    std::cerr << "\n--- Pixel Format ---" << std::endl;
     FeaturePtr pFormat;
     if (camera->GetFeatureByName("PixelFormat", pFormat) == VmbErrorSuccess) {
-        pFormat->SetValue("RGB8Packed");
+        std::string before, after;
+        pFormat->GetValue(before);
+        std::cerr << "PixelFormat BEFORE: " << before << std::endl;
+        
+        err = pFormat->SetValue("RGB8Packed");
+        std::cerr << "  SetValue('RGB8Packed') returned: " << err << std::endl;
+        
+        pFormat->GetValue(after);
+        std::cerr << "PixelFormat AFTER:  " << after << std::endl;
     }
 
-    // GigE network
+    // === GIGE NETWORK ===
+    std::cerr << "\n--- GigE Network ---" << std::endl;
     FeaturePtr pPacketSize;
     if (camera->GetFeatureByName("GevSCPSPacketSize", pPacketSize) == VmbErrorSuccess) {
+        VmbInt64_t before, after;
+        pPacketSize->GetValue(before);
+        std::cerr << "PacketSize BEFORE: " << before << std::endl;
+        
         pPacketSize->SetValue(1500);
+        
+        pPacketSize->GetValue(after);
+        std::cerr << "PacketSize AFTER:  " << after << std::endl;
+    }
+    
+    FeaturePtr pDelay;
+    if (camera->GetFeatureByName("GevSCPD", pDelay) == VmbErrorSuccess) {
+        VmbInt64_t delay;
+        pDelay->GetValue(delay);
+        std::cerr << "Inter-packet delay: " << delay << " ns" << std::endl;
     }
 
-    // Exposure
+    // === EXPOSURE ===
+    std::cerr << "\n--- Exposure ---" << std::endl;
     FeaturePtr pExposureAuto;
     if (camera->GetFeatureByName("ExposureAuto", pExposureAuto) == VmbErrorSuccess) {
+        std::string before, after;
+        pExposureAuto->GetValue(before);
+        std::cerr << "ExposureAuto BEFORE: " << before << std::endl;
+        
         pExposureAuto->SetValue("Off");
+        
+        pExposureAuto->GetValue(after);
+        std::cerr << "ExposureAuto AFTER:  " << after << std::endl;
     }
 
     FeaturePtr pExposure;
     if (camera->GetFeatureByName("ExposureTime", pExposure) == VmbErrorSuccess) {
+        double min, max, before, after;
+        pExposure->GetRange(min, max);
+        std::cerr << "ExposureTime range: " << min << "-" << max << " µs" << std::endl;
+        
+        pExposure->GetValue(before);
+        std::cerr << "ExposureTime BEFORE: " << before << " µs" << std::endl;
+        
         pExposure->SetValue(9000);
+        
+        pExposure->GetValue(after);
+        std::cerr << "ExposureTime AFTER:  " << after << " µs" << std::endl;
+        std::cerr << "  (= " << (after/1000.0) << " ms)" << std::endl;
     }
 
-    // Gain
+    // === GAIN ===
+    std::cerr << "\n--- Gain ---" << std::endl;
     FeaturePtr pGainAuto;
     if (camera->GetFeatureByName("GainAuto", pGainAuto) == VmbErrorSuccess) {
+        std::string before, after;
+        pGainAuto->GetValue(before);
+        std::cerr << "GainAuto BEFORE: " << before << std::endl;
+        
         pGainAuto->SetValue("Continuous");
+        
+        pGainAuto->GetValue(after);
+        std::cerr << "GainAuto AFTER:  " << after << std::endl;
+    }
+    
+    FeaturePtr pGain;
+    if (camera->GetFeatureByName("Gain", pGain) == VmbErrorSuccess) {
+        double gain;
+        pGain->GetValue(gain);
+        std::cerr << "Current Gain: " << gain << " dB" << std::endl;
     }
 
-    // White balance
+    // === WHITE BALANCE ===
+    std::cerr << "\n--- White Balance ---" << std::endl;
     FeaturePtr pBalanceWhiteAuto;
     if (camera->GetFeatureByName("BalanceWhiteAuto", pBalanceWhiteAuto) == VmbErrorSuccess) {
+        std::string mode;
+        pBalanceWhiteAuto->GetValue(mode);
+        std::cerr << "BalanceWhiteAuto: " << mode << std::endl;
+        
+        // Try enabling it
         pBalanceWhiteAuto->SetValue("Continuous");
+        pBalanceWhiteAuto->GetValue(mode);
+        std::cerr << "BalanceWhiteAuto AFTER: " << mode << std::endl;
     }
+
+    // === GAMMA ===
+    std::cerr << "\n--- Gamma ---" << std::endl;
+    FeaturePtr pGamma;
+    if (camera->GetFeatureByName("Gamma", pGamma) == VmbErrorSuccess) {
+        double gamma;
+        pGamma->GetValue(gamma);
+        std::cerr << "Gamma: " << gamma << std::endl;
+    }
+
+    // === BLACK LEVEL ===
+    std::cerr << "\n--- Black Level ---" << std::endl;
+    FeaturePtr pBlackLevel;
+    if (camera->GetFeatureByName("BlackLevel", pBlackLevel) == VmbErrorSuccess) {
+        double blackLevel;
+        pBlackLevel->GetValue(blackLevel);
+        std::cerr << "BlackLevel: " << blackLevel << std::endl;
+    }
+
+    std::cerr << "\n================================================\n" << std::endl;
 
     // Start acquisition
     observer = std::make_shared<FrameObserver>(camera, tsfn);
     err = camera->StartContinuousImageAcquisition(40, IFrameObserverPtr(observer));
     if (VmbErrorSuccess != err) {
+        std::cerr << "StartContinuousImageAcquisition FAILED: " << err << std::endl;
         return err;
     }
+    std::cerr << "Started acquisition with 40 buffers" << std::endl;
 
     // AcquisitionStart
     FeaturePtr pAcqStart;
     err = camera->GetFeatureByName("AcquisitionStart", pAcqStart);
     if (VmbErrorSuccess == err) {
-        pAcqStart->RunCommand();
+        err = pAcqStart->RunCommand();
+        std::cerr << "AcquisitionStart command: " << (err == VmbErrorSuccess ? "SUCCESS" : "FAILED") << std::endl;
     }
     
     return VmbErrorSuccess;
