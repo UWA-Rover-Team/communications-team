@@ -206,7 +206,7 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
 
     err = camera->GetFeatureByName("PixelFormat", pFormatFeature);
     if (VmbErrorSuccess == err) {
-        err = pFormatFeature->SetValue(VmbPixelFormatYuv422);
+        err = pFormatFeature->SetValue(VmbPixelFormatRgb8);
         std::cerr << "Set PixelFormat result: " << err << std::endl;
     }
 
