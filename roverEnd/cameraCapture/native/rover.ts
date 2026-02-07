@@ -44,7 +44,10 @@ async function createStream(camera: cameras, resolution: resolution): Promise<vo
   const senders = pcCAM.getSenders();
   
   // Create and send the offer
-  const offerCAM = await pcCAM.createOffer();
+  const offerCAM = await pcCAM.createOffer({
+  offerToReceiveAudio: false,
+  offerToReceiveVideo: false 
+  });
   await pcCAM.setLocalDescription(offerCAM);
   console.log('Offer SDP:', offerCAM.sdp);
   
