@@ -82,31 +82,21 @@ std::vector<uint8_t> FrameObserver::convertYUV422toYUV420(VmbUchar_t* yuv422, ui
     uint8_t* u_plane = yuv420.data() + y_size;
     uint8_t* v_plane = yuv420.data() + y_size + uv_size;
     
-    // YUV422 format is: Y0 U0 Y1 V0 Y2 U1 Y3 V1 (YUYV)
-    // We need to extract Y, and subsample U/V by 2 vertically for YUV420
-    
+    // Extract only Y values - should give us grayscale
     for (uint32_t row = 0; row < height; row++) {
-        for (uint32_t col = 0; col < width; col += 2) {
+        for (uint32_t col = 0; col < width; col++) {
             uint32_t yuv422_idx = (row * width + col) * 2;
             uint32_t y_idx = row * width + col;
             
-            // If the format is UYVY (U0 Y0 V0 Y1), use this:
-            y_plane[y_idx] = yuv422[yuv422_idx + 1];      // Y0
-            y_plane[y_idx + 1] = yuv422[yuv422_idx + 3];  // Y1
-
-            if (row % 2 == 0) {
-                uint32_t uv_idx = (row / 2) * (width / 2) + (col / 2);
-                if (row + 1 < height) {
-                    uint32_t yuv422_idx_next = ((row + 1) * width + col) * 2;
-                    u_plane[uv_idx] = (yuv422[yuv422_idx] + yuv422[yuv422_idx_next]) / 2;
-                    v_plane[uv_idx] = (yuv422[yuv422_idx + 2] + yuv422[yuv422_idx_next + 2]) / 2;
-                } else {
-                    u_plane[uv_idx] = yuv422[yuv422_idx];
-                    v_plane[uv_idx] = yuv422[yuv422_idx + 2];
-                }
-            }
+            // Try both possible Y positions
+            y_plane[y_idx] = yuv422[yuv422_idx];  // If YUYV
+            // OR try: y_plane[y_idx] = yuv422[yuv422_idx + 1];  // If UYVY
         }
     }
+    
+    // Fill U and V with 128 (neutral gray)
+    std::fill(u_plane, u_plane + uv_size, 128);
+    std::fill(v_plane, v_plane + uv_size, 128);
     
     return yuv420;
 }
