@@ -65,6 +65,13 @@ function requestCamera(cameraId: string): MediaStreamTrack {
   const source = new RTCVideoSource();
   const track = source.createTrack();
   
+  console.log('Track created:');
+  console.log('  id:', track.id);
+  console.log('  kind:', track.kind); // Should be 'video'
+  console.log('  readyState:', track.readyState); // Should be 'live'
+  console.log('  enabled:', track.enabled); // Should be true
+  console.log('  muted:', track.muted); // Should be false
+
   vimbaSystem.startCapture(cameraId, (frameData: { buffer: Buffer, width: number, height: number }) => {
     console.log(`Frame: ${frameData.width}x${frameData.height}, size: ${frameData.buffer.length}`);
     // Jscript callback lambda function
