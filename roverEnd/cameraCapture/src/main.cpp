@@ -101,8 +101,8 @@ std::vector<uint8_t> FrameObserver::convertYUV422toYUV420(VmbUchar_t* yuv422, ui
                 // Average U and V from current and next row if possible
                 if (row + 1 < height) {
                     uint32_t yuv422_idx_next = ((row + 1) * width + col) * 2;
-                    u_plane[uv_idx] = (yuv422[yuv422_idx + 1] + yuv422[yuv422_idx_next + 1]) / 2;
-                    v_plane[uv_idx] = (yuv422[yuv422_idx + 3] + yuv422[yuv422_idx_next + 3]) / 2;
+                    v_plane[uv_idx] = (yuv422[yuv422_idx + 1] + yuv422[yuv422_idx_next + 1]) / 2;
+                    u_plane[uv_idx] = (yuv422[yuv422_idx + 3] + yuv422[yuv422_idx_next + 3]) / 2;
                 } else {
                     u_plane[uv_idx] = yuv422[yuv422_idx + 1];
                     v_plane[uv_idx] = yuv422[yuv422_idx + 3];
