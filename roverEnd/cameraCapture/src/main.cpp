@@ -50,10 +50,7 @@ void FrameObserver::FrameReceived(const FramePtr pFrame){
     pFrame->GetWidth(width);
     pFrame->GetHeight(height);
 
-    // === CRITICAL: Copy data FIRST, THEN requeue immediately ===
     std::vector<uint8_t> frameCopy(pBuffer, pBuffer + bufferSize);
-    
-    // Requeue the frame IMMEDIATELY so camera can reuse the buffer
     m_pCamera->QueueFrame(pFrame);
     
     // NOW do the slow conversion with the copy
@@ -186,13 +183,24 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
         return err;
     }
 
+    // === CRITICAL: Set TriggerSelector to FrameStart, then disable trigger ===
+    FeaturePtr pTriggerSelector;
+    if (camera->GetFeatureByName("TriggerSelector", pTriggerSelector) == VmbErrorSuccess) {
+        pTriggerSelector->SetValue("FrameStart");
+    }
+    
+    FeaturePtr pTriggerMode;
+    if (camera->GetFeatureByName("TriggerMode", pTriggerMode) == VmbErrorSuccess) {
+        pTriggerMode->SetValue("Off");
+    }
+
     // Set AcquisitionMode to Continuous
     FeaturePtr pAcqMode;
     if (camera->GetFeatureByName("AcquisitionMode", pAcqMode) == VmbErrorSuccess) {
         pAcqMode->SetValue("Continuous");
     }
 
-    // In InitializeCamera - use heavy binning to get close to 240x240
+    // Use binning to get close to 240x240 with full FOV
     FeaturePtr pBinningH, pBinningV;
     if (camera->GetFeatureByName("BinningHorizontal", pBinningH) == VmbErrorSuccess) {
         pBinningH->SetValue(8);  // 2064 / 8 ≈ 258
@@ -201,7 +209,7 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
         pBinningV->SetValue(6);  // 1544 / 6 ≈ 257
     }
 
-    // Then manually set width/height to 240x240 (camera will crop)
+    // Set width/height to 240x240
     FeaturePtr pWidth, pHeight;
     camera->GetFeatureByName("Width", pWidth);
     camera->GetFeatureByName("Height", pHeight);
@@ -211,18 +219,15 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
     // Set pixel format
     FeaturePtr pFormat;
     if (camera->GetFeatureByName("PixelFormat", pFormat) == VmbErrorSuccess) {
-        err = pFormat->SetValue("RGB8Packed");
+        pFormat->SetValue("RGB8Packed");
     }
 
     // GigE packet settings
     FeaturePtr pPacketSize;
     if (camera->GetFeatureByName("GevSCPSPacketSize", pPacketSize) == VmbErrorSuccess) {
-        // Try 1500 first (standard MTU)
         pPacketSize->SetValue(1500);
-        std::cerr << "Set packet size to 1500" << std::endl;
     }
 
-    
     // Enable auto gain
     FeaturePtr pGainAuto;
     if (camera->GetFeatureByName("GainAuto", pGainAuto) == VmbErrorSuccess) {
@@ -237,14 +242,19 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
 
     // Start acquisition 
     observer = std::make_shared<FrameObserver>(camera, tsfn);
-    err = camera->StartContinuousImageAcquisition(30, IFrameObserverPtr(observer));  
+    err = camera->StartContinuousImageAcquisition(30, IFrameObserverPtr(observer));
     if (VmbErrorSuccess != err) {
         return err;
     }
-    
-    err = VmbErrorSuccess;
 
-    return err;
+    // === CRITICAL: Run AcquisitionStart command ===
+    FeaturePtr pAcqStart;
+    err = camera->GetFeatureByName("AcquisitionStart", pAcqStart);
+    if (VmbErrorSuccess == err) {
+        pAcqStart->RunCommand();
+    }
+    
+    return VmbErrorSuccess;
 }
 
 // =============================== Specific camera capture function for jscript ======================
