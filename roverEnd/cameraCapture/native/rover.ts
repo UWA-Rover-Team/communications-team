@@ -1,6 +1,7 @@
 import WebSocket from 'ws';
 import { RTCPeerConnection, RTCSessionDescription, RTCIceCandidate, nonstandard, MediaStream} from '@roamhq/wrtc';
-import { WebRTCMessage, clients, cameras, resolution } from './webRtcStreamObject';
+import type { WebRTCMessage, clients, resolution } from './webRtcStreamObject';
+import { cameras } from './webRtcStreamObject';
 import { RTCVideoFrame } from '@roamhq/wrtc/types/nonstandard';
 const vimbax = require('../build/Release/addon');
 
