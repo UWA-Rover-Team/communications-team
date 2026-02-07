@@ -107,11 +107,21 @@ std::vector<uint8_t> FrameObserver::convertYUV422toYUV420(VmbUchar_t* yuv422, ui
 class VimbaXSystem : public Napi::ObjectWrap<VimbaXSystem> {
     private:
         VmbSystem& system;
-        CameraPtr camera1;
-        std::shared_ptr<FrameObserver> myFrameObserver; // smart pointer. is nullptr currently
+        CameraPtr cameraFront;
+        CameraPtr cameraBack;
+        CameraPtr cameraLeft;
+        CameraPtr cameraRight;
+        CameraPtr cameraManip;
+        
+        std::shared_ptr<FrameObserver> frameObserverFront;
+        std::shared_ptr<FrameObserver> frameObserverBack;
+        std::shared_ptr<FrameObserver> frameObserverLeft;
+        std::shared_ptr<FrameObserver> frameObserverRight;
+        std::shared_ptr<FrameObserver> frameObserverManip;
+
+        VmbError_t InitializeCamera(const std::string& cameraIP, CameraPtr& camera, std::shared_ptr<FrameObserver>& observer, Napi::ThreadSafeFunction& tsfn);
 
     public:
-
         static Napi::Function GetClass(Napi::Env env) {
             return DefineClass(env, "VimbaXSystem", {
                 VimbaXSystem::InstanceMethod("startCapture", &VimbaXSystem::StartCapture)
@@ -126,87 +136,94 @@ class VimbaXSystem : public Napi::ObjectWrap<VimbaXSystem> {
 VimbaXSystem::VimbaXSystem(const Napi::CallbackInfo& info) 
 : Napi::ObjectWrap<VimbaXSystem>(info), system(VmbSystem::GetInstance()) {
     VmbError_t err = system.Startup();
-    std::cerr << "Succesfully initisalised system" << std::endl;
+    std::cerr << "Successfully initialised system" << std::endl;
 }
 
-// =============================== Javascript calls to begin capture ======================
-// This is a setup function, to make the FrameObserver act as a bridge between the two. VimbaX will call FrameRecieved, and FrameRecieved will call the javascript callback.
-Napi::Value VimbaXSystem::StartCapture(const Napi::CallbackInfo& info) {
+// ================== Helper Function ================
+VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr& camera,
+                                          std::shared_ptr<FrameObserver>& observer,
+                                          Napi::ThreadSafeFunction& tsfn) {
     VmbError_t err;
-    Napi::ThreadSafeFunction tsfnJScriptCallback;
     FeaturePtr pFormatFeature;
     FeaturePtr pPayloadSizeFeature;
     VmbInt64_t payloadSize;
     FeaturePtr pAcqStartFeature;
 
-    Napi::Env env = info.Env(); // Info on the runtime enviroment
+    err = system.OpenCameraByID(cameraIP.c_str(), VmbAccessModeFull, camera);
+    if (VmbErrorSuccess != err) {
+        std::cerr << "Failed to open camera at " << cameraIP << ": " << err << std::endl;
+        return err;
+    }
+    std::cerr << "Opened camera at " << cameraIP << std::endl;
 
-    Napi::Number cameraIDparameter = info[0].As<Napi::Number>(); // Take second parameter, turn it into int
+    err = camera->GetFeatureByName("PixelFormat", pFormatFeature);
+    if (VmbErrorSuccess == err) {
+        err = pFormatFeature->SetValue(VmbPixelFormatYuv422);
+        std::cerr << "Set PixelFormat result: " << err << std::endl;
+    }
+
+    err = camera->GetFeatureByName("PayloadSize", pPayloadSizeFeature);
+    if (VmbErrorSuccess == err) {
+        pPayloadSizeFeature->GetValue(payloadSize);
+        std::cerr << "PayloadSize: " << payloadSize << std::endl;
+    }
+
+    observer = std::make_shared<FrameObserver>(camera, tsfn);
+
+    err = camera->StartContinuousImageAcquisition(5, IFrameObserverPtr(observer));
+    if (VmbErrorSuccess != err) {
+        std::cerr << "Failed to start continuous acquisition: " << err << std::endl;
+        return err;
+    }
+    std::cerr << "Started continuous acquisition" << std::endl;
+
+    err = camera->GetFeatureByName("AcquisitionStart", pAcqStartFeature);
+    if (VmbErrorSuccess == err) {
+        err = pAcqStartFeature->RunCommand();
+        std::cerr << "AcquisitionStart command result: " << err << std::endl;
+    }
+    
+    return err;
+}
+
+// =============================== Javascript calls to begin capture ======================
+Napi::Value VimbaXSystem::StartCapture(const Napi::CallbackInfo& info) {
+    VmbError_t err;
+    Napi::Env env = info.Env();
+
+    Napi::Number cameraIDparameter = info[0].As<Napi::Number>();
     uint32_t cameraID = cameraIDparameter.Uint32Value();
 
-    Napi::Function jscriptCallback = info[1].As<Napi::Function>(); // Take the first parameter, turn it into a function
+    Napi::Function jscriptCallback = info[1].As<Napi::Function>();
+    
+    Napi::ThreadSafeFunction tsfnJScriptCallback = Napi::ThreadSafeFunction::New(
+        env,
+        jscriptCallback,
+        "FrameCallback",
+        0,
+        1
+    );
 
-
-    // Open the requested camera
     switch(cameraID) {
-        case 1:
-            err = system.OpenCameraByID("169.254.24.139", VmbAccessModeFull, camera1); // OpenCameraById returns an error. If not error, will edit camera object to read only from ID
-            if (VmbErrorSuccess != err) {
-                std::cerr << "Failed to open camera: " << err << std::endl;
-                system.Shutdown();
-            } else std::cerr << "Opened FRONT camera" << std::endl;
-
-            // Configure pixel format
-            err = camera1->GetFeatureByName("PixelFormat", pFormatFeature);
-            if (VmbErrorSuccess == err) {
-                err = pFormatFeature->SetValue(VmbPixelFormatYuv422);
-                std::cerr << "Set PixelFormat result: " << err << std::endl;
-            }
-            
-            // Set payload size (CRITICAL for frame completion)
-            err = camera1->GetFeatureByName("PayloadSize", pPayloadSizeFeature);
-            if (VmbErrorSuccess == err) {
-
-                pPayloadSizeFeature->GetValue(payloadSize);
-                std::cerr << "PayloadSize: " << payloadSize << std::endl;
-            }
-            
-            // Prepare camera for capture - IMPORTANT!
-            err = camera1->AnnounceFrame(FramePtr(new Frame(payloadSize)));
-            // or simpler:
-            
-            // Start acquisition ON THE CAMERA first
-            err = camera1->GetFeatureByName("AcquisitionStart", pAcqStartFeature);
-            if (VmbErrorSuccess == err) {
-                err = pAcqStartFeature->RunCommand();
-                std::cerr << "AcquisitionStart command result: " << err << std::endl;
-            }
-
-            tsfnJScriptCallback = Napi::ThreadSafeFunction::New( // Turn the callback function into threadsafe so that we can access the javascript function from the C++ thread
-                env, // The runtime code, taken from the info
-                jscriptCallback, // The javascript function that will be called in javascript file                 
-                "FrameCallback",   // Debugging name that will appear in jscript logs       
-                0,   // max queue size of functions                       
-                1   // How many threads will call this function (just main for me)                      
-            );
-            
-            // Create frame observer with the thread-safe function. Has to be shared because we need to be able to stop the camera later
-            myFrameObserver = std::make_shared<FrameObserver>(camera1, tsfnJScriptCallback);
-            
-            // Start capture. VimbaX gets this function, and calls FrameRecieved whenever a frame comes from it. 
-            err = camera1->StartContinuousImageAcquisition(
-                5,  // Number of frames to queue
-                IFrameObserverPtr(myFrameObserver)
-            );
-            if (VmbErrorSuccess != err) {
-                std::cerr << "Failed to start acquisition: " << err << std::endl;
-                // cleanup camera
-            }
+        case FRONTCAMERA:
+            err = InitializeCamera("169.254.24.139", cameraFront, frameObserverFront, tsfnJScriptCallback);
+            break;
+        case BACKCAMERA:
+            err = InitializeCamera("169.254.24.XXX", cameraBack, frameObserverBack, tsfnJScriptCallback);
+            break;
+        case LEFTCAMERA:
+            err = InitializeCamera("169.254.24.XXX", cameraLeft, frameObserverLeft, tsfnJScriptCallback);
+            break;
+        case RIGHTCAMERA:
+            err = InitializeCamera("169.254.24.XXX", cameraRight, frameObserverRight, tsfnJScriptCallback);
+            break;
+        case MANIPCAMERA:
+            err = InitializeCamera("169.254.24.XXX", cameraManip, frameObserverManip, tsfnJScriptCallback);
             break;
         default:
             std::cerr << "Invalid cameraID: " << cameraID << std::endl;
+            return env.Undefined();
     }
-
 
     return env.Undefined();
 }
