@@ -37,11 +37,18 @@ void FrameObserver::FrameReceived(const FramePtr pFrame){
     VmbUint32_t bufferSize;
     VmbUint32_t width, height;
 
-    // From frame passed by VimbaX Camera, get the data on it
     pFrame->GetBuffer(pBuffer);
     pFrame->GetBufferSize(bufferSize);
     pFrame->GetWidth(width);
     pFrame->GetHeight(height);
+    
+    // Print first 32 bytes to see the pattern
+    std::cerr << "First 32 bytes of frame: ";
+    for (int i = 0; i < 32 && i < bufferSize; i++) {
+        std::cerr << std::hex << (int)pBuffer[i] << " ";
+    }
+    std::cerr << std::dec << std::endl;
+    std::cerr << "Buffer size: " << bufferSize << ", expected for YUV422: " << (width * height * 2) << std::endl;
 
     // Convert that data
     std::vector<uint8_t> yuv420data = convertYUV422toYUV420(pBuffer, width, height);
@@ -72,6 +79,8 @@ void FrameObserver::FrameReceived(const FramePtr pFrame){
 
 
 std::vector<uint8_t> FrameObserver::convertYUV422toYUV420(VmbUchar_t* yuv422, uint32_t width, uint32_t height) {
+    
+    
     uint32_t y_size = width * height;
     uint32_t uv_size = (width / 2) * (height / 2);
     uint32_t total_size = y_size + 2 * uv_size;
