@@ -169,6 +169,21 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
     }
     std::cerr << "Opened camera at " << cameraIP << std::endl;
 
+    FeaturePtr pTriggerMode;
+    err = camera->GetFeatureByName("TriggerMode", pTriggerMode);
+    if (VmbErrorSuccess == err) {
+        std::string triggerMode;
+        pTriggerMode->GetValue(triggerMode);
+        std::cerr << "TriggerMode: " << triggerMode << std::endl;
+        
+        if (triggerMode != "Off") {
+            err = pTriggerMode->SetValue("Off");
+            std::cerr << "Disabled TriggerMode: " << err << std::endl;
+        }
+    } else {
+        std::cerr << "Could not access TriggerMode feature" << std::endl;
+    }
+
     err = camera->GetFeatureByName("Width", pWidth);
     if (VmbErrorSuccess == err) {
         err = pWidth->SetValue(240);
