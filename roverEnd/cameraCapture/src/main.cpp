@@ -191,7 +191,7 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
     
     FeaturePtr pTriggerMode;
     if (camera->GetFeatureByName("TriggerMode", pTriggerMode) == VmbErrorSuccess) {
-        pTriggerMode->SetValue("Off");
+        pTriggerMode->SetValue("On");
     }
 
     FeaturePtr pAcqMode;
@@ -207,16 +207,6 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
     if (camera->GetFeatureByName("BinningVertical", pBinningV) == VmbErrorSuccess) {
         pBinningV->SetValue(6);
     }
-
-    // Check resolution
-    FeaturePtr pWidth, pHeight;
-    camera->GetFeatureByName("Width", pWidth);
-    camera->GetFeatureByName("Height", pHeight);
-    
-    VmbInt64_t actualW, actualH;
-    pWidth->GetValue(actualW);
-    pHeight->GetValue(actualH);
-    std::cerr << "Resolution: " << actualW << "x" << actualH << std::endl;
 
     // Pixel format
     FeaturePtr pFormat;
@@ -235,16 +225,14 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
         pGainAuto->SetValue("Continuous");
     }
     
-    // Turn off auto exposure
     FeaturePtr pExposureAuto;
     if (camera->GetFeatureByName("ExposureAuto", pExposureAuto) == VmbErrorSuccess) {
         pExposureAuto->SetValue("Off");
     }
 
-    // Get the ExposureTime feature and set it
     FeaturePtr pExposure;
     if (camera->GetFeatureByName("ExposureTime", pExposure) == VmbErrorSuccess) {
-        pExposure->SetValue(10000);  // 10ms = 10000 µs
+        pExposure->SetValue(9000);  
     }
 
     // Start acquisition
