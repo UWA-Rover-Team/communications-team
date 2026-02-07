@@ -37,11 +37,10 @@ void FrameObserver::FrameReceived(const FramePtr pFrame){
     VmbError_t err = pFrame->GetReceiveStatus(status);
 
     if (status != VmbFrameStatusComplete) {
-        // Frame is incomplete
-        std::cerr << "Incomplete frame, status: " << status << std::endl;
         m_pCamera->QueueFrame(pFrame);
         return;
     }
+    
     VmbUchar_t* pBuffer;
     VmbUint32_t bufferSize;
     VmbUint32_t width, height;
@@ -51,8 +50,14 @@ void FrameObserver::FrameReceived(const FramePtr pFrame){
     pFrame->GetWidth(width);
     pFrame->GetHeight(height);
 
-    // Convert that data
-    std::vector<uint8_t> yuv420data = convertRGB8toYUV420(pBuffer, width, height);
+    // === CRITICAL: Copy data FIRST, THEN requeue immediately ===
+    std::vector<uint8_t> frameCopy(pBuffer, pBuffer + bufferSize);
+    
+    // Requeue the frame IMMEDIATELY so camera can reuse the buffer
+    m_pCamera->QueueFrame(pFrame);
+    
+    // NOW do the slow conversion with the copy
+    std::vector<uint8_t> yuv420data = convertRGB8toYUV420(frameCopy.data(), width, height);
 
     struct FrameInfo {
         std::vector<uint8_t> data;
@@ -62,7 +67,6 @@ void FrameObserver::FrameReceived(const FramePtr pFrame){
     
     FrameInfo* info = new FrameInfo{std::move(yuv420data), width, height};
 
-    // Take the jscript callback given in the ts file, and call it passing our Napi object in
     auto translateFunction = [](Napi::Env env, Napi::Function jsCallback, FrameInfo* info){
         Napi::Object obj = Napi::Object::New(env);
         obj.Set("buffer", Napi::Buffer<uint8_t>::Copy(env, info->data.data(), info->data.size()));
@@ -75,7 +79,6 @@ void FrameObserver::FrameReceived(const FramePtr pFrame){
     };
 
     tsfnJScriptCallback.NonBlockingCall(info, translateFunction);
-    m_pCamera->QueueFrame(pFrame);
 }
 
 
