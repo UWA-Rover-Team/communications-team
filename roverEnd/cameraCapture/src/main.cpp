@@ -47,23 +47,22 @@ void FrameObserver::FrameReceived(const FramePtr pFrame){
     std::vector<uint8_t> yuv420data = convertYUV422toYUV420(pBuffer, width, height);
 
     struct FrameInfo {
-        std::vector<uint8_t>* data;
+        std::vector<uint8_t> data;
         uint32_t width;
         uint32_t height;
     };
     
-    FrameInfo* info = new FrameInfo{&yuv420data, width, height};
+    FrameInfo* info = new FrameInfo{std::move(yuv420data), width, height};
 
     // Take the jscript callback given in the ts file, and call it passing our Napi object in
     auto translateFunction = [](Napi::Env env, Napi::Function jsCallback, FrameInfo* info){
         Napi::Object obj = Napi::Object::New(env);
-        obj.Set("buffer", Napi::Buffer<uint8_t>::Copy(env, info->data->data(), info->data->size()));
+        obj.Set("buffer", Napi::Buffer<uint8_t>::Copy(env, info->data.data(), info->data.size()));
         obj.Set("width", info->width);
         obj.Set("height", info->height);
         
         jsCallback.Call({obj});
         
-        delete info->data;
         delete info;
     };
 
