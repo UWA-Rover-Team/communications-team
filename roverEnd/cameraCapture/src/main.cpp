@@ -156,6 +156,8 @@ class VimbaXSystem : public Napi::ObjectWrap<VimbaXSystem> {
 
         VmbError_t InitializeCamera(const std::string& cameraIP, CameraPtr& camera, std::shared_ptr<FrameObserver>& observer, Napi::ThreadSafeFunction& tsfn);
 
+        VmbError_t checkStopAquisition(CameraPtr& camera);
+
     public:
         static Napi::Function GetClass(Napi::Env env) {
             return DefineClass(env, "VimbaXSystem", {
@@ -178,9 +180,11 @@ VimbaXSystem::VimbaXSystem(const Napi::CallbackInfo& info)
 VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr& camera, std::shared_ptr<FrameObserver>& observer, Napi::ThreadSafeFunction& tsfn) {
     VmbError_t err;
     
-    err = system.OpenCameraByID(cameraIP.c_str(), VmbAccessModeFull, camera);
-    if (VmbErrorSuccess != err) {
-        return err;
+    if (!camera) {
+        err = system.OpenCameraByID(cameraIP.c_str(), VmbAccessModeFull, camera);
+        if (VmbErrorSuccess != err) {
+            return err;
+        }
     }
 
     // Trigger Settings
@@ -287,59 +291,27 @@ Napi::Value VimbaXSystem::StartCapture(const Napi::CallbackInfo& info) {
         1
     );
 
-    FeaturePtr pAcquisitionStatus;
-    VmbInt64_t status;
+
 
     switch(cameraID) {
         case FRONTCAMERA:
-            if (cameraFront->GetFeatureByName("AcquisitionStatus", pAcquisitionStatus) == VmbErrorSuccess) {
-                if (pAcquisitionStatus->GetValue(status) == VmbErrorSuccess) {
-                    std::cerr << "Aquisition status is: " << status << std::endl;
-                    if (status == 1) {
-                        err = cameraFront->StopContinuousImageAcquisition();
-                    }
-                } else std::cerr << "Failed to stop camera: " << cameraFront << std::endl;
-            }
+            err = checkStopAquisition(cameraFront);
             err = InitializeCamera("169.254.24.139", cameraFront, frameObserverFront, tsfnJScriptCallback);
             break;
         case BACKCAMERA:
-            if (cameraBack->GetFeatureByName("AcquisitionStatus", pAcquisitionStatus) == VmbErrorSuccess) {
-                if (pAcquisitionStatus->GetValue(status) == VmbErrorSuccess) {
-                    if (status == 1) {
-                        err = cameraBack->StopContinuousImageAcquisition();
-                    }
-                } else std::cerr << "Failed to stop camera: " << cameraBack << std::endl;
-            }
+            err = checkStopAquisition(cameraBack);
             err = InitializeCamera("169.254.234.45", cameraBack, frameObserverBack, tsfnJScriptCallback);
             break;
         case LEFTCAMERA:
-            if (cameraLeft->GetFeatureByName("AcquisitionStatus", pAcquisitionStatus) == VmbErrorSuccess) {
-                if (pAcquisitionStatus->GetValue(status) == VmbErrorSuccess) {
-                    if (status == 1) {
-                        err = cameraLeft->StopContinuousImageAcquisition();
-                    }
-                } else std::cerr << "Failed to stop camera: " << cameraLeft << std::endl;
-            }
+            err = checkStopAquisition(cameraLeft);
             err = InitializeCamera("169.254.145.157", cameraLeft, frameObserverLeft, tsfnJScriptCallback);
             break;
         case RIGHTCAMERA:
-            if (cameraRight->GetFeatureByName("AcquisitionStatus", pAcquisitionStatus) == VmbErrorSuccess) {
-                if (pAcquisitionStatus->GetValue(status) == VmbErrorSuccess) {
-                    if (status == 1) {
-                        err = cameraRight->StopContinuousImageAcquisition();
-                    }
-                } else std::cerr << "Failed to stop camera: " << cameraRight << std::endl;
-            }
+            err = checkStopAquisition(cameraRight);
             err = InitializeCamera("169.254.56.227", cameraRight, frameObserverRight, tsfnJScriptCallback);
             break;
         case MANIPCAMERA:
-            if (cameraManip->GetFeatureByName("AcquisitionStatus", pAcquisitionStatus) == VmbErrorSuccess) {
-                if (pAcquisitionStatus->GetValue(status) == VmbErrorSuccess) {
-                    if (status == 1) {
-                        err = cameraManip->StopContinuousImageAcquisition();
-                    }
-                } else std::cerr << "Failed to stop camera: " << cameraManip << std::endl;
-            }
+            err = checkStopAquisition(cameraManip);
             err = InitializeCamera("169.254.24.XXX", cameraManip, frameObserverManip, tsfnJScriptCallback);
             break;
         default:
@@ -348,6 +320,28 @@ Napi::Value VimbaXSystem::StartCapture(const Napi::CallbackInfo& info) {
     }
 
     return env.Undefined();
+}
+
+
+VmbError_t VimbaXSystem::checkStopAquisition(CameraPtr& camera) {
+    FeaturePtr pAcquisitionStatus;
+    VmbInt64_t status;
+    VmbError_t err = VmbErrorSuccess;
+
+    // TODO fix this error checking
+    if (camera) {
+        if (camera->GetFeatureByName("AcquisitionStatus", pAcquisitionStatus) == VmbErrorSuccess) {
+            if (pAcquisitionStatus->GetValue(status) == VmbErrorSuccess) {
+                std::cerr << "Aquisition status is: " << status << std::endl;
+                if (status == 1) {
+                    err = camera->StopContinuousImageAcquisition();
+                    std::cerr << "Stopped camera acquisition. Error: " << err << std::endl;
+                }
+            } else std::cerr << "Failed to get acquisition status value" << std::endl;
+        }
+    }
+
+    return err;
 }
 
 // ----------------------------------------------------------------------------------------------
