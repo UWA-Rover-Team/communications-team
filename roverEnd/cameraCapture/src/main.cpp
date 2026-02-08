@@ -37,7 +37,16 @@ void FrameObserver::FrameReceived(const FramePtr pFrame){
     pFrame->GetReceiveStatus(status);
 
     if (status != VmbFrameStatusComplete) {
-        std::cerr << "Incomplete frame, status: " << status << std::endl;
+        VmbUint64_t frameID;
+        pFrame->GetFrameID(frameID);
+        
+        std::string cameraID;
+        m_pCamera->GetID(cameraID);
+        
+        std::cerr << "Camera: " << cameraID 
+                  << " Frame: " << frameID 
+                  << " Status: " << status << std::endl;
+        
         m_pCamera->QueueFrame(pFrame);
         return;
     }
