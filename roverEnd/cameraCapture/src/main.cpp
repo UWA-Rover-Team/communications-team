@@ -176,7 +176,70 @@ VimbaXSystem::VimbaXSystem(const Napi::CallbackInfo& info)
     std::cerr << "Successfully initialised system" << std::endl;
 }
 
-// ================== General camera capture Function ================
+// =============================== Specific camera capture function for jscript ======================
+Napi::Value VimbaXSystem::StartCapture(const Napi::CallbackInfo& info) {
+    VmbError_t err;
+    Napi::Env env = info.Env();
+
+    Napi::Number cameraIDparameter = info[0].As<Napi::Number>();
+    uint32_t cameraID = cameraIDparameter.Uint32Value();
+
+    Napi::Function jscriptCallback = info[1].As<Napi::Function>();
+    
+    Napi::ThreadSafeFunction tsfnJScriptCallback = Napi::ThreadSafeFunction::New(
+        env,
+        jscriptCallback,
+        "FrameCallback",
+        0,
+        1
+    );
+
+    switch(cameraID) {
+        case FRONTCAMERA:
+            err = InitializeCamera("169.254.24.139", cameraFront, frameObserverFront, tsfnJScriptCallback);
+            if (err != VmbErrorSuccess) {
+                std::cerr << "Failed to initialise camera: " << FRONTCAMERA << std::endl;
+                return Napi::Number::New(env, err);
+            }
+            break;
+        case BACKCAMERA:
+            err = InitializeCamera("169.254.234.45", cameraBack, frameObserverBack, tsfnJScriptCallback);
+            if (err != VmbErrorSuccess) {
+                std::cerr << "Failed to initialise camera: " << BACKCAMERA << std::endl;
+                return Napi::Number::New(env, err);
+            }
+            break;
+        case LEFTCAMERA:
+            err = InitializeCamera("169.254.145.157", cameraLeft, frameObserverLeft, tsfnJScriptCallback);
+            if (err != VmbErrorSuccess) {
+                std::cerr << "Failed to initialise camera: " << LEFTCAMERA << std::endl;
+                return Napi::Number::New(env, err);
+            }
+            break;
+        case RIGHTCAMERA:
+            err = InitializeCamera("169.254.56.227", cameraRight, frameObserverRight, tsfnJScriptCallback);
+            if (err != VmbErrorSuccess) {
+                std::cerr << "Failed to initialise camera: " << RIGHTCAMERA << std::endl;
+                return Napi::Number::New(env, err);
+            }
+            break;
+        case MANIPCAMERA:
+            err = InitializeCamera("169.254.24.XXX", cameraManip, frameObserverManip, tsfnJScriptCallback);
+            if (err != VmbErrorSuccess) {
+                std::cerr << "Failed to initialise camera: " << MANIPCAMERA << std::endl;
+                return Napi::Number::New(env, err);
+            }
+            break;
+        default:
+            std::cerr << "Invalid cameraID: " << cameraID << std::endl;
+            return Napi::Number::New(env, 0);
+    }
+
+    return Napi::Number::New(env, 0);
+}
+
+
+// ================== General camera capture Function ================= ==================
 VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr& camera, std::shared_ptr<FrameObserver>& observer, Napi::ThreadSafeFunction& tsfn) {
     VmbError_t err;
 
@@ -272,74 +335,7 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
     return VmbErrorSuccess;
 }
 
-// =============================== Specific camera capture function for jscript ======================
-Napi::Value VimbaXSystem::StartCapture(const Napi::CallbackInfo& info) {
-    VmbError_t err;
-    Napi::Env env = info.Env();
-
-    Napi::Number cameraIDparameter = info[0].As<Napi::Number>();
-    uint32_t cameraID = cameraIDparameter.Uint32Value();
-
-    Napi::Function jscriptCallback = info[1].As<Napi::Function>();
-    
-    Napi::ThreadSafeFunction tsfnJScriptCallback = Napi::ThreadSafeFunction::New(
-        env,
-        jscriptCallback,
-        "FrameCallback",
-        0,
-        1
-    );
-
-    switch(cameraID) {
-        case FRONTCAMERA:
-            err = checkStopAquisition(cameraFront);
-            err = InitializeCamera("169.254.24.139", cameraFront, frameObserverFront, tsfnJScriptCallback);
-            if (err != VmbErrorSuccess) {
-                std::cerr << "Failed to initialise camera: " << cameraFront << std::endl;
-                return Napi::Number::New(env, err);
-            }
-            break;
-        case BACKCAMERA:
-            err = checkStopAquisition(cameraBack);
-            err = InitializeCamera("169.254.234.45", cameraBack, frameObserverBack, tsfnJScriptCallback);
-            if (err != VmbErrorSuccess) {
-                std::cerr << "Failed to initialise camera: " << cameraBack << std::endl;
-                return Napi::Number::New(env, err);
-            }
-            break;
-        case LEFTCAMERA:
-            err = checkStopAquisition(cameraLeft);
-            err = InitializeCamera("169.254.145.157", cameraLeft, frameObserverLeft, tsfnJScriptCallback);
-            if (err != VmbErrorSuccess) {
-                std::cerr << "Failed to initialise camera: " << cameraLeft << std::endl;
-                return Napi::Number::New(env, err);
-            }
-            break;
-        case RIGHTCAMERA:
-            err = checkStopAquisition(cameraRight);
-            err = InitializeCamera("169.254.56.227", cameraRight, frameObserverRight, tsfnJScriptCallback);
-            if (err != VmbErrorSuccess) {
-                std::cerr << "Failed to initialise camera: " << cameraRight << std::endl;
-                return Napi::Number::New(env, err);
-            }
-            break;
-        case MANIPCAMERA:
-            err = checkStopAquisition(cameraManip);
-            err = InitializeCamera("169.254.24.XXX", cameraManip, frameObserverManip, tsfnJScriptCallback);
-            if (err != VmbErrorSuccess) {
-                std::cerr << "Failed to initialise camera: " << cameraManip << std::endl;
-                return Napi::Number::New(env, err);
-            }
-            break;
-        default:
-            std::cerr << "Invalid cameraID: " << cameraID << std::endl;
-            return Napi::Number::New(env, 0);
-    }
-
-    return Napi::Number::New(env, 0);
-}
-
-
+// =========================== Helper to check if camera is already running aquisition ============= DEPRECIATED FOR NOW
 VmbError_t VimbaXSystem::checkStopAquisition(CameraPtr& camera) {
     FeaturePtr pAcquisitionStatus;
     VmbInt64_t status;
