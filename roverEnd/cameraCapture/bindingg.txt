@@ -1,0 +1,59 @@
+{
+  "targets": [
+    {
+      "target_name": "addon",
+      "sources": [ "src/main.cpp" ],
+	
+      "cflags_cc!": [
+        "-fno-exceptions"
+      ],
+
+      "cflags_cc": [
+        "-Wno-unused-variable",
+        "-fexceptions",
+	"-std=c++17"
+      ],
+
+      "defines": [
+        "NODE_ADDON_API_CPP_EXCEPTIONS"
+      ],
+
+      "cflags": [ "-Wno-unused-variable" ],
+
+      "include_dirs": [
+        "<!@(node -p \"require('node-addon-api').include\")",
+        "/opt/VimbaX_2025-3/api/include"
+      ],
+
+      "dependencies": [
+        "<!@(node -p \"require('node-addon-api').gyp\")"
+      ],
+
+      "libraries": [
+        "-lVmbCPP"
+      ],
+
+      "library_dirs": [
+        "/opt/VimbaX_2025-3/api/lib"
+      ],
+
+      "copies": [
+        {
+          "destination": "<(module_root_dir)/build/Release/",
+          "files": [
+            "/opt/VimbaX_2025-3/api/lib/libVmbCPP.so"
+          ]
+        }
+      ],
+
+      "link_settings": {
+        "libraries": [
+          "-L/opt/VimbaX_2025-3/api/lib -lVmbCPP"
+        ],
+        "ldflags": [
+          "-Wl,-rpath,/opt/VimbaX_2025-3/api/lib"
+        ]
+      }
+    }
+  ]
+}
