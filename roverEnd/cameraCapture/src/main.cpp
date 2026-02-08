@@ -179,14 +179,12 @@ VimbaXSystem::VimbaXSystem(const Napi::CallbackInfo& info)
 // ================== General camera capture Function ================
 VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr& camera, std::shared_ptr<FrameObserver>& observer, Napi::ThreadSafeFunction& tsfn) {
     VmbError_t err;
-    
-    if (!camera) {
-        err = system.OpenCameraByID(cameraIP.c_str(), VmbAccessModeFull, camera);
-        if (VmbErrorSuccess != err) {
-            return err;
-        }
-    }
 
+    err = system.OpenCameraByID(cameraIP.c_str(), VmbAccessModeFull, camera);
+    if (VmbErrorSuccess != err) {
+        return err;
+    }
+    
     // Trigger Settings
     FeaturePtr pTriggerSelector;
     if (camera->GetFeatureByName("TriggerSelector", pTriggerSelector) == VmbErrorSuccess) {
@@ -339,6 +337,7 @@ VmbError_t VimbaXSystem::checkStopAquisition(CameraPtr& camera) {
                 }
             } else std::cerr << "Failed to get acquisition status value" << std::endl;
         }
+        err = camera->Close();
     }
 
     return err;
