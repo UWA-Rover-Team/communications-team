@@ -241,6 +241,9 @@ Napi::Value VimbaXSystem::StartCapture(const Napi::CallbackInfo& info) {
 
 // ================== General camera capture Function ================= ==================
 VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr& camera, std::shared_ptr<FrameObserver>& observer, Napi::ThreadSafeFunction& tsfn) {
+
+    std::cerr << "=========== STARTING " << cameraIP << "AQUISITION ===========" << std::endl;
+
     VmbError_t err;
 
     err = system.OpenCameraByID(cameraIP.c_str(), VmbAccessModeFull, camera);
