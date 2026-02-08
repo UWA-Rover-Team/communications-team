@@ -10,10 +10,11 @@ export type resolution = [width: number, height: number];
 
 export interface WebRTCMessage {
     client: clients;
-    type: "REGISTER" | "OFFER" | "ANSWER" | "ICE_CANDIDATE" | "CAMERA_REQUEST";
+    type: "REGISTER" | "OFFER" | "ANSWER" | "ICE_CANDIDATE" | "CAMERA_REQUEST" | "ERROR";
     target: clients;
     sdp?: string;
     candidate?: RTCIceCandidate;
     camera?: cameras;
     resolution?: resolution;
+    error?: string;
 }

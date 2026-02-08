@@ -68,9 +68,10 @@ function requestCamera(cameraId: Number): Promise<MediaStreamTrack> {
   return new Promise((resolve, reject) => {
     const source = new RTCVideoSource();
     const track = source.createTrack();
+    let err: Number;
 
-    vimbaSystem.startCapture(cameraId, (frameData: { buffer: Buffer, width: number, height: number }) => {
 
+    err = vimbaSystem.startCapture(cameraId, (frameData: { buffer: Buffer, width: number, height: number }) => {
       const frame: RTCVideoFrame = {
         width: frameData.width,
         height: frameData.height,
@@ -78,6 +79,14 @@ function requestCamera(cameraId: Number): Promise<MediaStreamTrack> {
       };
       source.onFrame(frame);
     });
+    if (err != 0) {
+      socket.send(JSON.stringify({
+        type: "ERROR",
+        client: "ROVER",
+        target: "BASE_STATION",
+        error: `Failed to capture camera ${cameraId}`
+      }));
+    }
     
     // Resolve after first frame or timeout
     setTimeout(() => resolve(track), 500);

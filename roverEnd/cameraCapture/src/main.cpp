@@ -290,35 +290,53 @@ Napi::Value VimbaXSystem::StartCapture(const Napi::CallbackInfo& info) {
         1
     );
 
-
-
     switch(cameraID) {
         case FRONTCAMERA:
             err = checkStopAquisition(cameraFront);
             err = InitializeCamera("169.254.24.139", cameraFront, frameObserverFront, tsfnJScriptCallback);
+            if (err != VmbErrorSuccess) {
+                std::cerr << "Failed to initialise camera: " << cameraFront << std::endl;
+                return Napi::Number::New(env, err);
+            }
             break;
         case BACKCAMERA:
             err = checkStopAquisition(cameraBack);
             err = InitializeCamera("169.254.234.45", cameraBack, frameObserverBack, tsfnJScriptCallback);
+            if (err != VmbErrorSuccess) {
+                std::cerr << "Failed to initialise camera: " << cameraBack << std::endl;
+                return Napi::Number::New(env, err);
+            }
             break;
         case LEFTCAMERA:
             err = checkStopAquisition(cameraLeft);
             err = InitializeCamera("169.254.145.157", cameraLeft, frameObserverLeft, tsfnJScriptCallback);
+            if (err != VmbErrorSuccess) {
+                std::cerr << "Failed to initialise camera: " << cameraLeft << std::endl;
+                return Napi::Number::New(env, err);
+            }
             break;
         case RIGHTCAMERA:
             err = checkStopAquisition(cameraRight);
             err = InitializeCamera("169.254.56.227", cameraRight, frameObserverRight, tsfnJScriptCallback);
+            if (err != VmbErrorSuccess) {
+                std::cerr << "Failed to initialise camera: " << cameraRight << std::endl;
+                return Napi::Number::New(env, err);
+            }
             break;
         case MANIPCAMERA:
             err = checkStopAquisition(cameraManip);
             err = InitializeCamera("169.254.24.XXX", cameraManip, frameObserverManip, tsfnJScriptCallback);
+            if (err != VmbErrorSuccess) {
+                std::cerr << "Failed to initialise camera: " << cameraManip << std::endl;
+                return Napi::Number::New(env, err);
+            }
             break;
         default:
             std::cerr << "Invalid cameraID: " << cameraID << std::endl;
-            return env.Undefined();
+            return Napi::Number::New(env, 0);
     }
 
-    return env.Undefined();
+    return Napi::Number::New(env, 0);
 }
 
 
