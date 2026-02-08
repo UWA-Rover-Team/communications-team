@@ -69,25 +69,18 @@ function requestCamera(cameraId: Number): Promise<MediaStreamTrack> {
     const source = new RTCVideoSource();
     const track = source.createTrack();
 
-    try {
-      vimbaSystem.startCapture(cameraId, (frameData: { buffer: Buffer, width: number, height: number }) => {
+    vimbaSystem.startCapture(cameraId, (frameData: { buffer: Buffer, width: number, height: number }) => {
 
-        const frame: RTCVideoFrame = {
-          width: frameData.width,
-          height: frameData.height,
-          data: new Uint8Array(frameData.buffer),
-        };
-        source.onFrame(frame);
-      });
-      
-      console.log(`Started capturing from camera ${cameraId}`);
-      
-      // Resolve after first frame or timeout
-      setTimeout(() => resolve(track), 500);
-    } catch (error) {
-      console.error(`Failed to start camera ${cameraId}:`, error);
-      reject(error);
-    }
+      const frame: RTCVideoFrame = {
+        width: frameData.width,
+        height: frameData.height,
+        data: new Uint8Array(frameData.buffer),
+      };
+      source.onFrame(frame);
+    });
+    
+    // Resolve after first frame or timeout
+    setTimeout(() => resolve(track), 500);
   });
 }
 

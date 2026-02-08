@@ -182,6 +182,7 @@ VmbError_t VimbaXSystem::InitializeCamera(const std::string& cameraIP, CameraPtr
 
     err = system.OpenCameraByID(cameraIP.c_str(), VmbAccessModeFull, camera);
     if (VmbErrorSuccess != err) {
+        std::cerr << "Failed to open camera: " << err << std::endl;
         return err;
     }
     
