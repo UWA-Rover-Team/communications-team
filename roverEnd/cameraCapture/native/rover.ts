@@ -163,7 +163,7 @@ socket.onmessage = async (event: any) => {
   
   if (data.type === 'CAMERA_REQUEST') {
     if (data.camera && data.resolution) {
-      console.log("Camera stream requested...");
+      console.log(`Camera stream ${data.camera} requested...`);
       createStream(data.camera, data.resolution);
     }
   }

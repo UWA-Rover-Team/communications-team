@@ -275,103 +275,103 @@ VmbError_t VimbaXSystem::InitializeCamera(const char* cameraID, CameraPtr& camer
 
     // Trigger Settings
     FeaturePtr pTriggerSelector;
-    if (camera->GetFeatureByName("TriggerSelector", pTriggerSelector) == VmbErrorSuccess) {
+    if (camera->GetFeatureByName("TriggerSelector", pTriggerSelector) != VmbErrorSuccess) {
         err = pTriggerSelector->SetValue("FrameStart");
         std::cerr << "TriggerSelector set. Error: " << err << std::endl;
     }
     
     FeaturePtr pTriggerMode;
-    if (camera->GetFeatureByName("TriggerMode", pTriggerMode) == VmbErrorSuccess) {
+    if (camera->GetFeatureByName("TriggerMode", pTriggerMode) != VmbErrorSuccess) {
         err = pTriggerMode->SetValue("Off");
         std::cerr << "TriggerMode set. Error: " << err << std::endl;
     }
 
     // Enable packet resend
     FeaturePtr pResendEnabled;
-    if (camera->GetFeatureByName("GevSCPSPacketResend", pResendEnabled) == VmbErrorSuccess) {
+    if (camera->GetFeatureByName("GevSCPSPacketResend", pResendEnabled) != VmbErrorSuccess) {
         err = pResendEnabled->SetValue(true);
         std::cerr << "PacketResend enabled. Error: " << err << std::endl;
     }
 
     // Increase resend timeout
     FeaturePtr pResendTimeout;
-    if (camera->GetFeatureByName("GevSCPSResendRequestTimeout", pResendTimeout) == VmbErrorSuccess) {
+    if (camera->GetFeatureByName("GevSCPSResendRequestTimeout", pResendTimeout) != VmbErrorSuccess) {
         err = pResendTimeout->SetValue(10000); // 10ms timeout
         std::cerr << "ResendTimeout set. Error: " << err << std::endl;
     }
 
     FeaturePtr pDeviceThroughputLimit;
     err = camera->GetFeatureByName("DeviceLinkThroughputLimit", pDeviceThroughputLimit);
-    if (err == VmbErrorSuccess) {
+    if (err != VmbErrorSuccess) {
         err = pDeviceThroughputLimit->SetValue(23000000); 
-        std::cerr << "DeviceLinkThroughputLimit set to 60MB/s. Error: " << err << std::endl;
+        std::cerr << "DeviceLinkThroughputLimit set to 23MB/s. Error: " << err << std::endl;
     }
 
     // Maximum resend requests
     FeaturePtr pMaxResends;
-    if (camera->GetFeatureByName("GevSCPSMaxResendRequests", pMaxResends) == VmbErrorSuccess) {
+    if (camera->GetFeatureByName("GevSCPSMaxResendRequests", pMaxResends) != VmbErrorSuccess) {
         err = pMaxResends->SetValue(100);
         std::cerr << "MaxResendRequests set. Error: " << err << std::endl;
     }
 
     // Acquisition Mode
     FeaturePtr pAcqMode;
-    if (camera->GetFeatureByName("AcquisitionMode", pAcqMode) == VmbErrorSuccess) {
+    if (camera->GetFeatureByName("AcquisitionMode", pAcqMode) != VmbErrorSuccess) {
         err = pAcqMode->SetValue("Continuous");
         std::cerr << "AcquisitionMode set. Error: " << err << std::endl;
     }
 
     // Binning
     FeaturePtr pBinningH;
-    if (camera->GetFeatureByName("BinningHorizontal", pBinningH) == VmbErrorSuccess) {
+    if (camera->GetFeatureByName("BinningHorizontal", pBinningH) != VmbErrorSuccess) {
         err = pBinningH->SetValue(1);
         std::cerr << "BinningHorizontal set. Error: " << err << std::endl;
     }
 
     // Pixel Format
     FeaturePtr pFormat;
-    if (camera->GetFeatureByName("PixelFormat", pFormat) == VmbErrorSuccess) {
+    if (camera->GetFeatureByName("PixelFormat", pFormat) != VmbErrorSuccess) {
         err = pFormat->SetValue("RGB8Packed");
         std::cerr << "PixelFormat set. Error: " << err << std::endl;
     }
 
     // GigE Network
     FeaturePtr pPacketSize;
-    if (camera->GetFeatureByName("GevSCPSPacketSize", pPacketSize) == VmbErrorSuccess) {
+    if (camera->GetFeatureByName("GevSCPSPacketSize", pPacketSize) != VmbErrorSuccess) {
         err = pPacketSize->SetValue(1500);
         std::cerr << "GevSCPSPacketSize set. Error: " << err << std::endl;
     }
 
     // Exposure
     FeaturePtr pExposureAuto;
-    if (camera->GetFeatureByName("ExposureAuto", pExposureAuto) == VmbErrorSuccess) {
+    if (camera->GetFeatureByName("ExposureAuto", pExposureAuto) != VmbErrorSuccess) {
         err = pExposureAuto->SetValue("Off");
         std::cerr << "ExposureAuto set. Error: " << err << std::endl;
     }
 
     FeaturePtr pExposure;
-    if (camera->GetFeatureByName("ExposureTime", pExposure) == VmbErrorSuccess) {
+    if (camera->GetFeatureByName("ExposureTime", pExposure) != VmbErrorSuccess) {
         err = pExposure->SetValue(9000);
         std::cerr << "ExposureTime set. Error: " << err << std::endl;
     }
 
     // Gain
     FeaturePtr pGainAuto;
-    if (camera->GetFeatureByName("GainAuto", pGainAuto) == VmbErrorSuccess) {
+    if (camera->GetFeatureByName("GainAuto", pGainAuto) != VmbErrorSuccess) {
         err = pGainAuto->SetValue("Continuous");
         std::cerr << "GainAuto set. Error: " << err << std::endl;
     }
 
     // White Balance
     FeaturePtr pBalanceWhiteAuto;
-    if (camera->GetFeatureByName("BalanceWhiteAuto", pBalanceWhiteAuto) == VmbErrorSuccess) {
+    if (camera->GetFeatureByName("BalanceWhiteAuto", pBalanceWhiteAuto) != VmbErrorSuccess) {
         err = pBalanceWhiteAuto->SetValue("Continuous");
         std::cerr << "BalanceWhiteAuto set. Error: " << err << std::endl;
     }
 
     // Inter packet delay
     FeaturePtr pInterPacketDelay;
-    if (camera->GetFeatureByName("GevSCPD", pInterPacketDelay) == VmbErrorSuccess) {
+    if (camera->GetFeatureByName("GevSCPD", pInterPacketDelay) != VmbErrorSuccess) {
         err = pInterPacketDelay->SetValue(1000);  // 1000ns delay between packets
         std::cerr << "GevSCPD set. Error: " << err << std::endl;
     }
@@ -386,7 +386,7 @@ VmbError_t VimbaXSystem::InitializeCamera(const char* cameraID, CameraPtr& camer
     // AcquisitionStart
     FeaturePtr pAcqStart;
     err = camera->GetFeatureByName("AcquisitionStart", pAcqStart);
-    if (VmbErrorSuccess == err) {
+    if (VmbErrorSuccess != err) {
         err = pAcqStart->RunCommand();
         std::cerr << "AcquisitionStart set. Error: " << err << std::endl;
     }
