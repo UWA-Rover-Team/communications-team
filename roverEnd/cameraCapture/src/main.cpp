@@ -303,22 +303,8 @@ VmbError_t VimbaXSystem::InitializeCamera(const char* cameraID, CameraPtr& camer
     FeaturePtr pDeviceThroughputLimit;
     err = camera->GetFeatureByName("DeviceLinkThroughputLimit", pDeviceThroughputLimit);
     if (err == VmbErrorSuccess) {
-        err = pDeviceThroughputLimit->SetValue(60000000);  // 60 MB/s
+        err = pDeviceThroughputLimit->SetValue(23000000); 
         std::cerr << "DeviceLinkThroughputLimit set to 60MB/s. Error: " << err << std::endl;
-        
-        // Verify
-        VmbInt64_t actualLimit;
-        pDeviceThroughputLimit->GetValue(actualLimit);
-        std::cerr << "Verified limit: " << actualLimit << " bytes/sec" << std::endl;
-    } else {
-        // Try alternative feature name
-        err = camera->GetFeatureByName("StreamBytesPerSecond", pDeviceThroughputLimit);
-        if (err == VmbErrorSuccess) {
-            err = pDeviceThroughputLimit->SetValue(60000000);
-            std::cerr << "StreamBytesPerSecond set. Error: " << err << std::endl;
-        } else {
-            std::cerr << "WARNING: Bandwidth limit feature not found!" << std::endl;
-        }
     }
 
     // Maximum resend requests
