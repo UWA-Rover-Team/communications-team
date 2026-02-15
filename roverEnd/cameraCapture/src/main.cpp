@@ -224,7 +224,7 @@ Napi::Value VimbaXSystem::StartCapture(const Napi::CallbackInfo& info) {
             break;
         case LEFTCAMERA:
             std::cerr << "=========== starting LEFT-CAMERA aquisition ===========" << std::endl;
-            err = InitializeCamera("MWRMGIR", cameraLeft, frameObserverLeft, tsfnJScriptCallback);
+            err = InitializeCamera("DEV_000F315DFF47", cameraLeft, frameObserverLeft, tsfnJScriptCallback);
             if (err != VmbErrorSuccess) {
                 std::cerr << "Failed to initialise camera: " << LEFTCAMERA << std::endl;
                 return Napi::Number::New(env, err);
