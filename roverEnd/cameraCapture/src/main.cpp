@@ -316,9 +316,21 @@ VmbError_t VimbaXSystem::InitializeCamera(const char* cameraID, CameraPtr& camer
 
     // Binning
     FeaturePtr pBinningH;
-    if (camera->GetFeatureByName("BinningHorizontal", pBinningH) == VmbErrorSuccess) {
+    err = camera->GetFeatureByName("BinningHorizontal", pBinningH);
+    if (err == VmbErrorSuccess) {
+        VmbInt64_t currentValue;
+        err = pBinningH->GetValue(currentValue);
+        std::cerr << "BinningHorizontal current value: " << currentValue 
+                << " (GetValue Error: " << err << ")" << std::endl;
+        
         err = pBinningH->SetValue(1);
-        std::cerr << "BinningHorizontal set. Error: " << err << std::endl;
+        std::cerr << "BinningHorizontal SetValue(1) Error: " << err << std::endl;
+        
+        // Read again to verify
+        err = pBinningH->GetValue(currentValue);
+        std::cerr << "BinningHorizontal after set: " << currentValue << std::endl;
+    } else {
+        std::cerr << "ERROR: BinningHorizontal GetFeatureByName failed: " << err << std::endl;
     }
 
     // Pixel Format
