@@ -286,6 +286,27 @@ VmbError_t VimbaXSystem::InitializeCamera(const char* cameraID, CameraPtr& camer
         std::cerr << "TriggerMode set. Error: " << err << std::endl;
     }
 
+    // Enable packet resend
+    FeaturePtr pResendEnabled;
+    if (camera->GetFeatureByName("GevSCPSPacketResend", pResendEnabled) == VmbErrorSuccess) {
+        err = pResendEnabled->SetValue(true);
+        std::cerr << "PacketResend enabled. Error: " << err << std::endl;
+    }
+
+    // Increase resend timeout
+    FeaturePtr pResendTimeout;
+    if (camera->GetFeatureByName("GevSCPSResendRequestTimeout", pResendTimeout) == VmbErrorSuccess) {
+        err = pResendTimeout->SetValue(10000); // 10ms timeout
+        std::cerr << "ResendTimeout set. Error: " << err << std::endl;
+    }
+
+    // Maximum resend requests
+    FeaturePtr pMaxResends;
+    if (camera->GetFeatureByName("GevSCPSMaxResendRequests", pMaxResends) == VmbErrorSuccess) {
+        err = pMaxResends->SetValue(100);
+        std::cerr << "MaxResendRequests set. Error: " << err << std::endl;
+    }
+
     // Acquisition Mode
     FeaturePtr pAcqMode;
     if (camera->GetFeatureByName("AcquisitionMode", pAcqMode) == VmbErrorSuccess) {
