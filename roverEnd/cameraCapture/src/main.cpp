@@ -45,7 +45,8 @@ void FrameObserver::FrameReceived(const FramePtr pFrame){
         
         std::cerr << "Camera: " << cameraID 
                   << " Frame: " << frameID 
-                  << " Status: " << status << std::endl;
+                  << " Status: " << status 
+                  <<  std::endl;
         
         m_pCamera->QueueFrame(pFrame);
         return;
@@ -231,7 +232,7 @@ Napi::Value VimbaXSystem::StartCapture(const Napi::CallbackInfo& info) {
             break;
         case RIGHTCAMERA:
             std::cerr << "=========== starting RIGHT-CAMERA aquisition ===========" << std::endl;
-            err = InitializeCamera("WMGORW", cameraRight, frameObserverRight, tsfnJScriptCallback);
+            err = InitializeCamera("DEV_000F315DFF45", cameraRight, frameObserverRight, tsfnJScriptCallback);
             if (err != VmbErrorSuccess) {
                 std::cerr << "Failed to initialise camera: " << RIGHTCAMERA << std::endl;
                 return Napi::Number::New(env, err);
@@ -263,6 +264,7 @@ VmbError_t VimbaXSystem::InitializeCamera(const char* cameraID, CameraPtr& camer
     if (err != VmbErrorSuccess)
     {
         std::cerr << ("No camera found with ID=" + std::string(cameraID) + ", err = " + std::to_string(err)) << std::endl;
+        return -3;
     }
 
     err = camera->Open(VmbAccessModeFull);
@@ -336,7 +338,6 @@ VmbError_t VimbaXSystem::InitializeCamera(const char* cameraID, CameraPtr& camer
     FeaturePtr pBalanceWhiteAuto;
     if (camera->GetFeatureByName("BalanceWhiteAuto", pBalanceWhiteAuto) == VmbErrorSuccess) {
         err = pBalanceWhiteAuto->SetValue("Continuous");
-        err = pBalanceWhiteAuto->RunCommand();
         std::cerr << "BalanceWhiteAuto set. Error: " << err << std::endl;
     }
 
