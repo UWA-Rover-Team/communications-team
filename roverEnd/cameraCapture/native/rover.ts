@@ -7,7 +7,7 @@ const vimbax = require('../build/Release/addon');
 
 const { RTCVideoSource } = nonstandard;
 
-const socket = new WebSocket("ws://192.168.2.164:8080");
+const socket = new WebSocket("ws://172.20.10.3:8080");
 
 const vimbaSystem = new vimbax.VimbaXSystem();
 
