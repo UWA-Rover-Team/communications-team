@@ -3,6 +3,7 @@
 #include <napi.h>
 #include <cstdint>
 #include <vector>
+#include <filesystem>
 
 #define FRONTCAMERA 1
 #define BACKCAMERA 2
@@ -258,6 +259,8 @@ Napi::Value VimbaXSystem::StartCapture(const Napi::CallbackInfo& info) {
 // ================== General camera capture Function ================= ==================
 VmbError_t VimbaXSystem::InitializeCamera(const char* cameraID, CameraPtr& camera, std::shared_ptr<FrameObserver>& observer, Napi::ThreadSafeFunction& tsfn) {
 
+
+
     VmbErrorType err;
 
     err = system.GetCameraByID(cameraID, camera);
@@ -274,7 +277,8 @@ VmbError_t VimbaXSystem::InitializeCamera(const char* cameraID, CameraPtr& camer
         return err;
     }
 
-   // Trigger Settings
+    /*
+    // Trigger Settings
     FeaturePtr pTriggerSelector;
     err = camera->GetFeatureByName("TriggerSelector", pTriggerSelector);
     if (err == VmbErrorSuccess) {
@@ -302,7 +306,7 @@ VmbError_t VimbaXSystem::InitializeCamera(const char* cameraID, CameraPtr& camer
             std::cerr << "ERROR: PacketResend failed to enable. Error: " << err << std::endl;
         }
     }
-
+    
     // Increase resend timeout
     FeaturePtr pResendTimeout;
     err = camera->GetFeatureByName("GevSCPSResendRequestTimeout", pResendTimeout);
@@ -410,7 +414,7 @@ VmbError_t VimbaXSystem::InitializeCamera(const char* cameraID, CameraPtr& camer
             std::cerr << "ERROR: BalanceWhiteAuto failed to set. Error: " << err << std::endl;
         }
     }
-
+    
     // Inter packet delay
     FeaturePtr pInterPacketDelay;
     err = camera->GetFeatureByName("GevSCPD", pInterPacketDelay);
@@ -420,6 +424,19 @@ VmbError_t VimbaXSystem::InitializeCamera(const char* cameraID, CameraPtr& camer
             std::cerr << "ERROR: GevSCPD failed to set. Error: " << err << std::endl;
         }
     }
+    */
+
+    VmbFeaturePersistSettings_t settingsStruct;
+    settingsStruct.loggingLevel = 1;
+    settingsStruct.maxIterations = 5;
+    settingsStruct.persistType = VmbFeaturePersistNoLUT;
+
+    std::filesystem::path xmlFile("camera_0_settings.xml");
+
+    if (VmbErrorSuccess != camera->LoadSettings(xmlFile.c_str(),  &settingsStruct)) {
+        std::cerr << "ERROR: Failed to load camera settings from XML" << std::endl;
+        return VmbErrorResources;
+    }
 
     // Start acquisition
     observer = std::make_shared<FrameObserver>(camera, tsfn);
@@ -428,7 +445,7 @@ VmbError_t VimbaXSystem::InitializeCamera(const char* cameraID, CameraPtr& camer
         std::cerr << "ERROR: Failed to start image aquisition. Code: " << err << std::endl;
         return err;
     }
-
+    
     // AcquisitionStart
     FeaturePtr pAcqStart;
     err = camera->GetFeatureByName("AcquisitionStart", pAcqStart);
