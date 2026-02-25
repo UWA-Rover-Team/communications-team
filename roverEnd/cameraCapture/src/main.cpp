@@ -93,14 +93,8 @@ void FrameObserver::FrameReceived(const FramePtr pFrame){
 
 std::vector<uint8_t> FrameObserver::convertRGB8toYUV420(VmbUchar_t* rgb, uint32_t width, uint32_t height) {
     
-    // Crop settings
-    const uint32_t crop_width = 400;
-    const uint32_t crop_height = 300;
-    const uint32_t crop_x = (width - crop_width) / 2;   // centered: 832
-    const uint32_t crop_y = (height - crop_height) / 2; // centered: 622
-
-    uint32_t y_size = crop_width * crop_height;
-    uint32_t uv_size = (crop_width / 2) * (crop_height / 2);
+    uint32_t y_size = width * height;
+    uint32_t uv_size = (width / 2) * (height / 2);
     uint32_t total_size = y_size + 2 * uv_size;
     
     std::vector<uint8_t> yuv420(total_size);
@@ -108,34 +102,43 @@ std::vector<uint8_t> FrameObserver::convertRGB8toYUV420(VmbUchar_t* rgb, uint32_
     uint8_t* y_plane = yuv420.data();
     uint8_t* u_plane = yuv420.data() + y_size;
     uint8_t* v_plane = yuv420.data() + y_size + uv_size;
-
-    // Step 1: Convert cropped region to Y
-    for (uint32_t row = 0; row < crop_height; row++) {
-        for (uint32_t col = 0; col < crop_width; col++) {
-            uint32_t rgb_idx = ((crop_y + row) * width + (crop_x + col)) * 3;
-            uint32_t y_idx = row * crop_width + col;
+    
+    // Convert RGB to YUV420
+    // RGB8 format is: R G B R G B R G B... (3 bytes per pixel)
+    
+    // Step 1: Convert all pixels to Y (luminance)
+    for (uint32_t row = 0; row < height; row++) {
+        for (uint32_t col = 0; col < width; col++) {
+            uint32_t rgb_idx = (row * width + col) * 3;
+            uint32_t y_idx = row * width + col;
             
             uint8_t r = rgb[rgb_idx + 0];
             uint8_t g = rgb[rgb_idx + 1];
             uint8_t b = rgb[rgb_idx + 2];
             
+            // Y = 0.299*R + 0.587*G + 0.114*B
             y_plane[y_idx] = (uint8_t)((77 * r + 150 * g + 29 * b) >> 8);
         }
     }
     
-    // Step 2: Downsample cropped region to U and V
-    for (uint32_t row = 0; row < crop_height; row += 2) {
-        for (uint32_t col = 0; col < crop_width; col += 2) {
-            uint32_t rgb_idx = ((crop_y + row) * width + (crop_x + col)) * 3;
-            uint32_t uv_idx = (row / 2) * (crop_width / 2) + (col / 2);
+    // Step 2: Downsample and convert to U and V (chrominance)
+    // Sample every 2x2 block
+    for (uint32_t row = 0; row < height; row += 2) {
+        for (uint32_t col = 0; col < width; col += 2) {
+            // Sample the top-left pixel of each 2x2 block
+            uint32_t rgb_idx = (row * width + col) * 3;
+            uint32_t uv_idx = (row / 2) * (width / 2) + (col / 2);
             
             uint8_t r = rgb[rgb_idx + 0];
             uint8_t g = rgb[rgb_idx + 1];
             uint8_t b = rgb[rgb_idx + 2];
             
+            // U = -0.169*R - 0.331*G + 0.500*B + 128
+            // V =  0.500*R - 0.419*G - 0.081*B + 128
             int u_val = ((-43 * r - 85 * g + 128 * b) >> 8) + 128;
             int v_val = ((128 * r - 107 * g - 21 * b) >> 8) + 128;
             
+            // Clamp to 0-255
             u_plane[uv_idx] = (uint8_t)(u_val < 0 ? 0 : (u_val > 255 ? 255 : u_val));
             v_plane[uv_idx] = (uint8_t)(v_val < 0 ? 0 : (v_val > 255 ? 255 : v_val));
         }
@@ -143,6 +146,7 @@ std::vector<uint8_t> FrameObserver::convertRGB8toYUV420(VmbUchar_t* rgb, uint32_
     
     return yuv420;
 }
+
 // ------------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------------
 // ============================ VimbaX class to initialise in JScript ===================================

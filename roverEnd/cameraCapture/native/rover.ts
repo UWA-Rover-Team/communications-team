@@ -41,7 +41,13 @@ async function createStream(camera: cameras, resolution: resolution): Promise<vo
   const mediaTrack = await requestCamera(camera);
   const mediaStream = new MediaStream([mediaTrack]); 
     
-  pcCAM.addTrack(mediaTrack, mediaStream);
+  pcCAM.addTransceiver(mediaTrack, {
+    streams: [mediaStream],
+    sendEncodings: [{
+      maxBitrate: 500000,
+      scaleResolutionDownBy: 5.0  // 2064x1544 -> ~412x308, close to 400x300
+    }]
+  });
   
   // Give it a moment to ensure track is active
   await new Promise(resolve => setTimeout(resolve, 100));
