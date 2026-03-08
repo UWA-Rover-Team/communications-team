@@ -67,7 +67,7 @@ void FrameObserver::FrameReceived(const FramePtr pFrame){
     m_pCamera->QueueFrame(pFrame);
     
     // NOW do the slow conversion with the copy
-    uint8_t binninFactor = 3;
+    uint8_t binninFactor = 2;
     uint32_t binnedHeight = height/binninFactor;
     std::vector<uint8_t> binnedRGBdata = binRGB8Vertical(frameCopy.data(), width, height, binninFactor);
     std::vector<uint8_t> yuv420data = convertRGB8toYUV420(binnedRGBdata.data(), width, binnedHeight);
@@ -446,7 +446,7 @@ VmbError_t VimbaXSystem::InitializeCamera(const char* cameraID, CameraPtr& camer
     FeaturePtr pBinningH;
     err = camera->GetFeatureByName("BinningHorizontal", pBinningH);
     if (err == VmbErrorSuccess) {
-        err = pBinningH->SetValue(3);
+        err = pBinningH->SetValue(2);
         if (err != VmbErrorSuccess) {
             std::cerr << "ERROR: BinningHorizontal failed to set. Error: " << err << std::endl;
         }
@@ -715,7 +715,7 @@ VmbError_t VimbaXSystem::InitializeCamera(const char* cameraID, CameraPtr& camer
     FeaturePtr pStreamBytesPerSecond;
     err = camera->GetFeatureByName("StreamBytesPerSecond", pStreamBytesPerSecond);
     if (err == VmbErrorSuccess) {
-        err = pStreamBytesPerSecond->SetValue(23000000);
+        err = pStreamBytesPerSecond->SetValue(30000000);
         if (err != VmbErrorSuccess) {
             std::cerr << "ERROR: StreamBytesPerSecond failed to set. Error: " << err << std::endl;
         }
