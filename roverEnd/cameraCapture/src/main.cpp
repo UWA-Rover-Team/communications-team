@@ -96,8 +96,12 @@ std::vector<uint8_t> FrameObserver::convertRGB8toYUV420_verticalBin(VmbUchar_t* 
     uint32_t binned_height = height / binningFactor;
     uint32_t binned_width  = width;
     
-    uint32_t y_size     = binned_width * binned_height;
-    uint32_t uv_size    = (binned_width / 2) * (binned_height / 2);
+    // Output is full original size for WebRTC
+    uint32_t out_height = height;
+    uint32_t out_width  = width;
+
+    uint32_t y_size     = out_width * out_height;
+    uint32_t uv_size    = (out_width / 2) * (out_height / 2);
     uint32_t total_size = y_size + 2 * uv_size;
     
     std::vector<uint8_t> yuv420(total_size);
@@ -105,14 +109,17 @@ std::vector<uint8_t> FrameObserver::convertRGB8toYUV420_verticalBin(VmbUchar_t* 
     uint8_t* y_plane = yuv420.data();
     uint8_t* u_plane = yuv420.data() + y_size;
     uint8_t* v_plane = yuv420.data() + y_size + uv_size;
+
+    // Temp buffers for the binned result
+    std::vector<uint8_t> binned_y(binned_width * binned_height);
+    std::vector<uint8_t> binned_u((binned_width / 2) * (binned_height / 2));
+    std::vector<uint8_t> binned_v((binned_width / 2) * (binned_height / 2));
     
     // Step 1: Vertical bin + Y plane
     for (uint32_t row = 0; row < binned_height; row++) {
-
         for (uint32_t col = 0; col < binned_width; col++) {
             uint32_t sum_r = 0, sum_g = 0, sum_b = 0;
 
-            // Average binningFactor rows
             for (uint32_t k = 0; k < binningFactor; k++) {
                 uint32_t src_row = row * binningFactor + k;
                 uint32_t rgb_idx = (src_row * width + col) * 3;
@@ -125,8 +132,7 @@ std::vector<uint8_t> FrameObserver::convertRGB8toYUV420_verticalBin(VmbUchar_t* 
             uint16_t g = sum_g / binningFactor;
             uint16_t b = sum_b / binningFactor;
             
-            uint32_t y_idx = row * binned_width + col;
-            y_plane[y_idx] = (uint8_t)((77 * r + 150 * g + 29 * b) >> 8);
+            binned_y[row * binned_width + col] = (uint8_t)((77 * r + 150 * g + 29 * b) >> 8);
         }
     }
     
@@ -135,7 +141,6 @@ std::vector<uint8_t> FrameObserver::convertRGB8toYUV420_verticalBin(VmbUchar_t* 
         for (uint32_t col = 0; col < binned_width; col += 2) {
             uint32_t sum_r = 0, sum_g = 0, sum_b = 0;
 
-            // Average binningFactor rows for chroma
             for (uint32_t k = 0; k < binningFactor; k++) {
                 uint32_t src_row = row * binningFactor + k;
                 uint32_t rgb_idx = (src_row * width + col) * 3;
@@ -153,8 +158,42 @@ std::vector<uint8_t> FrameObserver::convertRGB8toYUV420_verticalBin(VmbUchar_t* 
             int u_val = ((-43 * r - 85 * g + 128 * b) >> 8) + 128;
             int v_val = ((128 * r - 107 * g - 21 * b) >> 8) + 128;
             
-            u_plane[uv_idx] = (uint8_t)(u_val < 0 ? 0 : (u_val > 255 ? 255 : u_val));
-            v_plane[uv_idx] = (uint8_t)(v_val < 0 ? 0 : (v_val > 255 ? 255 : v_val));
+            binned_u[uv_idx] = (uint8_t)(u_val < 0 ? 0 : (u_val > 255 ? 255 : u_val));
+            binned_v[uv_idx] = (uint8_t)(v_val < 0 ? 0 : (v_val > 255 ? 255 : v_val));
+        }
+    }
+
+    // Step 3: Stretch back to full height by repeating each binned row binningFactor times
+    for (uint32_t row = 0; row < binned_height; row++) {
+        for (uint32_t rep = 0; rep < binningFactor; rep++) {
+            uint32_t dst_row = row * binningFactor + rep;
+            memcpy(
+                y_plane + dst_row * out_width,
+                binned_y.data() + row * binned_width,
+                binned_width
+            );
+        }
+    }
+
+    // UV stretch: each binned UV row repeats (binningFactor/2) times
+    uint32_t uv_binned_width  = binned_width / 2;
+    uint32_t uv_binned_height = binned_height / 2;
+    uint32_t uv_out_width     = out_width / 2;
+    uint32_t uv_rep           = binningFactor / 2;
+
+    for (uint32_t row = 0; row < uv_binned_height; row++) {
+        for (uint32_t rep = 0; rep < uv_rep; rep++) {
+            uint32_t dst_row = row * uv_rep + rep;
+            memcpy(
+                u_plane + dst_row * uv_out_width,
+                binned_u.data() + row * uv_binned_width,
+                uv_binned_width
+            );
+            memcpy(
+                v_plane + dst_row * uv_out_width,
+                binned_v.data() + row * uv_binned_width,
+                uv_binned_width
+            );
         }
     }
     
