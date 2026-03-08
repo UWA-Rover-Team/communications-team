@@ -78,7 +78,7 @@ void FrameObserver::FrameReceived(const FramePtr pFrame){
         uint32_t binnedHeight;
     };
     
-    FrameInfo* info = new FrameInfo{std::move(yuv420data), width, height};
+    FrameInfo* info = new FrameInfo{std::move(yuv420data), width, binnedHeight};
 
     auto translateFunction = [](Napi::Env env, Napi::Function jsCallback, FrameInfo* info){
         Napi::Object obj = Napi::Object::New(env);
