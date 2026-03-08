@@ -23,7 +23,7 @@ class FrameObserver : public IFrameObserver
 {
 private:
     Napi::ThreadSafeFunction tsfnJScriptCallback;
-    std::vector<uint8_t> convertRGB8toYUV420(VmbUchar_t* rgb, uint32_t width, uint32_t height);
+    std::vector<uint8_t> convertRGB8toYUV420_verticalBin(VmbUchar_t* rgb, uint32_t width, uint32_t height, uint32_t binningFactor);
 public:
    FrameObserver(CameraPtr pCamera, Napi::ThreadSafeFunction threadsafefunction);
    void FrameReceived(const FramePtr pFrame);
@@ -66,7 +66,7 @@ void FrameObserver::FrameReceived(const FramePtr pFrame){
     m_pCamera->QueueFrame(pFrame);
     
     // NOW do the slow conversion with the copy
-    std::vector<uint8_t> yuv420data = convertRGB8toYUV420(frameCopy.data(), width, height);
+    std::vector<uint8_t> yuv420data = convertRGB8toYUV420_verticalBin(frameCopy.data(), width, height, 4);
 
     struct FrameInfo {
         std::vector<uint8_t> data;
@@ -91,10 +91,13 @@ void FrameObserver::FrameReceived(const FramePtr pFrame){
 }
 
 
-std::vector<uint8_t> FrameObserver::convertRGB8toYUV420(VmbUchar_t* rgb, uint32_t width, uint32_t height) {
+std::vector<uint8_t> FrameObserver::convertRGB8toYUV420_verticalBin(VmbUchar_t* rgb, uint32_t width, uint32_t height, uint32_t binningFactor = 4) {
     
-    uint32_t y_size = width * height;
-    uint32_t uv_size = (width / 2) * (height / 2);
+    uint32_t binned_height = height / binningFactor;
+    uint32_t binned_width  = width;
+    
+    uint32_t y_size     = binned_width * binned_height;
+    uint32_t uv_size    = (binned_width / 2) * (binned_height / 2);
     uint32_t total_size = y_size + 2 * uv_size;
     
     std::vector<uint8_t> yuv420(total_size);
@@ -103,42 +106,53 @@ std::vector<uint8_t> FrameObserver::convertRGB8toYUV420(VmbUchar_t* rgb, uint32_
     uint8_t* u_plane = yuv420.data() + y_size;
     uint8_t* v_plane = yuv420.data() + y_size + uv_size;
     
-    // Convert RGB to YUV420
-    // RGB8 format is: R G B R G B R G B... (3 bytes per pixel)
-    
-    // Step 1: Convert all pixels to Y (luminance)
-    for (uint32_t row = 0; row < height; row++) {
-        for (uint32_t col = 0; col < width; col++) {
-            uint32_t rgb_idx = (row * width + col) * 3;
-            uint32_t y_idx = row * width + col;
+    // Step 1: Vertical bin + Y plane
+    for (uint32_t row = 0; row < binned_height; row++) {
+
+        for (uint32_t col = 0; col < binned_width; col++) {
+            uint32_t sum_r = 0, sum_g = 0, sum_b = 0;
+
+            // Average binningFactor rows
+            for (uint32_t k = 0; k < binningFactor; k++) {
+                uint32_t src_row = row * binningFactor + k;
+                uint32_t rgb_idx = (src_row * width + col) * 3;
+                sum_r += rgb[rgb_idx + 0];
+                sum_g += rgb[rgb_idx + 1];
+                sum_b += rgb[rgb_idx + 2];
+            }
+
+            uint16_t r = sum_r / binningFactor;
+            uint16_t g = sum_g / binningFactor;
+            uint16_t b = sum_b / binningFactor;
             
-            uint8_t r = rgb[rgb_idx + 0];
-            uint8_t g = rgb[rgb_idx + 1];
-            uint8_t b = rgb[rgb_idx + 2];
-            
-            // Y = 0.299*R + 0.587*G + 0.114*B
+            uint32_t y_idx = row * binned_width + col;
             y_plane[y_idx] = (uint8_t)((77 * r + 150 * g + 29 * b) >> 8);
         }
     }
     
-    // Step 2: Downsample and convert to U and V (chrominance)
-    // Sample every 2x2 block
-    for (uint32_t row = 0; row < height; row += 2) {
-        for (uint32_t col = 0; col < width; col += 2) {
-            // Sample the top-left pixel of each 2x2 block
-            uint32_t rgb_idx = (row * width + col) * 3;
-            uint32_t uv_idx = (row / 2) * (width / 2) + (col / 2);
+    // Step 2: Downsample to U and V on the binned image
+    for (uint32_t row = 0; row < binned_height; row += 2) {
+        for (uint32_t col = 0; col < binned_width; col += 2) {
+            uint32_t sum_r = 0, sum_g = 0, sum_b = 0;
+
+            // Average binningFactor rows for chroma
+            for (uint32_t k = 0; k < binningFactor; k++) {
+                uint32_t src_row = row * binningFactor + k;
+                uint32_t rgb_idx = (src_row * width + col) * 3;
+                sum_r += rgb[rgb_idx + 0];
+                sum_g += rgb[rgb_idx + 1];
+                sum_b += rgb[rgb_idx + 2];
+            }
+
+            uint16_t r = sum_r / binningFactor;
+            uint16_t g = sum_g / binningFactor;
+            uint16_t b = sum_b / binningFactor;
             
-            uint8_t r = rgb[rgb_idx + 0];
-            uint8_t g = rgb[rgb_idx + 1];
-            uint8_t b = rgb[rgb_idx + 2];
+            uint32_t uv_idx = (row / 2) * (binned_width / 2) + (col / 2);
             
-            // U = -0.169*R - 0.331*G + 0.500*B + 128
-            // V =  0.500*R - 0.419*G - 0.081*B + 128
             int u_val = ((-43 * r - 85 * g + 128 * b) >> 8) + 128;
             int v_val = ((128 * r - 107 * g - 21 * b) >> 8) + 128;
             
-            // Clamp to 0-255
             u_plane[uv_idx] = (uint8_t)(u_val < 0 ? 0 : (u_val > 255 ? 255 : u_val));
             v_plane[uv_idx] = (uint8_t)(v_val < 0 ? 0 : (v_val > 255 ? 255 : v_val));
         }
@@ -146,6 +160,7 @@ std::vector<uint8_t> FrameObserver::convertRGB8toYUV420(VmbUchar_t* rgb, uint32_
     
     return yuv420;
 }
+
 
 // ------------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------------
@@ -653,7 +668,7 @@ VmbError_t VimbaXSystem::InitializeCamera(const char* cameraID, CameraPtr& camer
     FeaturePtr pStreamBytesPerSecond;
     err = camera->GetFeatureByName("StreamBytesPerSecond", pStreamBytesPerSecond);
     if (err == VmbErrorSuccess) {
-        err = pStreamBytesPerSecond->SetValue(54000000);
+        err = pStreamBytesPerSecond->SetValue(23000000);
         if (err != VmbErrorSuccess) {
             std::cerr << "ERROR: StreamBytesPerSecond failed to set. Error: " << err << std::endl;
         }
