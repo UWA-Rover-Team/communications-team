@@ -60,16 +60,16 @@
   let focusManip = $state(false);
 
   onMount(() => {
-    requestCameraStream(1, [240,240]); // Need to change cameras to 1-5 enum, rather than string
-    // requestCameraStream("LEFT", [240,240]);
-    // requestCameraStream("RIGHT", [240,240]); 
-    // requestCameraStream("BACK", [240,240]);
-    // requestCameraStream("MANIP", [240,240]);
+    requestCameraStream(cameras.FRONT, [240,240]); // Need to change cameras to 1-5 enum, rather than string
+    requestCameraStream(cameras.LEFT, [240,240]);
+    requestCameraStream(cameras.RIGHT, [240,240]); 
+    requestCameraStream(cameras.BACK, [240,240]);
+    requestCameraStream(cameras.MANIP, [240,240]);
   });
 
 
   // Control Panel State Variables
-  let activeMode = $state<'arm' | 'drivetrain'>('drivetrain');
+  let activeMode = $state<'arm' | 'drivetrain' | 'science'>('drivetrain');
   let isConnected = $state(true);
   let latency = $state(45);
   let commandId = $state(0);
@@ -148,7 +148,7 @@
 
 
 
-<!-- Control Panel -->
+<!-- Control Panel ========================= -->
 <div class="controlPanel">
   <!-- Tab Buttons -->
   <div class="tabButtons">
@@ -157,6 +157,9 @@
     </button>
     <button class="tabButton" class:active={activeMode === 'drivetrain'} onclick={() => activeMode = 'drivetrain'}>
       Drivetrain
+    </button>
+    <button class="tabButton" class:active={activeMode === 'science'} onclick={() => activeMode = 'science'}>
+      Science
     </button>
   </div>
 
@@ -201,6 +204,18 @@
 
     <!-- ARM TAB -->
     {#if activeMode === 'arm'}
+
+      <!-- Presets -->
+      <div class="controlSection">
+        <div class="sectionTitle">Presets</div>
+        <div class="presetGrid">
+          <button class="presetButton" onclick={() => handleArmPreset('home')}>Home</button>
+          <button class="presetButton" onclick={() => handleArmPreset('stow')}>Stow</button>
+          <button class="presetButton" onclick={() => handleArmPreset('pickup')}>Pickup</button>
+          <button class="presetButton" onclick={() => handleArmPreset('extended')}>Extended</button>
+        </div>
+      </div>
+
       <!-- Cartesian data -->
       <div class="controlSection">
         <div class="sectionTitle">Cartesian Position</div>
@@ -234,16 +249,7 @@
         </div>
       </div>
 
-      <!-- Presets -->
-      <div class="controlSection">
-        <div class="sectionTitle">Presets</div>
-        <div class="presetGrid">
-          <button class="presetButton" onclick={() => handleArmPreset('home')}>Home</button>
-          <button class="presetButton" onclick={() => handleArmPreset('stow')}>Stow</button>
-          <button class="presetButton" onclick={() => handleArmPreset('pickup')}>Pickup</button>
-          <button class="presetButton" onclick={() => handleArmPreset('extended')}>Extended</button>
-        </div>
-      </div>
+
 
       <!-- Joint Angles -->
       <div class="controlSection">
@@ -362,98 +368,65 @@
         </div>
       </div>
     {/if}
+
+    <!-- SCIENT TAB-->
+    {#if activeMode === 'science'}
+      <!-- Presets -->
+      <div class="controlSection">
+        <div class="sectionTitle">Presets</div>
+        <div class="presetGrid">
+          <button class="presetButton" >Drill</button>
+          <button class="presetButton" >Process</button>
+          <button class="presetButton" >Measure</button>
+          <button class="presetButton" >Explode</button>
+        </div>
+      </div>
+    {/if}
   </div>
 </div>
 
 
-<div class = "videoContainerFocus">
-  {#if focusFront}
-    <!-- svelte-ignore a11y_click_events_have_key_events --><!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="videoBaseFocus videoButton" onclick={() => {
-      focusFront = false;
-      requestCameraStream(cameras.FRONT, [240,240]);
-    }}>
-      <span class="videoLabel">Front</span>
-      <video bind:this={frontVideo} autoplay playsinline class="videoBaseFocus videoStream"></video>
-    </div>
-  {/if}
-  {#if focusLeft}
-    <!-- svelte-ignore a11y_click_events_have_key_events --><!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="videoBaseFocus videoButton" onclick={() => {
-      focusLeft = false;
-      requestCameraStream(cameras.LEFT, [240,240]);
-    }}>
-      <span class="videoLabel">Left</span>
-      <video bind:this={leftVideo} autoplay playsinline class="videoBaseFocus videoStream"></video>
-    </div>
-  {/if}
-  {#if focusRight}
-    <!-- svelte-ignore a11y_click_events_have_key_events --><!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="videoBaseFocus videoButton" onclick={() => {
-      focusRight = false;
-      requestCameraStream(cameras.RIGHT, [240,240]);
-    }}>
-      <span class="videoLabel">Right</span>
-      <video bind:this={rightVideo} autoplay playsinline class="videoBaseFocus videoStream"></video>
-    </div>
-  {/if}
-  {#if focusBack}
-    <!-- svelte-ignore a11y_click_events_have_key_events --><!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="videoBaseFocus videoButton" onclick={() => {
-      focusBack = false;
-      requestCameraStream(cameras.BACK, [240,240]);
-    }}>
-      <span class="videoLabel">Back</span>
-      <video bind:this={backVideo} autoplay playsinline class="videoBaseFocus videoStream"></video>
-    </div>
-  {/if}
-  {#if focusManip}
-    <!-- svelte-ignore a11y_click_events_have_key_events --><!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="videoBaseFocus videoButton" onclick={() => {
-      focusManip = false;
-      requestCameraStream(cameras.MANIP, [240,240]);
-    }}>
-      <span class="videoLabel">Manipulator</span>
-      <video bind:this={manipVideo} autoplay playsinline class="videoBaseFocus videoStream"></video>
-    </div>
-  {/if}
-</div>
 
-<div class = "videoContainerBottom">
-  {#if !focusFront}
-    <!-- svelte-ignore a11y_consider_explicit_label-->
-    <button class="videoBasePeripheral videoButton" onclick={() => focusFront = true}>
-      <span class="videoLabel">Front</span>
-      <video bind:this={frontVideo} autoplay playsinline muted class="videoBasePeripheral videoStream"></video>
-    </button>
-  {/if}
-  {#if !focusLeft}
-    <!-- svelte-ignore a11y_consider_explicit_label-->
-    <button class="videoBasePeripheral videoButton" onclick={() => focusLeft = true}>
-      <span class="videoLabel">Left</span>
-      <video bind:this={leftVideo} autoplay playsinline muted class="videoBasePeripheral videoStream"></video>
-    </button>
-  {/if}
-  {#if !focusRight}
-    <!-- svelte-ignore a11y_consider_explicit_label-->
-    <button class="videoBasePeripheral videoButton" onclick={() => focusRight = true}>
-      <span class="videoLabel">Right</span>
-      <video bind:this={rightVideo} autoplay playsinline muted class="videoBasePeripheral videoStream"></video>
-    </button>
-  {/if}
-  {#if !focusBack}
-    <!-- svelte-ignore a11y_consider_explicit_label-->
-    <button class="videoBasePeripheral videoButton" onclick={() => focusBack = true}>
-      <span class="videoLabel">Back</span>
-      <video bind:this={backVideo} autoplay playsinline muted class="videoBasePeripheral videoStream"></video>
-    </button>
-  {/if}
-  {#if !focusManip}
-    <!-- svelte-ignore a11y_consider_explicit_label-->
-    <button class="videoBasePeripheral videoButton" onclick={() => focusManip = true}>
+<!-- Camera Panel ======================= -->
+<div class="allVideosContainer">
+
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div class="manipulator">
+    <div class="videoWrapper manip">
       <span class="videoLabel">Manipulator</span>
-      <video bind:this={manipVideo} autoplay playsinline muted class="videoBasePeripheral videoStream"></video>
-    </button>
-  {/if}
+      <video bind:this={manipVideo} autoplay playsinline muted class="videoStream"></video>
+    </div>
+  </div>
+
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div class="frontAndWings">
+
+    <div class="videoWrapper wings">
+      <span class="videoLabel">Left</span>
+      <video bind:this={leftVideo} autoplay playsinline muted class="videoStream"></video>
+    </div>
+
+    <div class="videoWrapper front">
+      <span class="videoLabel">Front</span>
+      <video bind:this={frontVideo} autoplay playsinline muted class="videoStream"></video>
+    </div>
+
+    <div class="videoWrapper wings">
+      <span class="videoLabel">Right</span>
+      <video bind:this={rightVideo} autoplay playsinline muted class="videoStream"></video>
+    </div>
+  </div>
+
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div class="rearviewMirror">
+    <div class="videoWrapper rear">
+      <span class="videoLabel">Back</span>
+      <video bind:this={backVideo} autoplay playsinline muted class="videoStream"></video>
+    </div>
+  </div>
+
 </div>
 

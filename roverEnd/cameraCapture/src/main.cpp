@@ -208,6 +208,13 @@ Napi::Value VimbaXSystem::StartCapture(const Napi::CallbackInfo& info) {
 
     switch(cameraID) {
         case FRONTCAMERA:
+            if (cameraFront) {
+                VmbError_t closeErr = cameraFront->Close();
+                if (closeErr != VmbErrorSuccess) {
+                    std::cerr << "Warning: Failed to close existing camera connection: " << closeErr << std::endl;
+                }
+                cameraFront.reset(); // Reset the shared_ptr if using smart pointers
+            }
             std::cerr << "=========== starting FRONT-CAMERA aquisition ===========" << std::endl;
             err = InitializeCamera("DEV_000F315DFF44", cameraFront, frameObserverFront, tsfnJScriptCallback);
             if (err != VmbErrorSuccess) {
@@ -377,7 +384,7 @@ VmbError_t VimbaXSystem::InitializeCamera(const char* cameraID, CameraPtr& camer
     FeaturePtr pBinningH;
     err = camera->GetFeatureByName("BinningHorizontal", pBinningH);
     if (err == VmbErrorSuccess) {
-        err = pBinningH->SetValue(1);
+        err = pBinningH->SetValue(4);
         if (err != VmbErrorSuccess) {
             std::cerr << "ERROR: BinningHorizontal failed to set. Error: " << err << std::endl;
         }
