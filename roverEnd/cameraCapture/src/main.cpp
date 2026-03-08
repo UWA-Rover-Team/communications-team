@@ -24,7 +24,7 @@ class FrameObserver : public IFrameObserver
 private:
     Napi::ThreadSafeFunction tsfnJScriptCallback;
     std::vector<uint8_t> convertRGB8toYUV420(VmbUchar_t* rgb, uint32_t width, uint32_t height);
-    std::vector<uint8_t> FrameObserver::binRGB8Vertical(VmbUchar_t* rgb, uint32_t width, uint32_t height, uint32_t binningFactor);
+    std::vector<uint8_t> binRGB8Vertical(VmbUchar_t* rgb, uint32_t width, uint32_t height, uint32_t binningFactor);
 public:
    FrameObserver(CameraPtr pCamera, Napi::ThreadSafeFunction threadsafefunction);
    void FrameReceived(const FramePtr pFrame);
