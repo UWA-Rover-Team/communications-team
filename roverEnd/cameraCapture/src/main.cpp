@@ -23,7 +23,8 @@ class FrameObserver : public IFrameObserver
 {
 private:
     Napi::ThreadSafeFunction tsfnJScriptCallback;
-    std::vector<uint8_t> convertRGB8toYUV420_verticalBin(VmbUchar_t* rgb, uint32_t width, uint32_t height, uint32_t binningFactor);
+    std::vector<uint8_t> convertRGB8toYUV420(VmbUchar_t* rgb, uint32_t width, uint32_t height);
+    std::vector<uint8_t> FrameObserver::binRGB8Vertical(VmbUchar_t* rgb, uint32_t width, uint32_t height, uint32_t binningFactor);
 public:
    FrameObserver(CameraPtr pCamera, Napi::ThreadSafeFunction threadsafefunction);
    void FrameReceived(const FramePtr pFrame);
@@ -66,12 +67,15 @@ void FrameObserver::FrameReceived(const FramePtr pFrame){
     m_pCamera->QueueFrame(pFrame);
     
     // NOW do the slow conversion with the copy
-    std::vector<uint8_t> yuv420data = convertRGB8toYUV420_verticalBin(frameCopy.data(), width, height, 4);
+    uint8_t binninFactor = 4;
+    uint32_t binnedHeight = height/binninFactor;
+    std::vector<uint8_t> binnedRGBdata = binRGB8Vertical(frameCopy.data(), width, height, binninFactor);
+    std::vector<uint8_t> yuv420data = convertRGB8toYUV420(binnedRGBdata.data(), width, binnedHeight);
 
     struct FrameInfo {
         std::vector<uint8_t> data;
         uint32_t width;
-        uint32_t height;
+        uint32_t binnedHeight;
     };
     
     FrameInfo* info = new FrameInfo{std::move(yuv420data), width, height};
@@ -80,7 +84,7 @@ void FrameObserver::FrameReceived(const FramePtr pFrame){
         Napi::Object obj = Napi::Object::New(env);
         obj.Set("buffer", Napi::Buffer<uint8_t>::Copy(env, info->data.data(), info->data.size()));
         obj.Set("width", info->width);
-        obj.Set("height", info->height);
+        obj.Set("height", info->binnedHeight);
         
         jsCallback.Call({obj});
         
@@ -91,17 +95,38 @@ void FrameObserver::FrameReceived(const FramePtr pFrame){
 }
 
 
-std::vector<uint8_t> FrameObserver::convertRGB8toYUV420_verticalBin(VmbUchar_t* rgb, uint32_t width, uint32_t height, uint32_t binningFactor = 4) {
-    
-    uint32_t binned_height = height / binningFactor;
-    uint32_t binned_width  = width;
-    
-    // Output is full original size for WebRTC
-    uint32_t out_height = height;
-    uint32_t out_width  = width;
+std::vector<uint8_t> FrameObserver::binRGB8Vertical(VmbUchar_t* rgb, uint32_t width, uint32_t height, uint32_t binningFactor) {
 
-    uint32_t y_size     = out_width * out_height;
-    uint32_t uv_size    = (out_width / 2) * (out_height / 2);
+    uint32_t binned_height = height / binningFactor;
+    std::vector<uint8_t> binned_rgb(width * binned_height * 3);
+
+    for (uint32_t row = 0; row < binned_height; row++) {
+        for (uint32_t col = 0; col < width; col++) {
+            uint32_t sum_r = 0, sum_g = 0, sum_b = 0;
+
+            for (uint32_t k = 0; k < binningFactor; k++) {
+                uint32_t src_row = row * binningFactor + k;
+                uint32_t rgb_idx = (src_row * width + col) * 3;
+                sum_r += rgb[rgb_idx + 0];
+                sum_g += rgb[rgb_idx + 1];
+                sum_b += rgb[rgb_idx + 2];
+            }
+
+            uint32_t dst_idx = (row * width + col) * 3;
+            binned_rgb[dst_idx + 0] = (uint8_t)(sum_r / binningFactor);
+            binned_rgb[dst_idx + 1] = (uint8_t)(sum_g / binningFactor);
+            binned_rgb[dst_idx + 2] = (uint8_t)(sum_b / binningFactor);
+        }
+    }
+
+    return binned_rgb;
+}
+
+
+std::vector<uint8_t> FrameObserver::convertRGB8toYUV420(VmbUchar_t* rgb, uint32_t width, uint32_t height) {
+    
+    uint32_t y_size = width * height;
+    uint32_t uv_size = (width / 2) * (height / 2);
     uint32_t total_size = y_size + 2 * uv_size;
     
     std::vector<uint8_t> yuv420(total_size);
@@ -109,96 +134,51 @@ std::vector<uint8_t> FrameObserver::convertRGB8toYUV420_verticalBin(VmbUchar_t* 
     uint8_t* y_plane = yuv420.data();
     uint8_t* u_plane = yuv420.data() + y_size;
     uint8_t* v_plane = yuv420.data() + y_size + uv_size;
-
-    // Temp buffers for the binned result
-    std::vector<uint8_t> binned_y(binned_width * binned_height);
-    std::vector<uint8_t> binned_u((binned_width / 2) * (binned_height / 2));
-    std::vector<uint8_t> binned_v((binned_width / 2) * (binned_height / 2));
     
-    // Step 1: Vertical bin + Y plane
-    for (uint32_t row = 0; row < binned_height; row++) {
-        for (uint32_t col = 0; col < binned_width; col++) {
-            uint32_t sum_r = 0, sum_g = 0, sum_b = 0;
-
-            for (uint32_t k = 0; k < binningFactor; k++) {
-                uint32_t src_row = row * binningFactor + k;
-                uint32_t rgb_idx = (src_row * width + col) * 3;
-                sum_r += rgb[rgb_idx + 0];
-                sum_g += rgb[rgb_idx + 1];
-                sum_b += rgb[rgb_idx + 2];
-            }
-
-            uint16_t r = sum_r / binningFactor;
-            uint16_t g = sum_g / binningFactor;
-            uint16_t b = sum_b / binningFactor;
+    // Convert RGB to YUV420
+    // RGB8 format is: R G B R G B R G B... (3 bytes per pixel)
+    
+    // Step 1: Convert all pixels to Y (luminance)
+    for (uint32_t row = 0; row < height; row++) {
+        for (uint32_t col = 0; col < width; col++) {
+            uint32_t rgb_idx = (row * width + col) * 3;
+            uint32_t y_idx = row * width + col;
             
-            binned_y[row * binned_width + col] = (uint8_t)((77 * r + 150 * g + 29 * b) >> 8);
+            uint8_t r = rgb[rgb_idx + 0];
+            uint8_t g = rgb[rgb_idx + 1];
+            uint8_t b = rgb[rgb_idx + 2];
+            
+            // Y = 0.299*R + 0.587*G + 0.114*B
+            y_plane[y_idx] = (uint8_t)((77 * r + 150 * g + 29 * b) >> 8);
         }
     }
     
-    // Step 2: Downsample to U and V on the binned image
-    for (uint32_t row = 0; row < binned_height; row += 2) {
-        for (uint32_t col = 0; col < binned_width; col += 2) {
-            uint32_t sum_r = 0, sum_g = 0, sum_b = 0;
-
-            for (uint32_t k = 0; k < binningFactor; k++) {
-                uint32_t src_row = row * binningFactor + k;
-                uint32_t rgb_idx = (src_row * width + col) * 3;
-                sum_r += rgb[rgb_idx + 0];
-                sum_g += rgb[rgb_idx + 1];
-                sum_b += rgb[rgb_idx + 2];
-            }
-
-            uint16_t r = sum_r / binningFactor;
-            uint16_t g = sum_g / binningFactor;
-            uint16_t b = sum_b / binningFactor;
+    // Step 2: Downsample and convert to U and V (chrominance)
+    // Sample every 2x2 block
+    for (uint32_t row = 0; row < height; row += 2) {
+        for (uint32_t col = 0; col < width; col += 2) {
+            // Sample the top-left pixel of each 2x2 block
+            uint32_t rgb_idx = (row * width + col) * 3;
+            uint32_t uv_idx = (row / 2) * (width / 2) + (col / 2);
             
-            uint32_t uv_idx = (row / 2) * (binned_width / 2) + (col / 2);
+            uint8_t r = rgb[rgb_idx + 0];
+            uint8_t g = rgb[rgb_idx + 1];
+            uint8_t b = rgb[rgb_idx + 2];
             
+            // U = -0.169*R - 0.331*G + 0.500*B + 128
+            // V =  0.500*R - 0.419*G - 0.081*B + 128
             int u_val = ((-43 * r - 85 * g + 128 * b) >> 8) + 128;
             int v_val = ((128 * r - 107 * g - 21 * b) >> 8) + 128;
             
-            binned_u[uv_idx] = (uint8_t)(u_val < 0 ? 0 : (u_val > 255 ? 255 : u_val));
-            binned_v[uv_idx] = (uint8_t)(v_val < 0 ? 0 : (v_val > 255 ? 255 : v_val));
-        }
-    }
-
-    // Step 3: Stretch back to full height by repeating each binned row binningFactor times
-    for (uint32_t row = 0; row < binned_height; row++) {
-        for (uint32_t rep = 0; rep < binningFactor; rep++) {
-            uint32_t dst_row = row * binningFactor + rep;
-            memcpy(
-                y_plane + dst_row * out_width,
-                binned_y.data() + row * binned_width,
-                binned_width
-            );
-        }
-    }
-
-    // UV stretch: each binned UV row repeats (binningFactor/2) times
-    uint32_t uv_binned_width  = binned_width / 2;
-    uint32_t uv_binned_height = binned_height / 2;
-    uint32_t uv_out_width     = out_width / 2;
-    uint32_t uv_rep           = binningFactor / 2;
-
-    for (uint32_t row = 0; row < uv_binned_height; row++) {
-        for (uint32_t rep = 0; rep < uv_rep; rep++) {
-            uint32_t dst_row = row * uv_rep + rep;
-            memcpy(
-                u_plane + dst_row * uv_out_width,
-                binned_u.data() + row * uv_binned_width,
-                uv_binned_width
-            );
-            memcpy(
-                v_plane + dst_row * uv_out_width,
-                binned_v.data() + row * uv_binned_width,
-                uv_binned_width
-            );
+            // Clamp to 0-255
+            u_plane[uv_idx] = (uint8_t)(u_val < 0 ? 0 : (u_val > 255 ? 255 : u_val));
+            v_plane[uv_idx] = (uint8_t)(v_val < 0 ? 0 : (v_val > 255 ? 255 : v_val));
         }
     }
     
     return yuv420;
 }
+
 
 
 // ------------------------------------------------------------------------------------------------------
@@ -277,6 +257,13 @@ Napi::Value VimbaXSystem::StartCapture(const Napi::CallbackInfo& info) {
             }
             break;
         case BACKCAMERA:
+            if (cameraBack) {
+                VmbError_t closeErr = cameraBack->Close();
+                if (closeErr != VmbErrorSuccess) {
+                    std::cerr << "Warning: Failed to close existing camera connection: " << closeErr << std::endl;
+                }
+                cameraBack.reset(); // Reset the shared_ptr if using smart pointers
+            }
             std::cerr << "=========== starting BACK-CAMERA aquisition ===========" << std::endl;
             err = InitializeCamera("EMAEFO", cameraBack, frameObserverBack, tsfnJScriptCallback);
             if (err != VmbErrorSuccess) {
@@ -285,6 +272,13 @@ Napi::Value VimbaXSystem::StartCapture(const Napi::CallbackInfo& info) {
             }
             break;
         case LEFTCAMERA:
+            if (cameraLeft) {
+                VmbError_t closeErr = cameraLeft->Close();
+                if (closeErr != VmbErrorSuccess) {
+                    std::cerr << "Warning: Failed to close existing camera connection: " << closeErr << std::endl;
+                }
+                cameraLeft.reset(); // Reset the shared_ptr if using smart pointers
+            }
             std::cerr << "=========== starting LEFT-CAMERA aquisition ===========" << std::endl;
             err = InitializeCamera("DEV_000F315DFF47", cameraLeft, frameObserverLeft, tsfnJScriptCallback);
             if (err != VmbErrorSuccess) {
@@ -293,6 +287,13 @@ Napi::Value VimbaXSystem::StartCapture(const Napi::CallbackInfo& info) {
             }
             break;
         case RIGHTCAMERA:
+            if (cameraRight) {
+                VmbError_t closeErr = cameraRight->Close();
+                if (closeErr != VmbErrorSuccess) {
+                    std::cerr << "Warning: Failed to close existing camera connection: " << closeErr << std::endl;
+                }
+                cameraRight.reset(); // Reset the shared_ptr if using smart pointers
+            }
             std::cerr << "=========== starting RIGHT-CAMERA aquisition ===========" << std::endl;
             err = InitializeCamera("DEV_000F315DFF45", cameraRight, frameObserverRight, tsfnJScriptCallback);
             if (err != VmbErrorSuccess) {
@@ -301,6 +302,13 @@ Napi::Value VimbaXSystem::StartCapture(const Napi::CallbackInfo& info) {
             }
             break;
         case MANIPCAMERA:
+            if (cameraManip) {
+                VmbError_t closeErr = cameraManip->Close();
+                if (closeErr != VmbErrorSuccess) {
+                    std::cerr << "Warning: Failed to close existing camera connection: " << closeErr << std::endl;
+                }
+                cameraManip.reset(); // Reset the shared_ptr if using smart pointers
+            }
             std::cerr << "=========== starting MANIP-CAMERA aquisition ===========" << std::endl;
             err = InitializeCamera("MWRGORW", cameraManip, frameObserverManip, tsfnJScriptCallback);
             if (err != VmbErrorSuccess) {
