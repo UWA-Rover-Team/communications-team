@@ -22,7 +22,7 @@
 
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { requestCameraStream, registerVideoElement } from '$lib/cameraFunctions';
+  import { registerVideoElement, frameWatchdog, connectSocket } from '$lib/cameraFunctions';
   import { cameras } from '$lib/webRtcStreamObject';
   import '../lib/cameraStyles.css';
   import '../lib/controlPanelStyle.css'
@@ -53,20 +53,16 @@
     if (manipVideo) registerVideoElement(cameras.MANIP, manipVideo);
   });
 
-  let focusFront = $state(true);
-  let focusBack = $state(true);
-  let focusLeft = $state(false);
-  let focusRight = $state(false);
-  let focusManip = $state(false);
-
   onMount(() => {
-    requestCameraStream(cameras.FRONT, [240,240]); // Need to change cameras to 1-5 enum, rather than string
-    requestCameraStream(cameras.LEFT, [240,240]);
-    requestCameraStream(cameras.RIGHT, [240,240]); 
-    requestCameraStream(cameras.BACK, [240,240]);
-    requestCameraStream(cameras.MANIP, [240,240]);
+    connectSocket();
+    frameWatchdog(cameras.FRONT);
+    frameWatchdog(cameras.LEFT);
+    frameWatchdog(cameras.RIGHT); 
+    //frameWatchdog(cameras.BACK);
+    //frameWatchdog(cameras.MANIP);
   });
 
+  // ================= Control panel stuff ====================
 
   // Control Panel State Variables
   let activeMode = $state<'arm' | 'drivetrain' | 'science'>('drivetrain');
@@ -84,7 +80,7 @@
   let armZ = $state(0.3);
   let wristAngle = $state(0);
 
-  // Joint Angles (Read-only dummy data)
+  // Joint Angles 
   let jointBase = $state(45.2);
   let jointShoulder = $state(30.5);
   let jointElbow = $state(-15.8);
@@ -95,13 +91,13 @@
   let turn = $state(0);
   let speedLevel = $state<'slow' | 'normal' | 'fast'>('normal');
 
-  // Motor Status (dummy data)
+  // Motor Status 
   let motorFL = $state({ rpm: 0, current: 0.5, temp: 25 });
   let motorFR = $state({ rpm: 0, current: 0.5, temp: 26 });
   let motorBL = $state({ rpm: 0, current: 0.5, temp: 25 });
   let motorBR = $state({ rpm: 0, current: 0.5, temp: 24 });
 
-  // Odometry (dummy data)
+  // Odometry 
   let odomX = $state(0.0);
   let odomY = $state(0.0);
   let heading = $state(0.0);
@@ -405,7 +401,7 @@
 
     <div class="videoWrapper wings">
       <span class="videoLabel">Left</span>
-      <video bind:this={leftVideo} autoplay playsinline muted class="videoStream"></video>
+      <video bind:this={leftVideo} autoplay playsinline muted class="videoStream" style="transform: rotate(180deg)"></video>
     </div>
 
     <div class="videoWrapper front">
@@ -415,7 +411,7 @@
 
     <div class="videoWrapper wings">
       <span class="videoLabel">Right</span>
-      <video bind:this={rightVideo} autoplay playsinline muted class="videoStream"></video>
+      <video bind:this={rightVideo} autoplay playsinline muted class="videoStream" style="transform: rotate(180deg)"></video>
     </div>
   </div>
 

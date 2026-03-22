@@ -1,11 +1,25 @@
 import WebSocket from 'ws';
-import { WebRTCMessage, clients } from './webRtcStreamObject';
+import os from 'os';
+import { WebRTCMessage, clients, dataPacket } from './webRtcStreamObject';
 
 const wss = new WebSocket.Server({ host: "0.0.0.0", port: 8080 });
+
+wss.on('listening', () => {
+  const addr = wss.address();
+  if (addr && typeof addr === 'object') {
+    const localIP = Object.values(os.networkInterfaces())
+      .flat()
+      .find(n => n?.family === 'IPv4' && !n.internal)?.address;
+
+    console.log(`WebSocket server listening on ws://${localIP}:${addr.port}`);
+  }
+});
+
 const clientlist: { [key in clients]: WebSocket | null } = {
     BASE_STATION: null,
     ROVER: null,
-    SERVER: null
+    SERVER: null,
+    ROVER_LOGS: null
 };
 
 console.log("Server Started");
@@ -13,7 +27,7 @@ console.log("Server Started");
 wss.on("connection", (ws: WebSocket) => {
     let registeredClientId: clients | null = null;
     ws.on("message", (message: WebSocket.Data) => {
-        const data: WebRTCMessage = JSON.parse(message.toString());
+        const data: WebRTCMessage | dataPacket = JSON.parse(message.toString());
 
         if (data.type === "REGISTER") {
             clientlist[data.client] = ws;
