@@ -7,7 +7,26 @@ const vimbax = require('../build/Release/addon');
 
 const { RTCVideoSource } = nonstandard;
 
-const socket = new WebSocket("ws://172.20.10.3:8080");
+let socket: WebSocket | null = null;
+
+export function connectSocket() {
+  const ws = new WebSocket("ws://172.20.32.1:8080");
+
+  ws.onopen = () => {
+    socket = ws;
+    setEventListeners();
+  };
+
+  ws.onerror = () => {
+    ws.close();
+  };
+
+  ws.onclose = () => {
+    console.log(new Error("Failed to connect to WebServer"));
+    socket = null;
+    setTimeout(connectSocket, 1000);
+  };
+}
 
 const vimbaSystem = new vimbax.VimbaXSystem();
 
@@ -27,7 +46,7 @@ async function createStream(camera: cameras, resolution: resolution): Promise<vo
   
   pcCAM.onicecandidate = (event) => { 
     if (event.candidate) {
-      socket.send(JSON.stringify({
+      socket?.send(JSON.stringify({
         type: "ICE_CANDIDATE",
         client: "ROVER",
         target: "BASE_STATION",
@@ -58,7 +77,7 @@ async function createStream(camera: cameras, resolution: resolution): Promise<vo
   });
   await pcCAM.setLocalDescription(offerCAM);
   
-  socket.send(JSON.stringify({
+  socket?.send(JSON.stringify({
     type: "OFFER",
     client: "ROVER",
     target: "BASE_STATION",
@@ -86,7 +105,7 @@ function requestCamera(cameraId: Number): Promise<MediaStreamTrack> {
       source.onFrame(frame);
     });
     if (err != 0) {
-      socket.send(JSON.stringify({
+      socket?.send(JSON.stringify({
         type: "ERROR",
         client: "ROVER",
         target: "BASE_STATION",
@@ -98,7 +117,6 @@ function requestCamera(cameraId: Number): Promise<MediaStreamTrack> {
     setTimeout(() => resolve(track), 500);
   });
 }
-
 
 function createMockVideoTrack(resolution: resolution): MediaStreamTrack {
   const source = new nonstandard.RTCVideoSource();
@@ -121,8 +139,6 @@ function createMockVideoTrack(resolution: resolution): MediaStreamTrack {
   
   return track;
 }
-
-
 
 // =============== Handling RTC Stuff functions ================
 async function handleAnswer(data: WebRTCMessage) {
@@ -152,33 +168,38 @@ async function handleIceCandidate(data: WebRTCMessage) {
 
 
 // =============== MAIN LOOP ===============
-socket.onopen = () => {
-  const registerMsg: WebRTCMessage = {
-    type: "REGISTER",
-    client: "ROVER", 
-    target: "SERVER"
-  };
-  
-  socket.send(JSON.stringify(registerMsg));
-  console.log("Registered to the server");
-};
+function setEventListeners() {
+  if (socket) {
 
-
-socket.onmessage = async (event: any) => {
-  const data: WebRTCMessage = JSON.parse(event.data);
-  
-  if (data.type === 'CAMERA_REQUEST') {
-    if (data.camera && data.resolution) {
-      console.log(`Camera stream ${data.camera} requested...`);
-      createStream(data.camera, data.resolution);
-    }
+    socket.onopen = () => {
+      const registerMsg: WebRTCMessage = {
+        type: "REGISTER",
+        client: "ROVER", 
+        target: "SERVER"
+      };
+      
+      socket?.send(JSON.stringify(registerMsg));
+      console.log("Registered to the server");
+    };
+    
+    
+    socket.onmessage = async (event: any) => {
+      const data: WebRTCMessage = JSON.parse(event.data);
+      
+      if (data.type === 'CAMERA_REQUEST') {
+        if (data.camera && data.resolution) {
+          console.log(`Camera stream ${data.camera} requested...`);
+          createStream(data.camera, data.resolution);
+        }
+      }
+      
+      if (data.type === 'ANSWER') {
+        await handleAnswer(data);
+      }
+      
+      if (data.type === 'ICE_CANDIDATE') {
+        await handleIceCandidate(data);
+      }
+    };
   }
-  
-  if (data.type === 'ANSWER') {
-    await handleAnswer(data);
-  }
-  
-  if (data.type === 'ICE_CANDIDATE') {
-    await handleIceCandidate(data);
-  }
-};
+}

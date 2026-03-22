@@ -1,0 +1,260 @@
+/* Control Panel Layout */
+.controlPanel {
+  width: 30%;
+  background: rgba(15, 15, 40, 0);
+  border-right: 2px solid #4a5568;
+  overflow-y: auto;
+  color: #e2e8f0;
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+}
+
+/* Tab Buttons */
+.tabButtons {
+  display: flex;
+  background: rgba(20, 20, 50, 0.9);
+  border-bottom: 2px solid #4a5568;
+}
+
+.tabButton {
+  flex: 1;
+  padding: 15px;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tabButton.active {
+  color: #60a5fa;
+  border-bottom: 3px solid #60a5fa;
+  background: rgba(96, 165, 250, 0.1);
+}
+
+.tabContent {
+  padding: 20px;
+}
+
+/* Header */
+.headerSection {
+  background: rgba(30, 30, 60, 0.8);
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  border: 1px solid #4a5568;
+}
+
+.connectionStatus {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.statusDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 10px #10b981;
+}
+
+.statusDot.disconnected {
+  background: #ef4444;
+  box-shadow: 0 0 10px #ef4444;
+}
+
+/* E-Stop Section */
+.estopSection {
+  background: rgba(40, 20, 20, 0.8);
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  border: 2px solid #991b1b;
+}
+
+.estopButtons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.estopButton {
+  padding: 12px;
+  font-size: 14px;
+  font-weight: bold;
+  border: 2px solid;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.estopButton.combined {
+  background: #dc2626;
+  border-color: #b91c1c;
+  color: white;
+}
+
+.estopButton.arm {
+  background: #ea580c;
+  border-color: #c2410c;
+  color: white;
+}
+
+.estopButton.drivetrain {
+  background: #d97706;
+  border-color: #b45309;
+  color: white;
+}
+
+.estopButton.clear {
+  background: #059669;
+  border-color: #047857;
+  color: white;
+}
+
+/* Status Banner */
+.statusBanner {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.statusItem {
+  flex: 1;
+  padding: 10px;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.statusItem.active {
+  background: #065f46;
+  color: #d1fae5;
+}
+
+.statusItem.estopped {
+  background: #991b1b;
+  color: #fecaca;
+}
+
+/* Control Section */
+.controlSection {
+  background: rgba(30, 30, 60, 0.6);
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  border: 1px solid #4a5568;
+}
+
+.sectionTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: #03fc8c;
+  margin-bottom: 12px;
+}
+
+/* Sliders */
+.dataControl {
+  margin-bottom: 15px;
+}
+
+.dataLabel {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 5px;
+  color: #cbd5e1;
+}
+
+.dataValue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+input[type="range"] {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: #334155;
+  outline: none;
+}
+
+/* Preset Buttons */
+.presetGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.presetButton {
+  padding: 10px;
+  background: #1e3a8a;
+  border: 1px solid #3b82f6;
+  border-radius: 4px;
+  color: #dbeafe;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* Joint/Motor Display */
+.displayGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.displayItem {
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.displayLabel {
+  color: #94a3b8;
+  font-size: 11px;
+  margin-bottom: 2px;
+}
+
+.displayValue {
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+/* Speed Selector */
+.speedSelector {
+  display: flex;
+  gap: 8px;
+}
+
+.speedButton {
+  flex: 1;
+  padding: 8px;
+  background: #1e293b;
+  border: 1px solid #475569;
+  border-radius: 4px;
+  color: #cbd5e1;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.speedButton.active {
+  background: #1e40af;
+  border-color: #3b82f6;
+  color: #dbeafe;
+}
+
+/* Visualization Canvas */
+.visualizationCanvas {
+  width: 100%;
+  height: 200px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  border: 1px solid #334155;
+}
