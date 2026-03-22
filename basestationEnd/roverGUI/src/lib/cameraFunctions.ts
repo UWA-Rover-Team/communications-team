@@ -23,7 +23,7 @@ const videoElements: Record<cameras, HTMLVideoElement | null> = {
 let socket: WebSocket | null = null;
 
 export function connectSocket() {
-  const ws = new WebSocket("ws://172.20.32.1:8080");
+  const ws = new WebSocket("ws://192.168.0.14:8080");
 
   ws.onopen = () => {
     socket = ws;
