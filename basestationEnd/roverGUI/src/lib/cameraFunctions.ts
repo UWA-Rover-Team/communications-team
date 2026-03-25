@@ -92,7 +92,7 @@ export async function requestCameraStream(cam : cameras, reso: resolution) {
   };
 
   pcCAM.onicecandidate = (event) => {
-    socket.send(JSON.stringify({
+    socket?.send(JSON.stringify({
       type: "ICE_CANDIDATE",
       client: "BASE_STATION",
       target: "ROVER",
@@ -103,7 +103,7 @@ export async function requestCameraStream(cam : cameras, reso: resolution) {
 
   await waitForSocket();
 
-  socket.send(JSON.stringify({
+  socket?.send(JSON.stringify({
     type: "CAMERA_REQUEST",
     client: "BASE_STATION",
     target: "ROVER",
@@ -117,10 +117,10 @@ export async function requestCameraStream(cam : cameras, reso: resolution) {
 
 function waitForSocket(): Promise<void> {
   return new Promise((resolve) => {
-    if (socket.readyState === WebSocket.OPEN) {
+    if (socket?.readyState === WebSocket.OPEN) {
       resolve();
     }
-    else socket.addEventListener('open', () => resolve(), { once: true });
+    else socket?.addEventListener('open', () => resolve(), { once: true });
   });
 }
 
@@ -153,7 +153,7 @@ async function handleOffer(data: WebRTCMessage) {
       const answer = await pcCAM.createAnswer();
       await pcCAM.setLocalDescription(answer);
 
-      socket.send(JSON.stringify({
+      socket?.send(JSON.stringify({
         type: "ANSWER",
         client: "BASE_STATION",
         target: "ROVER",
