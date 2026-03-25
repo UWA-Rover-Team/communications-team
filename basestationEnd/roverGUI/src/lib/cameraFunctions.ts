@@ -28,6 +28,11 @@ export function connectSocket() {
   ws.onopen = () => {
     socket = ws;
     setEventListeners();
+    socket?.send(JSON.stringify({
+      type: "REGISTER",
+      client: "BASE_STATION",
+      target: "SERVER",
+    }));
   };
 
   ws.onerror = () => {

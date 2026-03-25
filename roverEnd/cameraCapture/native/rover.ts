@@ -15,6 +15,11 @@ export function connectSocket() {
   ws.onopen = () => {
     socket = ws;
     setEventListeners();
+    socket?.send(JSON.stringify({
+        type: "REGISTER",
+        client: "ROVER",
+        target: "SERVER",
+    }));
   };
 
   ws.onerror = () => {
@@ -24,7 +29,7 @@ export function connectSocket() {
   ws.onclose = () => {
     console.log(new Error("Failed to connect to WebServer"));
     socket = null;
-    setTimeout(connectSocket, 1000);
+    setTimeout(connectSocket, 3000);
   };
 }
 
@@ -63,8 +68,7 @@ async function createStream(camera: cameras, resolution: resolution): Promise<vo
   pcCAM.addTransceiver(mediaTrack, {
     streams: [mediaStream],
     sendEncodings: [{
-      maxBitrate: 500000,
-      scaleResolutionDownBy: 5.0  // 2064x1544 -> ~412x308, close to 400x300
+      maxFramerate: 32 
     }]
   });
   
