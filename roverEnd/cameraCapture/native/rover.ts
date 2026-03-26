@@ -70,7 +70,8 @@ async function createStream(camera: cameras, resolution: resolution): Promise<vo
   pcCAM.addTransceiver(mediaTrack, {
     streams: [mediaStream],
     sendEncodings: [{
-      maxFramerate: 32 
+      maxFramerate: 32, 
+      scaleResolutionDownBy: 2
     }]
   });
   
