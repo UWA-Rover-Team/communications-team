@@ -33,6 +33,8 @@ export function connectSocket() {
   };
 }
 
+connectSocket();
+
 const vimbaSystem = new vimbax.VimbaXSystem();
 
 // ======================== Create new Stream Functions ===================
