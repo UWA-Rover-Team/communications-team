@@ -250,4 +250,22 @@ function setEventListeners() {
   }
 }
   
-  
+
+export function takePhoto(video: HTMLVideoElement | null) {
+  if (!video) return;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  // Download the photo
+  const link = document.createElement('a');
+  link.href = canvas.toDataURL('image/png');
+  link.download = `photo-${Date.now()}.png`;
+  link.click();
+}

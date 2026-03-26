@@ -1,4 +1,5 @@
 .videoWrapper {
+  position: relative;
   pointer-events: auto;
   padding: 0;
   margin: 0;
@@ -30,12 +31,12 @@
 
 .allVideosContainer {
   position: fixed;
-  left: 30%;
+  left: 0%;
   top: 0;
   right: 0;
   bottom: 0;
 
-  width: 70vw;
+  width: 100vw;
 
   display: flex;
   flex-wrap: wrap;
@@ -72,4 +73,29 @@
   font-size: 14px;
   color: #ffffff;
   font-family:'Courier New', monospace;
+}
+
+.cameraIconBtn {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  top: 3px;
+  right: 3px;
+  z-index: 10;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 5px;
+}
+
+.cameraIcon {
+  width: 24px;
+  height: 24px;
+  display: block;
+  border-radius: 5px;
+}
+
+.cameraIconBtn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(0, 255, 255, 1);
 }

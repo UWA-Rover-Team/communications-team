@@ -35,3 +35,203 @@
         </button>
       </div>
     </div>
+
+
+    <!-- Control Panel ========================= -->
+<div class="controlPanel">
+  <!-- Tab Buttons -->
+  <div class="tabButtons">
+    <button class="tabButton" class:active={activeMode === 'arm'} onclick={() => activeMode = 'arm'}>
+      Arm
+    </button>
+    <button class="tabButton" class:active={activeMode === 'drivetrain'} onclick={() => activeMode = 'drivetrain'}>
+      Drivetrain
+    </button>
+    <button class="tabButton" class:active={activeMode === 'science'} onclick={() => activeMode = 'science'}>
+      Science
+    </button>
+  </div>
+
+  <div class="tabContent">
+    <!-- ARM TAB -->
+    {#if activeMode === 'arm'}
+
+      <!-- Presets -->
+      <div class="controlSection">
+        <div class="sectionTitle">Presets</div>
+        <div class="presetGrid">
+          <button class="presetButton" onclick={() => handleArmPreset('home')}>Home</button>
+          <button class="presetButton" onclick={() => handleArmPreset('stow')}>Stow</button>
+          <button class="presetButton" onclick={() => handleArmPreset('pickup')}>Pickup</button>
+          <button class="presetButton" onclick={() => handleArmPreset('extended')}>Extended</button>
+        </div>
+      </div>
+
+      <!-- Cartesian data -->
+      <div class="controlSection">
+        <div class="sectionTitle">Cartesian Position</div>
+        
+        <div class="dataControl">
+          <div class="dataLabel">
+            <span>X Position</span>
+            <span class="dataValue">{armX.toFixed(2)}m</span>
+          </div>
+        </div>
+
+        <div class="dataControl">
+          <div class="dataLabel">
+            <span>Y Position</span>
+            <span class="dataValue">{armY.toFixed(2)}m</span>
+          </div>
+        </div>
+
+        <div class="dataControl">
+          <div class="dataLabel">
+            <span>Z Position</span>
+            <span class="dataValue">{armZ.toFixed(2)}m</span>
+          </div>
+        </div>
+
+        <div class="dataControl">
+          <div class="dataLabel">
+            <span>Wrist Angle</span>
+            <span class="dataValue">{wristAngle.toFixed(1)}°</span>
+          </div>
+        </div>
+      </div>
+
+
+
+      <!-- Joint Angles -->
+      <div class="controlSection">
+        <div class="sectionTitle">Joint Angles</div>
+        <div class="displayGrid">
+          <div class="displayItem">
+            <div class="displayLabel">Base</div>
+            <div class="displayValue">{jointBase.toFixed(1)}°</div>
+          </div>
+          <div class="displayItem">
+            <div class="displayLabel">Shoulder</div>
+            <div class="displayValue">{jointShoulder.toFixed(1)}°</div>
+          </div>
+          <div class="displayItem">
+            <div class="displayLabel">Elbow</div>
+            <div class="displayValue">{jointElbow.toFixed(1)}°</div>
+          </div>
+          <div class="displayItem">
+            <div class="displayLabel">Wrist</div>
+            <div class="displayValue">{jointWrist.toFixed(1)}°</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Arm Visualization -->
+      <div class="controlSection">
+        <div class="sectionTitle">Arm Visualization</div>
+        <canvas class="visualizationCanvas"></canvas>
+      </div>
+    {/if}
+
+    <!-- DRIVETRAIN TAB -->
+    {#if activeMode === 'drivetrain'}
+      <!-- Drive Controls -->
+      <div class="controlSection">
+        <div class="sectionTitle">Drive Controls</div>
+        
+        <div class="dataControl">
+          <div class="dataLabel">
+            <span>Throttle</span>
+            <span class="dataValue">{throttle.toFixed(2)}</span>
+          </div>
+        </div>
+
+        <div class="dataControl">
+          <div class="dataLabel">
+            <span>Turn</span>
+            <span class="dataValue">{turn.toFixed(2)}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Speed Level -->
+      <div class="controlSection">
+        <div class="sectionTitle">Speed Level</div>
+        <div class="speedSelector">
+          <button class="speedButton" class:active={speedLevel === 'slow'} onclick={() => speedLevel = 'slow'}>
+            Slow
+          </button>
+          <button class="speedButton" class:active={speedLevel === 'normal'} onclick={() => speedLevel = 'normal'}>
+            Normal
+          </button>
+          <button class="speedButton" class:active={speedLevel === 'fast'} onclick={() => speedLevel = 'fast'}>
+            Fast
+          </button>
+        </div>
+      </div>
+
+      <!-- Motor Status -->
+      <div class="controlSection">
+        <div class="sectionTitle">Motor Status</div>
+        <div class="displayGrid">
+          <div class="displayItem">
+            <div class="displayLabel">FL (251)</div>
+            <div class="displayValue">{motorFL.rpm} RPM</div>
+            <div style="font-size: 10px; color: #94a3b8;">{motorFL.current}A / {motorFL.temp}°C</div>
+          </div>
+          <div class="displayItem">
+            <div class="displayLabel">FR (253)</div>
+            <div class="displayValue">{motorFR.rpm} RPM</div>
+            <div style="font-size: 10px; color: #94a3b8;">{motorFR.current}A / {motorFR.temp}°C</div>
+          </div>
+          <div class="displayItem">
+            <div class="displayLabel">BL (254)</div>
+            <div class="displayValue">{motorBL.rpm} RPM</div>
+            <div style="font-size: 10px; color: #94a3b8;">{motorBL.current}A / {motorBL.temp}°C</div>
+          </div>
+          <div class="displayItem">
+            <div class="displayLabel">BR (252)</div>
+            <div class="displayValue">{motorBR.rpm} RPM</div>
+            <div style="font-size: 10px; color: #94a3b8;">{motorBR.current}A / {motorBR.temp}°C</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Odometry -->
+      <div class="controlSection">
+        <div class="sectionTitle">Odometry</div>
+        <div class="displayGrid">
+          <div class="displayItem">
+            <div class="displayLabel">X Position</div>
+            <div class="displayValue">{odomX.toFixed(2)}m</div>
+          </div>
+          <div class="displayItem">
+            <div class="displayLabel">Y Position</div>
+            <div class="displayValue">{odomY.toFixed(2)}m</div>
+          </div>
+          <div class="displayItem">
+            <div class="displayLabel">Heading</div>
+            <div class="displayValue">{heading.toFixed(1)}°</div>
+          </div>
+          <div class="displayItem">
+            <div class="displayLabel">Speed</div>
+            <div class="displayValue">{speed.toFixed(2)}m/s</div>
+          </div>
+        </div>
+      </div>
+    {/if}
+
+    <!-- SCIENT TAB-->
+    {#if activeMode === 'science'}
+      <!-- Presets -->
+      <div class="controlSection">
+        <div class="sectionTitle">Presets</div>
+        <div class="presetGrid">
+          <button class="presetButton" >Drill</button>
+          <button class="presetButton" >Process</button>
+          <button class="presetButton" >Measure</button>
+          <button class="presetButton" >Explode</button>
+        </div>
+      </div>
+    {/if}
+  </div>
+</div>
