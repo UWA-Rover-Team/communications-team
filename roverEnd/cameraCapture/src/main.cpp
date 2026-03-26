@@ -715,7 +715,7 @@ VmbError_t VimbaXSystem::InitializeCamera(const char* cameraID, CameraPtr& camer
     FeaturePtr pStreamBytesPerSecond;
     err = camera->GetFeatureByName("StreamBytesPerSecond", pStreamBytesPerSecond);
     if (err == VmbErrorSuccess) {
-        err = pStreamBytesPerSecond->SetValue(37000000);
+        err = pStreamBytesPerSecond->SetValue(35000000);
         if (err != VmbErrorSuccess) {
             std::cerr << "ERROR: StreamBytesPerSecond failed to set. Error: " << err << std::endl;
         }
@@ -744,7 +744,7 @@ VmbError_t VimbaXSystem::InitializeCamera(const char* cameraID, CameraPtr& camer
     FeaturePtr pFrameRate;
     err = camera->GetFeatureByName("AcquisitionFrameRateAbs", pFrameRate);
     if (err == VmbErrorSuccess) {
-        err = pFrameRate->SetValue(16.0);
+        err = pFrameRate->SetValue(32.0);
         if (err != VmbErrorSuccess) {
             std::cerr << "ERROR: AcquisitionFrameRateAbs failed to set. Error: " << err << std::endl;
         }
