@@ -521,7 +521,7 @@ VmbError_t VimbaXSystem::InitializeCamera(const char* cameraID, CameraPtr& camer
     FeaturePtr pExposureTime;
     err = camera->GetFeatureByName("ExposureTimeAbs", pExposureTime);
     if (err == VmbErrorSuccess) {
-        err = pExposureTime->SetValue(5000.0);
+        err = pExposureTime->SetValue(1000.0);
         if (err != VmbErrorSuccess) {
             std::cerr << "ERROR: ExposureTimeAbs failed to set. Error: " << err << std::endl;
         }
@@ -715,7 +715,7 @@ VmbError_t VimbaXSystem::InitializeCamera(const char* cameraID, CameraPtr& camer
     FeaturePtr pStreamBytesPerSecond;
     err = camera->GetFeatureByName("StreamBytesPerSecond", pStreamBytesPerSecond);
     if (err == VmbErrorSuccess) {
-        err = pStreamBytesPerSecond->SetValue(30000000);
+        err = pStreamBytesPerSecond->SetValue(35000000);
         if (err != VmbErrorSuccess) {
             std::cerr << "ERROR: StreamBytesPerSecond failed to set. Error: " << err << std::endl;
         }
