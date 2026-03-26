@@ -83,8 +83,6 @@ export async function requestCameraStream(cam : cameras, reso: resolution) {
 
       setTimeout(() => {
         console.log(`Video dimensions: ${videoElement.videoWidth}x${videoElement.videoHeight}`);
-        console.log(`Video readyState: ${videoElement.readyState}`);
-        console.log(`Video paused: ${videoElement.paused}`);
       }, 1000);
 
 
@@ -112,7 +110,6 @@ export async function requestCameraStream(cam : cameras, reso: resolution) {
   }));
 
   console.log(`Requested stream for ${cam}`);
-  console.log(`camera is ${pcCAM}`);
 }
 
 function waitForSocket(): Promise<void> {
@@ -176,17 +173,14 @@ export function frameWatchdog(cam : cameras, timeout = 5000, cameraConnectTime =
     if (socket !== null) {
       const pcCAM = peerConnections[cam];
       if (Date.now() - cameraConnectingTimer > cameraConnectTime) {
-        console.log(pcCAM)
         if (pcCAM !== undefined) {
           const stats = await pcCAM.getStats();
           
           stats.forEach(report => {
             if (report.type === 'inbound-rtp' && report.kind === 'video') {
               const currentFrames = report.framesReceived;
-              console.log(`Current frames recieved ${currentFrames}`)
               
               if (currentFrames > lastFrameCount) {
-                console.log(`Current frame count is ${currentFrames}`)
                 lastFrameCount = currentFrames;
                 lastFrameTime = Date.now();
               } else if (Date.now() - lastFrameTime > timeout) {
