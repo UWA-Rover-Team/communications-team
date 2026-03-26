@@ -715,7 +715,7 @@ VmbError_t VimbaXSystem::InitializeCamera(const char* cameraID, CameraPtr& camer
     FeaturePtr pStreamBytesPerSecond;
     err = camera->GetFeatureByName("StreamBytesPerSecond", pStreamBytesPerSecond);
     if (err == VmbErrorSuccess) {
-        err = pStreamBytesPerSecond->SetValue(35000000);
+        err = pStreamBytesPerSecond->SetValue(37000000);
         if (err != VmbErrorSuccess) {
             std::cerr << "ERROR: StreamBytesPerSecond failed to set. Error: " << err << std::endl;
         }
