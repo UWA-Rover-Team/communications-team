@@ -7,25 +7,22 @@
   border-radius: 8px;
 }
 
-.rear {
-  width: 500px;
-  height: 180px;
-}
-
 .wings {
-  width: 288px;
-  height: 216px;
+  width: 32vw;
+  height: 24vw;
   padding: 10px;
 }
 
 .front {
-  width: 400px;
-  height: 300px;
+  width: 32vw;
+  height: 24vw;
+  padding: 10px;
 }
 
 .manip {
-  width: 376px;
-  height: 252px;
+  width: 32vw;
+  height: 24vw;
+  padding: 10px;
 }
 
 
@@ -38,33 +35,23 @@
   right: 0;
   bottom: 0;
 
+  width: 70vw;
+
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  flex-direction: column;
-}
-
-.rearviewMirror {
-  padding: 10px;
-  margin: 5px;
-
-  display: flex;
-
 }
 
 .frontAndWings {
   padding: 10px;
   margin: 5px;
-
+  flex-basis: calc(50% - 20px);
   display: flex;
-  flex-direction: row;
-}
-
-.manipulator {
-  padding: 10px;
-  margin: 5px;
-
-  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  
 }
 
 

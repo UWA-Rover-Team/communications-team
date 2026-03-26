@@ -386,27 +386,24 @@
 <!-- Camera Panel ======================= -->
 <div class="allVideosContainer">
 
-  <!-- svelte-ignore a11y_click_events_have_key_events -->
-  <!-- svelte-ignore a11y_no_static_element_interactions -->
-  <div class="manipulator">
+  <div class="frontAndWings">
+    <div class="videoWrapper front">
+      <span class="videoLabel">Front</span>
+      <video bind:this={frontVideo} autoplay playsinline muted class="videoStream"></video>
+    </div>
+
     <div class="videoWrapper manip">
       <span class="videoLabel">Manipulator</span>
-      <video bind:this={manipVideo} autoplay playsinline muted class="videoStream"></video>
+      <video bind:this={leftVideo} autoplay playsinline muted class="videoStream"></video>
     </div>
   </div>
 
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div class="frontAndWings">
-
     <div class="videoWrapper wings">
       <span class="videoLabel">Left</span>
-      <video bind:this={leftVideo} autoplay playsinline muted class="videoStream" style="transform: rotate(180deg)"></video>
-    </div>
-
-    <div class="videoWrapper front">
-      <span class="videoLabel">Front</span>
-      <video bind:this={frontVideo} autoplay playsinline muted class="videoStream"></video>
+      <video bind:this={manipVideo} autoplay playsinline muted class="videoStream" style="transform: rotate(180deg)"></video>
     </div>
 
     <div class="videoWrapper wings">
@@ -414,15 +411,5 @@
       <video bind:this={rightVideo} autoplay playsinline muted class="videoStream" style="transform: rotate(180deg)"></video>
     </div>
   </div>
-
-  <!-- svelte-ignore a11y_click_events_have_key_events -->
-  <!-- svelte-ignore a11y_no_static_element_interactions -->
-  <div class="rearviewMirror">
-    <div class="videoWrapper rear">
-      <span class="videoLabel">Back</span>
-      <video bind:this={backVideo} autoplay playsinline muted class="videoStream"></video>
-    </div>
-  </div>
-
 </div>
 
