@@ -70,7 +70,7 @@ export async function requestCameraStream(cam : cameras, reso: resolution) {
     console.log(`Removed ${cam} Cameras peer connection`)
   }
   
-  const pcCAM = new RTCPeerConnection();
+  const pcCAM = new RTCPeerConnection({iceServers: []});
   peerConnections[cam] = pcCAM;
 
   pcCAM.ontrack = (event) => {

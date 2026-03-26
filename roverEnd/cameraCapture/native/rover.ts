@@ -48,7 +48,7 @@ const peerConnections: Record<cameras, RTCPeerConnection | undefined> = {
 };
 
 async function createStream(camera: cameras, resolution: resolution): Promise<void> {
-  const pcCAM = new RTCPeerConnection();
+  const pcCAM = new RTCPeerConnection({iceServers: []});
   peerConnections[camera] = pcCAM;
   
   pcCAM.onicecandidate = (event) => { 
